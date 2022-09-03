@@ -15,7 +15,7 @@ use std::{
 
 const EPS: f64 = 0.0000001;
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Default, Debug)]
 /// A len-3 column vector
 pub struct Vec3 {
     pub x: f64,
@@ -589,15 +589,15 @@ impl Mul<Self> for Mat3 {
 
         // `acr` means a(column)(row)
         let a00 = d[0] * rd[0] + d[3] * rd[1] + d[6] * rd[2];
-        let a01 = d[0] * rd[3] + d[3] * rd[4] + d[6] * rd[5];
-        let a02 = d[0] * rd[6] + d[3] * rd[7] + d[6] * rd[8];
+        let a10 = d[0] * rd[3] + d[3] * rd[4] + d[6] * rd[5];
+        let a20 = d[0] * rd[6] + d[3] * rd[7] + d[6] * rd[8];
 
-        let a10 = d[1] * rd[0] + d[4] * rd[1] + d[7] * rd[2];
+        let a01 = d[1] * rd[0] + d[4] * rd[1] + d[7] * rd[2];
         let a11 = d[1] * rd[3] + d[4] * rd[4] + d[7] * rd[5];
-        let a12 = d[1] * rd[6] + d[4] * rd[7] + d[7] * rd[8];
+        let a21 = d[1] * rd[6] + d[4] * rd[7] + d[7] * rd[8];
 
-        let a20 = d[2] * rd[0] + d[5] * rd[1] + d[8] * rd[2];
-        let a21 = d[2] * rd[3] + d[5] * rd[4] + d[8] * rd[5];
+        let a02 = d[2] * rd[0] + d[5] * rd[1] + d[8] * rd[2];
+        let a12 = d[2] * rd[3] + d[5] * rd[4] + d[8] * rd[5];
         let a22 = d[2] * rd[6] + d[5] * rd[7] + d[8] * rd[8];
 
         Self {
@@ -890,23 +890,23 @@ impl Mul<Self> for Mat4 {
 
         // acr means a(column)(row)
         let a00 = d[0] * rd[0] + d[4] * rd[1] + d[8] * rd[2] + d[12] * rd[3];
-        let a01 = d[0] * rd[4] + d[4] * rd[5] + d[8] * rd[6] + d[12] * rd[7];
-        let a02 = d[0] * rd[8] + d[4] * rd[9] + d[8] * rd[10] + d[12] * rd[11];
-        let a03 = d[0] * rd[12] + d[4] * rd[13] + d[8] * rd[14] + d[12] * rd[15];
+        let a10 = d[0] * rd[4] + d[4] * rd[5] + d[8] * rd[6] + d[12] * rd[7];
+        let a20 = d[0] * rd[8] + d[4] * rd[9] + d[8] * rd[10] + d[12] * rd[11];
+        let a30 = d[0] * rd[12] + d[4] * rd[13] + d[8] * rd[14] + d[12] * rd[15];
 
-        let a10 = d[1] * rd[0] + d[5] * rd[1] + d[9] * rd[2] + d[13] * rd[3];
+        let a01 = d[1] * rd[0] + d[5] * rd[1] + d[9] * rd[2] + d[13] * rd[3];
         let a11 = d[1] * rd[4] + d[5] * rd[5] + d[9] * rd[6] + d[13] * rd[7];
-        let a12 = d[1] * rd[8] + d[5] * rd[9] + d[9] * rd[10] + d[13] * rd[11];
-        let a13 = d[1] * rd[12] + d[5] * rd[13] + d[9] * rd[14] + d[13] * rd[15];
+        let a21 = d[1] * rd[8] + d[5] * rd[9] + d[9] * rd[10] + d[13] * rd[11];
+        let a31 = d[1] * rd[12] + d[5] * rd[13] + d[9] * rd[14] + d[13] * rd[15];
 
-        let a20 = d[2] * rd[0] + d[6] * rd[1] + d[10] * rd[2] + d[14] * rd[3];
-        let a21 = d[2] * rd[4] + d[6] * rd[5] + d[10] * rd[6] + d[14] * rd[7];
+        let a02 = d[2] * rd[0] + d[6] * rd[1] + d[10] * rd[2] + d[14] * rd[3];
+        let a12 = d[2] * rd[4] + d[6] * rd[5] + d[10] * rd[6] + d[14] * rd[7];
         let a22 = d[2] * rd[8] + d[6] * rd[9] + d[10] * rd[10] + d[14] * rd[11];
-        let a23 = d[2] * rd[12] + d[6] * rd[13] + d[10] * rd[14] + d[14] * rd[15];
+        let a32 = d[2] * rd[12] + d[6] * rd[13] + d[10] * rd[14] + d[14] * rd[15];
 
-        let a30 = d[3] * rd[0] + d[7] * rd[1] + d[11] * rd[2] + d[15] * rd[3];
-        let a31 = d[3] * rd[4] + d[7] * rd[5] + d[11] * rd[6] + d[15] * rd[7];
-        let a32 = d[3] * rd[8] + d[7] * rd[9] + d[11] * rd[10] + d[15] * rd[11];
+        let a03 = d[3] * rd[0] + d[7] * rd[1] + d[11] * rd[2] + d[15] * rd[3];
+        let a13 = d[3] * rd[4] + d[7] * rd[5] + d[11] * rd[6] + d[15] * rd[7];
+        let a23 = d[3] * rd[8] + d[7] * rd[9] + d[11] * rd[10] + d[15] * rd[11];
         let a33 = d[3] * rd[12] + d[7] * rd[13] + d[11] * rd[14] + d[15] * rd[15];
 
         Self {
