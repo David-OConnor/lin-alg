@@ -1,2 +1,2 @@
 pub mod f32;
-mod f64;
+pub mod f64;

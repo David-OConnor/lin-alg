@@ -210,7 +210,7 @@ impl Vec4 {
     }
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, Default)]
 pub struct Quaternion {
     pub w: f64,
     pub x: f64,
@@ -673,6 +673,7 @@ impl Mat4 {
         Self { data }
     }
 
+    #[cfg(feature = "computer_graphics")]
     /// Creates a left-hand perspective projection matrix with 0-1 depth range.
     /// Field of view is in radians. Aspect is width / height.
     /// https://docs.rs/glam/latest/src/glam/f64/sse2/mat4.rs.html#818-830
@@ -701,9 +702,10 @@ impl Mat4 {
     // affect each other. For example, if you would first do a translation and then scale, the translation
     // vector would also scale!"
 
+    #[cfg(feature = "computer_graphics")]
     /// https://learnopengl.com/Getting-started/Transformations
     #[rustfmt::skip]
-    pub fn _new_rotation(val: Vec3) -> Self {
+    pub fn new_rotation(val: Vec3) -> Self {
         let (sin_x, cos_x) = val.x.sin_cos();
         let (sin_y, cos_y) = val.y.sin_cos();
         let (sin_z, cos_z) = val.z.sin_cos();
@@ -742,6 +744,7 @@ impl Mat4 {
     }
 
 
+    #[cfg(feature = "computer_graphics")]
     #[rustfmt::skip]
     pub fn new_scaler(scale: f64) -> Self {
         Self {
@@ -754,6 +757,7 @@ impl Mat4 {
         }
     }
 
+    #[cfg(feature = "computer_graphics")]
     #[rustfmt::skip]
     /// Create a translation matrix. Note that the matrix is 4x4, but it takes len-3 vectors -
     /// this is so we can compose it with other 4x4 matrices.
@@ -865,6 +869,7 @@ impl Mat4 {
         }
     }
 
+    #[cfg(feature = "computer_graphics")]
     pub fn to_bytes(&self) -> [u8; 16 * 4] {
         let mut result = [0; 16 * 4];
 
