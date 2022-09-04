@@ -5,11 +5,16 @@
 //! Note that this doesn't handle things like constructing a camera view matrix
 //! using up, forward, side - handle that in application code, or use a rotation matrix.
 
-use std::{
+use core::{
     f32::consts::TAU,
-    fmt,
     ops::{Add, AddAssign, Mul, MulAssign, Neg, Sub},
 };
+
+#[cfg(not(feature = "no_std"))]
+use std::fmt;
+
+#[cfg(feature = "no_std")]
+use num_traits::float::Float;
 
 const EPS: f32 = 0.0000001;
 
@@ -106,6 +111,20 @@ impl Vec3 {
             y: 0.,
             z: 0.,
         }
+    }
+
+    /// Calculates the Hadamard product (element-wise multiplication).
+    pub fn hadamard_product(self, rhs: Self) -> Self {
+        Self {
+            x: self.x * rhs.x,
+            y: self.y * rhs.y,
+            z: self.z * rhs.z,
+        }
+    }
+
+    /// Returns the vector magnitude squared
+    pub fn magnitude_squared(self) -> f32 {
+        (self.hadamard_product(self)).sum()
     }
 
     pub fn magnitude(&self) -> f32 {
@@ -940,6 +959,7 @@ impl Mul<Vec4> for Mat4 {
     }
 }
 
+#[cfg(not(feature = "no_std"))]
 impl fmt::Display for Mat4 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let d = self.data;
