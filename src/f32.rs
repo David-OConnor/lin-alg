@@ -150,6 +150,11 @@ impl Vec3 {
         self.x * rhs.x + self.y * rhs.y + self.z * rhs.z
     }
 
+    /// Returns a sum of all elements
+    pub fn sum(&self) -> f32 {
+        self.x + self.y + self.z
+    }
+
     /// Calculate the cross product.
     pub fn cross(&self, rhs: Self) -> Self {
         Self {
@@ -301,6 +306,10 @@ impl Quaternion {
         }
     }
 
+    pub fn new(w: f32, x: f32, y: f32, z: f32) -> Self {
+        Self { w, x, y, z }
+    }
+
     /// Create the quaternion that creates the shortest (great circle) rotation from vec0
     /// to vec1.
     pub fn from_unit_vecs(v0: Vec3, v1: Vec3) -> Self {
@@ -366,6 +375,19 @@ impl Quaternion {
         let yaw = siny_cosp.atan2(cosy_cosp);
 
         (roll, pitch, yaw)
+    }
+
+    /// Converts a Quaternion to ZYX Euler angles, in radians.
+    /// todo: THis is from AHR fusion. Which do you want?
+    pub fn to_euler2(self) -> EulerAngle {
+        let half_minus_qy_squared = 0.5 - self.y * self.y; // calculate common terms to avoid repeated operations
+
+        EulerAngle {
+            roll: (self.w * self.x + self.y * self.z)
+                .atan2(half_minus_qy_squared - self.x * self.x),
+            pitch: fusion_asin(2.0 * (self.w * self.y - self.z * self.x)),
+            yaw: (self.w * self.z + self.x * self.y).atan2(half_minus_qy_squared - self.z * self.z),
+        }
     }
 
     // /// Creates an orientation that point towards a vector, with a given up direction defined.
@@ -497,9 +519,9 @@ impl Quaternion {
 
 /// Euler angles.
 pub struct EulerAngle {
-    roll: f32,
-    pitch: f32,
-    yaw: f32,
+    pub roll: f32,
+    pub pitch: f32,
+    pub yaw: f32,
 }
 
 impl EulerAngle {
@@ -983,3 +1005,17 @@ pub fn det_from_cols(c0: Vec3, c1: Vec3, c2: Vec3) -> f32 {
         c1.x * c0.y * c2.z -
         c2.x * c1.y * c0.z
 }
+
+/// Returns the arc sine of the value. Presumably used as a workaround for certain cases.
+/// (pub for use in lin_alg)
+// todo: You don't want this long-term.
+fn fusion_asin(value: f32) -> f32 {
+    if value <= -1.0 {
+        return TAU / -4.0;
+    }
+    if value >= 1.0 {
+        return TAU / 4.0;
+    }
+    value.asin()
+}
+

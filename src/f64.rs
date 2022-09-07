@@ -125,7 +125,7 @@ impl Vec3 {
     }
 
     /// Returns the vector magnitude squared
-    pub fn magnitude_squared(self) -> f32 {
+    pub fn magnitude_squared(self) -> f64 {
         (self.hadamard_product(self)).sum()
     }
 
@@ -150,6 +150,11 @@ impl Vec3 {
 
     pub fn dot(&self, rhs: Self) -> f64 {
         self.x * rhs.x + self.y * rhs.y + self.z * rhs.z
+    }
+
+    /// Returns a sum of all elements
+    pub fn sum(&self) -> f64 {
+        self.x + self.y + self.z
     }
 
     /// Calculate the cross product.
@@ -303,6 +308,10 @@ impl Quaternion {
         }
     }
 
+    pub fn new(w: f64, x: f64, y: f64, z: f64) -> Self {
+        Self { w, x, y, z }
+    }
+
     /// Create the quaternion that creates the shortest (great circle) rotation from vec0
     /// to vec1.
     pub fn from_unit_vecs(v0: Vec3, v1: Vec3) -> Self {
@@ -368,6 +377,19 @@ impl Quaternion {
         let yaw = siny_cosp.atan2(cosy_cosp);
 
         (roll, pitch, yaw)
+    }
+
+    /// Converts a Quaternion to ZYX Euler angles, in radians.
+/// todo: THis is from AHR fusion. Which do you want?
+    pub fn to_euler2(self) -> EulerAngle {
+        let half_minus_qy_squared = 0.5 - self.y * self.y; // calculate common terms to avoid repeated operations
+
+        EulerAngle {
+            roll: (self.w * self.x + self.y * self.z)
+                .atan2(half_minus_qy_squared - self.x * self.x),
+            pitch: fusion_asin(2.0 * (self.w * self.y - self.z * self.x)),
+            yaw: (self.w * self.z + self.x * self.y).atan2(half_minus_qy_squared - self.z * self.z),
+        }
     }
 
     // /// Creates an orientation that point towards a vector, with a given up direction defined.
@@ -499,9 +521,9 @@ impl Quaternion {
 
 /// Euler angles.
 pub struct EulerAngle {
-    roll: f64,
-    pitch: f64,
-    yaw: f64,
+    pub roll: f64,
+    pub pitch: f64,
+    pub yaw: f64,
 }
 
 impl EulerAngle {
@@ -984,4 +1006,16 @@ pub fn det_from_cols(c0: Vec3, c1: Vec3, c2: Vec3) -> f64 {
         c0.x * c2.y * c1.z -
         c1.x * c0.y * c2.z -
         c2.x * c1.y * c0.z
+}
+
+/// Returns the arc sine of the value. Presumably used as a workaround for certain cases.
+/// (pub for use in lin_alg)
+fn fusion_asin(value: f64) -> f64 {
+    if value <= -1.0 {
+        return TAU / -4.0;
+    }
+    if value >= 1.0 {
+        return TAU / 4.0;
+    }
+    value.asin()
 }
