@@ -1,4 +1,4 @@
-//! This module is a copy+paste of `f32`
+//! This module is a copy+paste of `f64`
 
 //! Vector, matrix, and quatenrion operations on f64
 
@@ -356,14 +356,13 @@ impl Quaternion {
     /// Convert this quaternion to Euler angles.
     /// https://en.wikipedia.org/wiki/Conversion_between_quaternions_and_Euler_angles
     pub fn to_euler(&self) -> (f64, f64, f64) {
-        // roll, pitch, yaw, (x, y, z axes)
-        // roll (x-axis rotation)
+        // roll (z-axis rotation)
         let sinr_cosp = 2. * (self.w * self.x + self.y * self.z);
         let cosr_cosp = 1. - 2. * (self.x * self.x + self.y * self.y);
 
         let roll = sinr_cosp.atan2(cosr_cosp);
 
-        // pitch (y-axis rotation)
+        // pitch (x-axis rotation)
         let sinp = 2. * (self.w * self.y - self.z * self.x);
         let pitch = if sinp.abs() >= 1. {
             (TAU / 4.).copysign(sinp) // use 90 degrees if out of range
@@ -371,26 +370,26 @@ impl Quaternion {
             sinp.asin()
         };
 
-        // yaw (z-axis rotation)
+        // yaw (y-axis rotation)
         let siny_cosp = 2. * (self.w * self.z + self.x * self.y);
         let cosy_cosp = 1. - 2. * (self.y * self.y + self.z * self.z);
         let yaw = siny_cosp.atan2(cosy_cosp);
 
-        (roll, pitch, yaw)
+        (pitch, yaw, roll)
     }
 
-    /// Converts a Quaternion to ZYX Euler angles, in radians.
-/// todo: THis is from AHR fusion. Which do you want?
-    pub fn to_euler2(self) -> EulerAngle {
-        let half_minus_qy_squared = 0.5 - self.y * self.y; // calculate common terms to avoid repeated operations
-
-        EulerAngle {
-            roll: (self.w * self.x + self.y * self.z)
-                .atan2(half_minus_qy_squared - self.x * self.x),
-            pitch: fusion_asin(2.0 * (self.w * self.y - self.z * self.x)),
-            yaw: (self.w * self.z + self.x * self.y).atan2(half_minus_qy_squared - self.z * self.z),
-        }
-    }
+    // /// Converts a Quaternion to ZYX Euler angles, in radians.
+    // /// todo: THis is from AHR fusion. Which do you want?
+    // pub fn to_euler2(self) -> (f64, f64, f64) {
+    //     let half_minus_qy_squared = 0.5 - self.y * self.y; // calculate common terms to avoid repeated operations
+    //
+    //     (
+    //         (self.w * self.x + self.y * self.z)
+    //             .atan2(half_minus_qy_squared - self.x * self.x),
+    //         fusion_asin(2.0 * (self.w * self.y - self.z * self.x)),
+    //         (self.w * self.z + self.x * self.y).atan2(half_minus_qy_squared - self.z * self.z),
+    //     )
+    // }
 
     // /// Creates an orientation that point towards a vector, with a given up direction defined.
     // pub fn from_vec_direction(dir: Vec3, up: Vec3) -> Self {
@@ -515,24 +514,6 @@ impl Quaternion {
                 xy - wz, 1.0 - (xx + zz), yz + wx,
                 xz + wy, yz - wx, 1.0 - (xx + yy),
             ]
-        }
-    }
-}
-
-/// Euler angles.
-pub struct EulerAngle {
-    pub roll: f64,
-    pub pitch: f64,
-    pub yaw: f64,
-}
-
-impl EulerAngle {
-    /// Euler angles of zero.
-    pub fn zero() -> Self {
-        Self {
-            roll: 0.,
-            pitch: 0.,
-            yaw: 0.,
         }
     }
 }
@@ -1006,16 +987,4 @@ pub fn det_from_cols(c0: Vec3, c1: Vec3, c2: Vec3) -> f64 {
         c0.x * c2.y * c1.z -
         c1.x * c0.y * c2.z -
         c2.x * c1.y * c0.z
-}
-
-/// Returns the arc sine of the value. Presumably used as a workaround for certain cases.
-/// (pub for use in lin_alg)
-fn fusion_asin(value: f64) -> f64 {
-    if value <= -1.0 {
-        return TAU / -4.0;
-    }
-    if value >= 1.0 {
-        return TAU / 4.0;
-    }
-    value.asin()
 }
