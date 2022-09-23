@@ -3,8 +3,11 @@ name = "lin-alg2"
 version = "0.1.0"
 authors = ["David O'Connor <david.alan.oconnor@gmail.com>"]
 description = "Vector and quaternion operations for general purposes"
-keywords = ["linear algebra", "math", "quaternions", "graphics"]
+keywords = ["math", "vectors", "quaternions", "graphics"]
 categories = [
+    "algorithms",
+    "graphics",
+    "mathematics",
     "no-std",
 ]
 repository = "https://github.com/David-OConnor/lin-alg"
