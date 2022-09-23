@@ -1,6 +1,17 @@
 [package]
-name = "lin_alg2"
+name = "lin-alg2"
 version = "0.1.0"
+authors = ["David O'Connor <david.alan.oconnor@gmail.com>"]
+description = "Vector and quaternion operations for general purposes"
+keywords = ["linear algebra", "math", "quaternions", "graphics"]
+categories = [
+    "no-std",
+]
+repository = "https://github.com/David-OConnor/lin-alg"
+documentation = "https://docs.rs/lin-alg2"
+readme = "README.md"
+license = "MIT"
+exclude = [".gitignore"]
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
