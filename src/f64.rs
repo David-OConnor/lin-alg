@@ -1,11 +1,7 @@
 //! This module is a copy+paste of `f64`
+//!
+//! Vector, matrix, and quaternion operations on f64
 
-//! Vector, matrix, and quatenrion operations on f64
-
-//! Module for matrices, vectors, and quaternions, as used in 3d graphics. Similar to the
-//! `cgmath` and `glam` crates, but with a more transparent UI, and no dependencies.
-//! Note that this doesn't handle things like constructing a camera view matrix
-//! using up, forward, side - handle that in application code, or use a rotation matrix.
 
 use core::{
     f64::consts::TAU,
