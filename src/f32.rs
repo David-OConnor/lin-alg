@@ -469,12 +469,15 @@ impl Quaternion {
         let x2 = self.x + self.x;
         let y2 = self.y + self.y;
         let z2 = self.z + self.z;
+
         let xx = self.x * x2;
         let xy = self.x * y2;
         let xz = self.x * z2;
+
         let yy = self.y * y2;
         let yz = self.y * z2;
         let zz = self.z * z2;
+        
         let wx = self.w * x2;
         let wy = self.w * y2;
         let wz = self.w * z2;
@@ -496,12 +499,15 @@ impl Quaternion {
         let x2 = self.x + self.x;
         let y2 = self.y + self.y;
         let z2 = self.z + self.z;
+
         let xx = self.x * x2;
         let xy = self.x * y2;
         let xz = self.x * z2;
+
         let yy = self.y * y2;
         let yz = self.y * z2;
         let zz = self.z * z2;
+        
         let wx = self.w * x2;
         let wy = self.w * y2;
         let wz = self.w * z2;
@@ -701,6 +707,7 @@ impl Mat4 {
         Self { data }
     }
 
+    #[cfg(feature = "computer_graphics")]
     /// Creates a left-hand perspective projection matrix with 0-1 depth range.
     /// Field of view is in radians. Aspect is width / height.
     /// https://docs.rs/glam/latest/src/glam/f32/sse2/mat4.rs.html#818-830
