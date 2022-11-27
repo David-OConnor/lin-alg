@@ -5,7 +5,7 @@
 
 use core::{
     f64::consts::TAU,
-    ops::{Add, AddAssign, Mul, MulAssign, Neg, Sub},
+    ops::{Add, AddAssign, Mul, Div, MulAssign, Neg, Sub},
 };
 
 #[cfg(not(feature = "no_std"))]
@@ -74,6 +74,19 @@ impl Mul<f64> for Vec3 {
             x: self.x * rhs,
             y: self.y * rhs,
             z: self.z * rhs,
+        }
+    }
+}
+
+
+impl Div<f64> for Vec3 {
+    type Output = Self;
+
+    fn div(self, rhs: f64) -> Self::Output {
+        Self {
+            x: self.x / rhs,
+            y: self.y / rhs,
+            z: self.z / rhs,
         }
     }
 }
