@@ -16,7 +16,7 @@ use num_traits::float::Float;
 
 const EPS: f64 = 0.0000001;
 
-#[derive(Clone, Copy, Default, Debug)]
+#[derive(Clone, Copy, Default, Debug, PartialEq)]
 /// A len-3 column vector
 pub struct Vec3 {
     pub x: f64,
