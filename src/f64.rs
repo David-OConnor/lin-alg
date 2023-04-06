@@ -243,12 +243,18 @@ impl Vec4 {
     }
 }
 
-#[derive(Clone, Copy, Debug, Default)]
+#[derive(Clone, Copy, Debug)]
 pub struct Quaternion {
     pub w: f64,
     pub x: f64,
     pub y: f64,
     pub z: f64,
+}
+
+impl Default for Quaternion {
+    fn default() -> Self {
+        Self::new_identity()
+    }
 }
 
 impl Add<Self> for Quaternion {
