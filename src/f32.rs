@@ -4,10 +4,9 @@
 //! and aircraft attitude systems. Similar to the
 //! `cgmath` and `glam` crates, but with a more transparent API.
 
-
 use core::{
     f32::consts::TAU,
-    ops::{Add, AddAssign, Mul, Div, MulAssign, Neg, Sub},
+    ops::{Add, AddAssign, Div, Mul, MulAssign, Neg, Sub},
 };
 
 #[cfg(not(feature = "no_std"))]
@@ -392,8 +391,7 @@ impl Quaternion {
         let c = 2. * (self.w * self.y - self.z * self.x);
         let sinp = (1. + c).sqrt();
         let cosp = (1. - c).sqrt();
-        let pitch = 2. * sinp.atan2(cosp) - TAU/4.;
-
+        let pitch = 2. * sinp.atan2(cosp) - TAU / 4.;
 
         // yaw (y-axis rotation)
         let siny_cosp = 2. * (self.w * self.z + self.x * self.y);
@@ -467,6 +465,22 @@ impl Quaternion {
             y: axis.y * factor,
             z: axis.z * factor,
         }
+    }
+
+    /// Extract the axis of rotation.
+    pub fn axis(&self) -> Vec3 {
+        let denom = (1. - self.w.powi(2)).sqrt();
+
+        Vec3 {
+            x: self.x / denom,
+            y: self.y / denom,
+            z: self.z / denom,
+        }
+    }
+
+    /// Extract the axis of rotation.
+    pub fn angle(&self) -> f32 {
+        2. * self.w.acos()
     }
 
     /// Convert to a 3D vector, discarding `w`.
