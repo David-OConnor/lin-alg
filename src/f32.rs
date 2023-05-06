@@ -469,7 +469,13 @@ impl Quaternion {
 
     /// Extract the axis of rotation.
     pub fn axis(&self) -> Vec3 {
+        const EPS: f32 = 0.000001;
+
         let denom = (1. - self.w.powi(2)).sqrt();
+
+        if denom.abs() < EPS {
+            return Vec3 { x: 1., y: 0., z: 0. } // arbitrary.
+        }
 
         Vec3 {
             x: self.x / denom,
@@ -480,6 +486,12 @@ impl Quaternion {
 
     /// Extract the axis of rotation.
     pub fn angle(&self) -> f32 {
+        // Generally, this will be due to it being slightly higher than 1,
+        // but any value > 1 will return NaN from acos.
+        if self.w.abs() > 1. - EPS {
+            return 0.
+        }
+
         2. * self.w.acos()
     }
 

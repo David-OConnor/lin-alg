@@ -13,7 +13,7 @@ use std::fmt;
 #[cfg(feature = "no_std")]
 use num_traits::float::Float;
 
-const EPS: f64 = 0.0000001;
+const EPS: f64 = 0.000000001;
 
 #[derive(Clone, Copy, Default, Debug, PartialEq)]
 /// A len-3 column vector
@@ -469,6 +469,10 @@ impl Quaternion {
     pub fn axis(&self) -> Vec3 {
         let denom = (1. - self.w.powi(2)).sqrt();
 
+        if denom.abs() < EPS {
+            return Vec3 { x: 1., y: 0., z: 0. } // arbitrary.
+        }
+
         Vec3 {
             x: self.x / denom,
             y: self.y / denom,
@@ -478,6 +482,12 @@ impl Quaternion {
 
     /// Extract the axis of rotation.
     pub fn angle(&self) -> f64 {
+        // Generally, this will be due to it being slightly higher than 1,
+        // but any value > 1 will return NaN from acos.
+        if self.w.abs() > 1. - EPS {
+            return 0.
+        }
+
         2. * self.w.acos()
     }
 
