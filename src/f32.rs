@@ -469,13 +469,19 @@ impl Quaternion {
 
     /// Extract the axis of rotation.
     pub fn axis(&self) -> Vec3 {
-        const EPS: f32 = 0.000001;
+        if self.w.abs() > 1. - EPS {
+            return Vec3 {
+                x: 1.,
+                y: 0.,
+                z: 0.,
+            }; // arbitrary.
+        }
 
         let denom = (1. - self.w.powi(2)).sqrt();
 
-        if denom.abs() < EPS {
-            return Vec3 { x: 1., y: 0., z: 0. } // arbitrary.
-        }
+        // if denom.abs() < EPS {
+        //     return Vec3 { x: 1., y: 0., z: 0. } // arbitrary.
+        // }
 
         Vec3 {
             x: self.x / denom,
@@ -489,7 +495,7 @@ impl Quaternion {
         // Generally, this will be due to it being slightly higher than 1,
         // but any value > 1 will return NaN from acos.
         if self.w.abs() > 1. - EPS {
-            return 0.
+            return 0.;
         }
 
         2. * self.w.acos()
@@ -530,7 +536,6 @@ impl Quaternion {
         let yy = self.y * y2;
         let yz = self.y * z2;
         let zz = self.z * z2;
-        
         let wx = self.w * x2;
         let wy = self.w * y2;
         let wz = self.w * z2;
@@ -560,7 +565,7 @@ impl Quaternion {
         let yy = self.y * y2;
         let yz = self.y * z2;
         let zz = self.z * z2;
-        
+
         let wx = self.w * x2;
         let wy = self.w * y2;
         let wz = self.w * z2;
@@ -1026,6 +1031,33 @@ impl Mul<Vec4> for Mat4 {
                 + rhs.y * self.data[7]
                 + rhs.z * self.data[11]
                 + self.data[15] * rhs.w,
+        }
+    }
+}
+
+impl Mul<f32> for Mat4 {
+    type Output = Self;
+
+    fn mul(self, rhs: f32) -> Self::Output {
+        Self {
+            data: [
+                self.data[0] * rhs,
+                self.data[1] * rhs,
+                self.data[2] * rhs,
+                self.data[3] * rhs,
+                self.data[4] * rhs,
+                self.data[5] * rhs,
+                self.data[6] * rhs,
+                self.data[7] * rhs,
+                self.data[8] * rhs,
+                self.data[9] * rhs,
+                self.data[10] * rhs,
+                self.data[11] * rhs,
+                self.data[12] * rhs,
+                self.data[13] * rhs,
+                self.data[14] * rhs,
+                self.data[15] * rhs,
+            ],
         }
     }
 }
