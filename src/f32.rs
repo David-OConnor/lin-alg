@@ -355,10 +355,15 @@ impl Quaternion {
     /// Convert Euler angles to a quaternion.
     /// https://en.wikipedia.org/wiki/Conversion_between_quaternions_and_Euler_angles
     pub fn from_euler(euler: &EulerAngle) -> Self {
-        let cr = (euler.roll * 0.5).cos();
-        let sr = (euler.roll * 0.5).sin();
-        let cp = (euler.pitch * 0.5).cos();
-        let sp = (euler.pitch * 0.5).sin();
+        // let cr = (euler.roll * 0.5).cos();
+        // let sr = (euler.roll * 0.5).sin();
+        // let cp = (euler.pitch * 0.5).cos();
+        // let sp = (euler.pitch * 0.5).sin();
+
+        let cr = (euler.pitch * 0.5).cos();
+        let sr = (euler.pitch * 0.5).sin();
+        let cp = (euler.roll * 0.5).cos();
+        let sp = (euler.roll * 0.5).sin();
         let cy = (euler.yaw * 0.5).cos();
         let sy = (euler.yaw * 0.5).sin();
 
@@ -372,26 +377,19 @@ impl Quaternion {
 
     /// Convert this quaternion to Euler angles.
     /// https://en.wikipedia.org/wiki/Conversion_between_quaternions_and_Euler_angles
+    /// This assumes X is to the right, Y is forward, and Z is up.
+    /// (We had to modify the Wikipedia formula above)
     pub fn to_euler(&self) -> EulerAngle {
         // roll (z-axis rotation)
         let sinr_cosp = 2. * (self.w * self.x + self.y * self.z);
         let cosr_cosp = 1. - 2. * (self.x * self.x + self.y * self.y);
 
-        let roll = sinr_cosp.atan2(cosr_cosp);
+        let pitch = sinr_cosp.atan2(cosr_cosp);
 
-        // // pitch (x-axis rotation)
-        // let sinp = 2. * (self.w * self.y - self.z * self.x);
-        // let pitch = if sinp.abs() >= 1. {
-        //     (TAU / 4.).copysign(sinp) // use 90 degrees if out of range
-        // } else {
-        //     sinp.asin()
-        // };
-
-        // todo: Above, or below? Gimbal lock?
         let c = 2. * (self.w * self.y - self.z * self.x);
         let sinp = (1. + c).sqrt();
         let cosp = (1. - c).sqrt();
-        let pitch = 2. * sinp.atan2(cosp) - TAU / 4.;
+        let roll = 2. * sinp.atan2(cosp) - TAU / 4.;
 
         // yaw (y-axis rotation)
         let siny_cosp = 2. * (self.w * self.z + self.x * self.y);
@@ -400,41 +398,6 @@ impl Quaternion {
 
         EulerAngle { roll, pitch, yaw }
     }
-
-    // /// Converts a Quaternion to ZYX Euler angles, in radians.
-    // /// todo: THis is from AHR fusion. Which do you want?
-    // pub fn to_euler2(self) -> (f32, f32, f32) {
-    //     let half_minus_qy_squared = 0.5 - self.y * self.y; // calculate common terms to avoid repeated operations
-    //
-    //     (
-    //         (self.w * self.x + self.y * self.z)
-    //             .atan2(half_minus_qy_squared - self.x * self.x),
-    //         fusion_asin(2.0 * (self.w * self.y - self.z * self.x)),
-    //         (self.w * self.z + self.x * self.y).atan2(half_minus_qy_squared - self.z * self.z),
-    //     )
-    // }
-
-    // /// Creates an orientation that point towards a vector, with a given up direction defined.
-    // pub fn from_vec_direction(dir: Vec3, up: Vec3) -> Self {
-    //     let forward_vector = dir;
-    //
-    //     let forward = Vec3::new(0., 0., 1.);
-    //
-    //     let dot = forward.dot(forward_vector);
-    //
-    //     if (dot - (-1.0)).abs() < 0.000001 {
-    //         // return Self: { x:  Quaternion(Vector3.up.x, Vector3.up.y, Vector3.up.z, 3.1415926535897932f);
-    //         Self::new_identity(); // todo! adapt the above.
-    //     }
-    //     if (dot - (1.0)).abs() < 0.000001 {
-    //         return Self::new_identity();
-    //     }
-    //
-    //     let rot_angle = dot.acos();
-    //     let rot_axis = forward.cross(forward_vector).to_normalized();
-    //
-    //     Self::from_axis_angle(rot_axis, rot_angle)
-    // }
 
     pub fn inverse(self) -> Self {
         Self {
