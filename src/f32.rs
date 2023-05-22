@@ -3,6 +3,8 @@
 //! Module for matrices, vectors, and quaternions, as used in 3d graphics, geometry,
 //! and aircraft attitude systems. Similar to the
 //! `cgmath` and `glam` crates, but with a more transparent API.
+//!
+//! Quaternion operations use the Hamilton (vice JPL) convention.
 
 use core::{
     f32::consts::TAU,
@@ -352,18 +354,36 @@ impl Quaternion {
         .to_normalized()
     }
 
+    // /// Convert Euler angles to a quaternion.
+    // /// https://en.wikipedia.org/wiki/Conversion_between_quaternions_and_Euler_angles
+    // pub fn from_euler(euler: &EulerAngle) -> Self {
+    //     // let cr = (euler.roll * 0.5).cos();
+    //     // let sr = (euler.roll * 0.5).sin();
+    //     // let cp = (euler.pitch * 0.5).cos();
+    //     // let sp = (euler.pitch * 0.5).sin();
+    //
+    //     let cr = (euler.pitch * 0.5).cos();
+    //     let sr = (euler.pitch * 0.5).sin();
+    //     let cp = (euler.roll * 0.5).cos();
+    //     let sp = (euler.roll * 0.5).sin();
+    //     let cy = (euler.yaw * 0.5).cos();
+    //     let sy = (euler.yaw * 0.5).sin();
+    //
+    //     Self {
+    //         w: cr * cp * cy + sr * sp * sy,
+    //         x: sr * cp * cy - cr * sp * sy,
+    //         y: cr * sp * cy + sr * cp * sy,
+    //         z: cr * cp * sy - sr * sp * cy,
+    //     }
+    // }
+
     /// Convert Euler angles to a quaternion.
     /// https://en.wikipedia.org/wiki/Conversion_between_quaternions_and_Euler_angles
     pub fn from_euler(euler: &EulerAngle) -> Self {
-        // let cr = (euler.roll * 0.5).cos();
-        // let sr = (euler.roll * 0.5).sin();
-        // let cp = (euler.pitch * 0.5).cos();
-        // let sp = (euler.pitch * 0.5).sin();
-
-        let cr = (euler.pitch * 0.5).cos();
-        let sr = (euler.pitch * 0.5).sin();
-        let cp = (euler.roll * 0.5).cos();
-        let sp = (euler.roll * 0.5).sin();
+        let cr = (euler.roll * 0.5).cos();
+        let sr = (euler.roll * 0.5).sin();
+        let cp = (euler.pitch * 0.5).cos();
+        let sp = (euler.pitch * 0.5).sin();
         let cy = (euler.yaw * 0.5).cos();
         let sy = (euler.yaw * 0.5).sin();
 
@@ -375,21 +395,52 @@ impl Quaternion {
         }
     }
 
-    /// Convert this quaternion to Euler angles.
+    // /// Convert this quaternion to Euler angles.
+    // /// https://en.wikipedia.org/wiki/Conversion_between_quaternions_and_Euler_angles
+    // /// This assumes X is to the right, Y is forward, and Z is up.
+    // /// (We had to modify the Wikipedia formula above)
+    // pub fn to_euler(&self) -> EulerAngle {
+    //     // roll (z-axis rotation)
+    //     let sinr_cosp = 2. * (self.w * self.x + self.y * self.z);
+    //     let cosr_cosp = 1. - 2. * (self.x * self.x + self.y * self.y);
+    //
+    //     let pitch = sinr_cosp.atan2(cosr_cosp);
+    //
+    //     let c = 2. * (self.w * self.y - self.z * self.x);
+    //     let sinp = (1. + c).sqrt();
+    //     let cosp = (1. - c).sqrt();
+    //     let roll = 2. * sinp.atan2(cosp) - TAU / 4.;
+    //
+    //     // yaw (y-axis rotation)
+    //     let siny_cosp = 2. * (self.w * self.z + self.x * self.y);
+    //     let cosy_cosp = 1. - 2. * (self.y * self.y + self.z * self.z);
+    //     let yaw = siny_cosp.atan2(cosy_cosp);
+    //
+    //     EulerAngle { roll: -roll, pitch: -pitch, yaw }
+    // }
+
+        /// Convert this quaternion to Euler angles.
     /// https://en.wikipedia.org/wiki/Conversion_between_quaternions_and_Euler_angles
-    /// This assumes X is to the right, Y is forward, and Z is up.
-    /// (We had to modify the Wikipedia formula above)
     pub fn to_euler(&self) -> EulerAngle {
         // roll (z-axis rotation)
         let sinr_cosp = 2. * (self.w * self.x + self.y * self.z);
         let cosr_cosp = 1. - 2. * (self.x * self.x + self.y * self.y);
 
-        let pitch = sinr_cosp.atan2(cosr_cosp);
+        let roll = sinr_cosp.atan2(cosr_cosp);
 
+        // // pitch (x-axis rotation)
+        // let sinp = 2. * (self.w * self.y - self.z * self.x);
+        // let pitch = if sinp.abs() >= 1. {
+        //     (TAU / 4.).copysign(sinp) // use 90 degrees if out of range
+        // } else {
+        //     sinp.asin()
+        // };
+
+        // todo: Above, or below? Gimbal lock?
         let c = 2. * (self.w * self.y - self.z * self.x);
         let sinp = (1. + c).sqrt();
         let cosp = (1. - c).sqrt();
-        let roll = 2. * sinp.atan2(cosp) - TAU / 4.;
+        let pitch = 2. * sinp.atan2(cosp) - TAU / 4.;
 
         // yaw (y-axis rotation)
         let siny_cosp = 2. * (self.w * self.z + self.x * self.y);
