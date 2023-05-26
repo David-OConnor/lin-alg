@@ -8,7 +8,7 @@
 
 use core::{
     f32::consts::TAU,
-    ops::{Add, AddAssign, Div, Mul, MulAssign, Neg, Sub},
+    ops::{Add, AddAssign, SubAssign, Div, Mul, MulAssign, Neg, Sub},
 };
 
 #[cfg(not(feature = "no_std"))]
@@ -49,6 +49,14 @@ impl Add<Self> for Vec3 {
     }
 }
 
+impl AddAssign<Self> for Vec3 {
+    fn add_assign(&mut self, rhs: Self) {
+        self.x = self.x + rhs.x;
+        self.y = self.y + rhs.y;
+        self.z = self.z + rhs.z;
+    }
+}
+
 impl Sub<Self> for Vec3 {
     type Output = Self;
 
@@ -61,11 +69,11 @@ impl Sub<Self> for Vec3 {
     }
 }
 
-impl AddAssign<Self> for Vec3 {
-    fn add_assign(&mut self, rhs: Self) {
-        self.x = self.x + rhs.x;
-        self.y = self.y + rhs.y;
-        self.z = self.z + rhs.z;
+impl SubAssign<Self> for Vec3 {
+    fn sub_assign(&mut self, rhs: Self) {
+        self.x = self.x - rhs.x;
+        self.y = self.y - rhs.y;
+        self.z = self.z - rhs.z;
     }
 }
 
@@ -395,32 +403,7 @@ impl Quaternion {
         }
     }
 
-    // /// Convert this quaternion to Euler angles.
-    // /// https://en.wikipedia.org/wiki/Conversion_between_quaternions_and_Euler_angles
-    // /// This assumes X is to the right, Y is forward, and Z is up.
-    // /// (We had to modify the Wikipedia formula above)
-    // pub fn to_euler(&self) -> EulerAngle {
-    //     // roll (z-axis rotation)
-    //     let sinr_cosp = 2. * (self.w * self.x + self.y * self.z);
-    //     let cosr_cosp = 1. - 2. * (self.x * self.x + self.y * self.y);
-    //
-    //     let pitch = sinr_cosp.atan2(cosr_cosp);
-    //
-    //     let c = 2. * (self.w * self.y - self.z * self.x);
-    //     let sinp = (1. + c).sqrt();
-    //     let cosp = (1. - c).sqrt();
-    //     let roll = 2. * sinp.atan2(cosp) - TAU / 4.;
-    //
-    //     // yaw (y-axis rotation)
-    //     let siny_cosp = 2. * (self.w * self.z + self.x * self.y);
-    //     let cosy_cosp = 1. - 2. * (self.y * self.y + self.z * self.z);
-    //     let yaw = siny_cosp.atan2(cosy_cosp);
-    //
-    //     EulerAngle { roll: -roll, pitch: -pitch, yaw }
-    // }
-
-        /// Convert this quaternion to Euler angles.
-    /// https://en.wikipedia.org/wiki/Conversion_between_quaternions_and_Euler_angles
+    /// Convert this quaternion to Euler angles.
     pub fn to_euler(&self) -> EulerAngle {
         // roll (z-axis rotation)
         let sinr_cosp = 2. * (self.w * self.x + self.y * self.z);
@@ -447,7 +430,7 @@ impl Quaternion {
         let cosy_cosp = 1. - 2. * (self.y * self.y + self.z * self.z);
         let yaw = siny_cosp.atan2(cosy_cosp);
 
-        EulerAngle { roll, pitch, yaw }
+        EulerAngle { roll: -pitch, pitch: -roll, yaw }
     }
 
     pub fn inverse(self) -> Self {
@@ -462,6 +445,7 @@ impl Quaternion {
     /// Rotate a vector using this quaternion. Note that our multiplication Q * v
     /// operation is effectively quaternion multiplication, with a quaternion
     /// created by a vec with w=0.
+    /// Uses the right hand rule.
     pub fn rotate_vec(self, vec: Vec3) -> Vec3 {
         (self * vec * self.inverse()).to_vec()
     }
