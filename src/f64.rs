@@ -188,6 +188,11 @@ impl Vec3 {
         self - plane_norm * self.dot(plane_norm)
     }
 
+    /// Projects this vector onto another vector.
+    pub fn project_to_vec(self, other: Self) -> Self {
+        other * (self.dot(other) / other.magnitude_squared())
+    }
+
     #[cfg(feature = "computer_graphics")]
     /// Note that this function pads with an extra 4 bytes, IOC with the  hardware
     /// 16-byte alignment requirement. This assumes we're using this in a uniform; Vertexes
