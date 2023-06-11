@@ -282,6 +282,19 @@ impl Add<Self> for Quaternion {
     }
 }
 
+impl Sub<Self> for Quaternion {
+    type Output = Self;
+
+    fn sub(self, rhs: Self) -> Self::Output {
+        Self {
+            w: self.w - rhs.w,
+            x: self.x - rhs.x,
+            y: self.y - rhs.y,
+            z: self.z - rhs.z,
+        }
+    }
+}
+
 impl Mul<Self> for Quaternion {
     type Output = Self;
 
@@ -517,6 +530,56 @@ impl Quaternion {
     pub fn to_normalized(self) -> Self {
         let mag_recip = 1. / self.magnitude();
         self * mag_recip
+    }
+
+      /// Used by `slerp`.
+    pub fn dot(&self, rhs: Self) -> f64 {
+        self.w * rhs.w + self.x * rhs.x + self.y * rhs.y + self.z * rhs.z
+    }
+
+    /// Used as part of `slerp`.
+    /// https://github.com/bitshifter/glam-rs/blob/main/src/f32/scalar/quat.rs#L546
+    fn lerp(self, end: Self, amount: f64) -> Self {
+        let start = self;
+        let dot = start.dot(end);
+
+        let bias = if dot >= 0.0 { 1.0 } else { -1.0 };
+
+        let interpolated = start.add(end.mul(bias).sub(start).mul(amount));
+        interpolated.to_normalized()
+    }
+
+    /// Performs Spherical Linear Interpolation between this and another quaternion. A high
+    /// `amount` will make the result more towards `end`. An `amount` of 0 will result in
+    /// this quaternion.
+    /// Ref: https://github.com/bitshifter/glam-rs/blob/main/src/f32/scalar/quat.rs#L567
+    pub fn slerp(&self, mut end: Quaternion, amount: f64) -> Quaternion {
+        const DOT_THRESHOLD: f64 = 0.9995;
+
+        // Note that a rotation can be represented by two quaternions: `q` and
+        // `-q`. The slerp path between `q` and `end` will be different from the
+        // path between `-q` and `end`. One path will take the long way around and
+        // one will take the short way. In order to correct for this, the `dot`
+        // product between `self` and `end` should be positive. If the `dot`
+        // product is negative, slerp between `self` and `-end`.
+        let mut dot = self.dot(end);
+        if dot < 0.0 {
+            end = end * -1.;
+            dot = dot * -1.;
+        }
+
+        if dot > DOT_THRESHOLD {
+            // assumes lerp returns a normalized quaternion
+            self.lerp(end, amount)
+        } else {
+            let theta = dot.acos();
+
+            let scale1 = (theta * (1.0 - amount)).sin();
+            let scale2 = (theta * amount).sin();
+            let theta_sin = theta.sin();
+
+            self.mul(scale1).add(end.mul(scale2)).mul(1.0 / theta_sin)
+        }
     }
 
     /// Converts a Quaternion to a rotation matrix

@@ -285,6 +285,19 @@ impl Add<Self> for Quaternion {
     }
 }
 
+impl Sub<Self> for Quaternion {
+    type Output = Self;
+
+    fn sub(self, rhs: Self) -> Self::Output {
+        Self {
+            w: self.w - rhs.w,
+            x: self.x - rhs.x,
+            y: self.y - rhs.y,
+            z: self.z - rhs.z,
+        }
+    }
+}
+
 impl Mul<Self> for Quaternion {
     type Output = Self;
 
@@ -541,20 +554,7 @@ impl Quaternion {
 
         let bias = if dot >= 0.0 { 1.0 } else { -1.0 };
 
-        // todo: QC this A/R.
-        let a = end * bias;
-        let b = Self {
-            w: a.w - start.w,
-            x: a.x - start.x,
-            y: a.y - start.y,
-            z: a.z - start.z,
-        };
-
-        let c = b * amount;
-        let interpolated = start + c;
-
-        // let interpolated = start.add(end.mul(bias).sub(start).mul(amount));
-
+        let interpolated = start.add(end.mul(bias).sub(start).mul(amount));
         interpolated.to_normalized()
     }
 
@@ -581,7 +581,7 @@ impl Quaternion {
             // assumes lerp returns a normalized quaternion
             self.lerp(end, amount)
         } else {
-            let theta = dot.cos();
+            let theta = dot.acos();
 
             let scale1 = (theta * (1.0 - amount)).sin();
             let scale2 = (theta * amount).sin();
