@@ -8,7 +8,7 @@
 
 use core::{
     f32::consts::TAU,
-    ops::{Add, AddAssign, SubAssign, Div, Mul, MulAssign, Neg, Sub},
+    ops::{Add, AddAssign, Div, Mul, MulAssign, Neg, Sub, SubAssign},
 };
 
 #[cfg(not(feature = "no_std"))]
@@ -435,7 +435,11 @@ impl Quaternion {
         let cosy_cosp = 1. - 2. * (self.y * self.y + self.z * self.z);
         let yaw = siny_cosp.atan2(cosy_cosp);
 
-        EulerAngle { roll: -pitch, pitch: -roll, yaw }
+        EulerAngle {
+            roll: -pitch,
+            pitch: -roll,
+            yaw,
+        }
     }
 
     pub fn inverse(self) -> Self {
@@ -522,6 +526,66 @@ impl Quaternion {
     pub fn to_normalized(self) -> Self {
         let mag_recip = 1. / self.magnitude();
         self * mag_recip
+    }
+
+    /// Used by `slerp`.
+    pub fn dot(&self, rhs: Self) -> f32 {
+        self.w * rhs.w + self.x * rhs.x + self.y * rhs.y + self.z * rhs.z
+    }
+
+    /// Used as part of `slerp`.
+    /// https://github.com/bitshifter/glam-rs/blob/main/src/f32/scalar/quat.rs#L546
+    fn lerp(self, end: Self, amount: f32) -> Self {
+        let start = self;
+        let dot = start.dot(end);
+
+        let bias = if dot >= 0.0 { 1.0 } else { -1.0 };
+
+        // todo: QC this A/R.
+        let a = end * bias;
+        let b = Self {
+            w: a.w - start.w,
+            x: a.x - start.x,
+            y: a.y - start.y,
+            z: a.z - start.z,
+        };
+        let interpolated = b * amount;
+        // let interpolated = start.add(end.mul(bias).sub(start).mul(amount));
+
+        interpolated.to_normalized()
+    }
+
+    /// Performs Spherical Linear Interpolation between this and another quaternion. A high
+    /// `amount` will make the result more towards `end`. An `amount` of 0 will result in
+    /// this quaternion.
+    /// Ref: https://github.com/bitshifter/glam-rs/blob/main/src/f32/scalar/quat.rs#L567
+    pub fn slerp(&self, mut end: Quaternion, amount: f32) -> Quaternion {
+        const DOT_THRESHOLD: f32 = 0.9995;
+
+        // Note that a rotation can be represented by two quaternions: `q` and
+        // `-q`. The slerp path between `q` and `end` will be different from the
+        // path between `-q` and `end`. One path will take the long way around and
+        // one will take the short way. In order to correct for this, the `dot`
+        // product between `self` and `end` should be positive. If the `dot`
+        // product is negative, slerp between `self` and `-end`.
+        let mut dot = self.dot(end);
+        if dot < 0.0 {
+            end = end * -1.;
+            dot = dot * -1.;
+        }
+
+        if dot > DOT_THRESHOLD {
+            // assumes lerp returns a normalized quaternion
+            self.lerp(end, amount)
+        } else {
+            let theta = dot.cos();
+
+            let scale1 = (theta * (1.0 - amount)).sin();
+            let scale2 = (theta * amount).sin();
+            let theta_sin = theta.sin();
+
+            self.mul(scale1).add(end.mul(scale2)).mul(1.0 / theta_sin)
+        }
     }
 
     /// Converts a Quaternion to a rotation matrix

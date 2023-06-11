@@ -5,7 +5,7 @@
 
 use core::{
     f64::consts::TAU,
-    ops::{Add, AddAssign, SubAssign, Div, Mul, MulAssign, Neg, Sub},
+    ops::{Add, AddAssign, Div, Mul, MulAssign, Neg, Sub, SubAssign},
 };
 
 #[cfg(not(feature = "no_std"))]
@@ -382,7 +382,7 @@ impl Quaternion {
     //     }
     // }
 
-        /// Convert Euler angles to a quaternion.
+    /// Convert Euler angles to a quaternion.
     /// https://en.wikipedia.org/wiki/Conversion_between_quaternions_and_Euler_angles
     pub fn from_euler(euler: &EulerAngle) -> Self {
         let cr = (euler.roll * 0.5).cos();
@@ -426,7 +426,11 @@ impl Quaternion {
         let cosy_cosp = 1. - 2. * (self.y * self.y + self.z * self.z);
         let yaw = siny_cosp.atan2(cosy_cosp);
 
-        EulerAngle { roll: -pitch, pitch: -roll, yaw }
+        EulerAngle {
+            roll: -pitch,
+            pitch: -roll,
+            yaw,
+        }
     }
 
     pub fn inverse(self) -> Self {
