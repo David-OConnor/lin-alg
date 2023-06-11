@@ -549,7 +549,10 @@ impl Quaternion {
             y: a.y - start.y,
             z: a.z - start.z,
         };
-        let interpolated = b * amount;
+
+        let c = b * amount;
+        let interpolated = start + c;
+
         // let interpolated = start.add(end.mul(bias).sub(start).mul(amount));
 
         interpolated.to_normalized()
