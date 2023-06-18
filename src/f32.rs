@@ -19,6 +19,22 @@ use num_traits::float::Float;
 
 const EPS: f32 = 0.0000001;
 
+pub const UP: Vec3 = Vec3 {
+    x: 0.,
+    y: 0.,
+    z: 1.,
+};
+pub const FORWARD: Vec3 = Vec3 {
+    x: 0.,
+    y: 1.,
+    z: 0.,
+};
+pub const RIGHT: Vec3 = Vec3 {
+    x: 1.,
+    y: 0.,
+    z: 0.,
+};
+
 #[derive(Clone, Copy, Default, Debug, PartialEq)]
 /// A len-3 column vector
 pub struct Vec3 {
@@ -519,6 +535,23 @@ impl Quaternion {
         }
 
         2. * self.w.acos()
+    }
+
+    /// Convert an attitude to rotations around individual axes.
+    /// Assumes X is left, Z is up, and Y is forward.
+    pub fn to_axes(&self) -> (f32, f32, f32) {
+        let axis = self.axis();
+        let angle = self.angle();
+
+        let sign_x = -axis.x.signum();
+        let sign_y = -axis.y.signum();
+        let sign_z = -axis.z.signum();
+
+        let x_component = (axis.project_to_vec(RIGHT) * angle).magnitude() * sign_x;
+        let y_component = (axis.project_to_vec(FORWARD) * angle).magnitude() * sign_y;
+        let z_component = (axis.project_to_vec(UP) * angle).magnitude() * sign_z;
+
+        (x_component, y_component, z_component)
     }
 
     /// Convert to a 3D vector, discarding `w`.
@@ -1136,10 +1169,10 @@ impl Mul<f32> for Mat4 {
 impl fmt::Display for Mat4 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let d = self.data;
-        write!(f, "\n|{:.2} {:.2} {:.2} {:.2}|\n", d[0], d[4], d[8], d[12])?;
-        write!(f, "|{:.2} {:.2} {:.2} {:.2}|\n", d[1], d[5], d[9], d[13])?;
-        write!(f, "|{:.2} {:.2} {:.2} {:.2}|\n", d[2], d[6], d[10], d[14])?;
-        write!(f, "|{:.2} {:.2} {:.2} {:.2}|\n", d[3], d[7], d[11], d[15])?;
+        writeln!(f, "\n|{:.2} {:.2} {:.2} {:.2}|", d[0], d[4], d[8], d[12])?;
+        writeln!(f, "|{:.2} {:.2} {:.2} {:.2}|", d[1], d[5], d[9], d[13])?;
+        writeln!(f, "|{:.2} {:.2} {:.2} {:.2}|", d[2], d[6], d[10], d[14])?;
+        writeln!(f, "|{:.2} {:.2} {:.2} {:.2}|", d[3], d[7], d[11], d[15])?;
 
         Ok(())
     }
