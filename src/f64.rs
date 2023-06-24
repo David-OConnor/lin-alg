@@ -135,7 +135,7 @@ impl MulAssign<f64> for Vec3 {
 }
 
 impl Vec3 {
-    pub fn new(x: f64, y: f64, z: f64) -> Self {
+    pub const fn new(x: f64, y: f64, z: f64) -> Self {
         Self { x, y, z }
     }
 
@@ -371,7 +371,7 @@ impl Quaternion {
     /// Create the quaternion that creates the shortest (great circle) rotation from vec0
     /// to vec1.
     pub fn from_unit_vecs(v0: Vec3, v1: Vec3) -> Self {
-        const ONE_MINUS_EPS: f64 = 1.0 - 2.0 * EPS;
+        const ONE_MINUS_EPS: f64 = 1.0 - EPS;
 
         let dot = v0.dot(v1);
         if dot > ONE_MINUS_EPS {
