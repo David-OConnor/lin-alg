@@ -799,6 +799,50 @@ impl Mul<Vec3> for Mat3 {
     }
 }
 
+impl Mul<f64> for Mat3 {
+    type Output = Self;
+
+    fn mul(self, rhs: f64) -> Self::Output {
+        let d = self.data; // code shortener.
+        Self {
+            data: [
+                d[0] * rhs,
+                d[1] * rhs,
+                d[2] * rhs,
+                d[3] * rhs,
+                d[4] * rhs,
+                d[5] * rhs,
+                d[6] * rhs,
+                d[7] * rhs,
+                d[8] * rhs,
+            ],
+        }
+    }
+}
+
+impl Add<Self> for Mat3 {
+    type Output = Self;
+
+    fn add(self, rhs: Self) -> Self::Output {
+        let d = self.data; // code shortener.
+        let rd = rhs.data;
+
+        Self {
+            data: [
+                d[0] + rd[0],
+                d[1] + rd[1],
+                d[2] + rd[2],
+                d[3] + rd[3],
+                d[4] + rd[4],
+                d[5] + rd[5],
+                d[6] + rd[6],
+                d[7] + rd[7],
+                d[8] + rd[8],
+            ],
+        }
+    }
+}
+
 #[derive(Clone, Debug)]
 /// A 4x4 matrix. Data and operations are column-major.
 pub struct Mat4 {
