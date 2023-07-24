@@ -13,6 +13,8 @@
 macro_rules! create {
     ($f:ident) => {
 
+// Macro start
+
 use core::{
     $f::consts::TAU,
     ops::{Add, AddAssign, Div, Mul, MulAssign, Neg, Sub, SubAssign},
@@ -24,7 +26,7 @@ use std::fmt;
 #[cfg(feature = "no_std")]
 use num_traits::float::Float;
 
-const EPS: $f = 0.0000001;
+const EPS: $f = 0.00000000001;
 
 pub const UP: Vec3 = Vec3 {
     x: 0.,
@@ -1242,7 +1244,7 @@ pub fn det_from_cols(c0: Vec3, c1: Vec3, c2: Vec3) -> $f {
         c2.x * c1.y * c0.z
 }
 
-
+// Macro end
     }
 }
 
