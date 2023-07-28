@@ -366,6 +366,14 @@ impl Mul<$f> for Quaternion {
     }
 }
 
+impl Div<Self> for Quaternion {
+    type Output = Self;
+
+    fn div(self, rhs: Self) -> Self::Output {
+        self * rhs.inverse()
+    }
+}
+
 impl Quaternion {
     pub fn new_identity() -> Self {
         Self {
