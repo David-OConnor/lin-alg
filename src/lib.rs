@@ -469,7 +469,7 @@ macro_rules! create {
                 let yaw = (x * y + w * z).atan2(0.5 - (y * y + z * z));
                 let pitch = -(xz / (0.25 - xz * xz).sqrt()).atan();
 
-                const YPR_GIMBAL_LOCK: $f = 0.01;
+                const YPR_GIMBAL_LOCK: $f = 100.; // todo: Currently always uses logic A.
 
                 let roll = if (xz.abs()) < YPR_GIMBAL_LOCK {
                     y * z + w * x.atan2(0.5 - (x * x + y * y))
