@@ -43,6 +43,27 @@ macro_rules! create {
             z: 0.,
         };
 
+        #[derive(Default, Clone, Copy)]
+        pub struct Vec2 {
+            pub x: $f,
+            pub y: $f,
+        }
+
+        impl Vec2 {
+            pub fn new(x: $f, y: $f) -> Self {
+                Self { x, y }
+            }
+
+            pub fn magnitude(&self) -> $f {
+                (self.x.powi(2) + self.y.powi(2)).sqrt()
+            }
+
+            /// Radians, CW from north.
+            pub fn track(&self) -> $f {
+                self.x.atan2(self.y)
+            }
+        }
+
         #[derive(Clone, Copy, Default, Debug, PartialEq)]
         /// A len-3 column vector
         pub struct Vec3 {
