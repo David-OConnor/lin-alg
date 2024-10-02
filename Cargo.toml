@@ -1,6 +1,6 @@
 [package]
 name = "lin-alg2"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["David O'Connor <david.alan.oconnor@gmail.com>"]
 description = "Vector and quaternion operations for general purposes"
 keywords = ["math", "vectors", "quaternions", "graphics"]
