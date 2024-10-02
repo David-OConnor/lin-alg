@@ -18,7 +18,6 @@ macro_rules! create {
             ops::{Add, AddAssign, Div, Mul, MulAssign, Neg, Sub, SubAssign},
             $f::consts::TAU,
         };
-
         #[cfg(not(feature = "no_std"))]
         use std::fmt;
 
@@ -660,62 +659,62 @@ macro_rules! create {
             }
 
             /// Converts a Quaternion to a rotation matrix
-                    #[rustfmt::skip]
+                            #[rustfmt::skip]
             pub fn to_matrix(&self) -> Mat4 {
-                        // https://docs.rs/glam/latest/src/glam/$f/mat3.rs.html#159-180
-                        let x2 = self.x + self.x;
-                        let y2 = self.y + self.y;
-                        let z2 = self.z + self.z;
+                                // https://docs.rs/glam/latest/src/glam/$f/mat3.rs.html#159-180
+                                let x2 = self.x + self.x;
+                                let y2 = self.y + self.y;
+                                let z2 = self.z + self.z;
 
-                        let xx = self.x * x2;
-                        let xy = self.x * y2;
-                        let xz = self.x * z2;
+                                let xx = self.x * x2;
+                                let xy = self.x * y2;
+                                let xz = self.x * z2;
 
-                        let yy = self.y * y2;
-                        let yz = self.y * z2;
-                        let zz = self.z * z2;
-                        let wx = self.w * x2;
-                        let wy = self.w * y2;
-                        let wz = self.w * z2;
+                                let yy = self.y * y2;
+                                let yz = self.y * z2;
+                                let zz = self.z * z2;
+                                let wx = self.w * x2;
+                                let wy = self.w * y2;
+                                let wz = self.w * z2;
 
-                        Mat4 {
-                            data: [
-                                1.0 - (yy + zz), xy + wz, xz - wy, 0.,
-                                xy - wz, 1.0 - (xx + zz), yz + wx, 0.,
-                                xz + wy, yz - wx, 1.0 - (xx + yy), 0.,
-                                0., 0., 0., 1.,
-                            ]
-                        }
-                    }
+                                Mat4 {
+                                    data: [
+                                        1.0 - (yy + zz), xy + wz, xz - wy, 0.,
+                                        xy - wz, 1.0 - (xx + zz), yz + wx, 0.,
+                                        xz + wy, yz - wx, 1.0 - (xx + yy), 0.,
+                                        0., 0., 0., 1.,
+                                    ]
+                                }
+                            }
 
             /// Converts a Quaternion to a rotation matrix
-                    #[rustfmt::skip]
+                            #[rustfmt::skip]
             pub fn to_matrix3(&self) -> Mat3 {
-                        // https://docs.rs/glam/latest/src/glam/$f/mat3.rs.html#159-180
-                        let x2 = self.x + self.x;
-                        let y2 = self.y + self.y;
-                        let z2 = self.z + self.z;
+                                // https://docs.rs/glam/latest/src/glam/$f/mat3.rs.html#159-180
+                                let x2 = self.x + self.x;
+                                let y2 = self.y + self.y;
+                                let z2 = self.z + self.z;
 
-                        let xx = self.x * x2;
-                        let xy = self.x * y2;
-                        let xz = self.x * z2;
+                                let xx = self.x * x2;
+                                let xy = self.x * y2;
+                                let xz = self.x * z2;
 
-                        let yy = self.y * y2;
-                        let yz = self.y * z2;
-                        let zz = self.z * z2;
+                                let yy = self.y * y2;
+                                let yz = self.y * z2;
+                                let zz = self.z * z2;
 
-                        let wx = self.w * x2;
-                        let wy = self.w * y2;
-                        let wz = self.w * z2;
+                                let wx = self.w * x2;
+                                let wy = self.w * y2;
+                                let wz = self.w * z2;
 
-                        Mat3{
-                            data: [
-                                1.0 - (yy + zz), xy + wz, xz - wy,
-                                xy - wz, 1.0 - (xx + zz), yz + wx,
-                                xz + wy, yz - wx, 1.0 - (xx + yy),
-                            ]
-                        }
-                    }
+                                Mat3{
+                                    data: [
+                                        1.0 - (yy + zz), xy + wz, xz - wy,
+                                        xy - wz, 1.0 - (xx + zz), yz + wx,
+                                        xz + wy, yz - wx, 1.0 - (xx + yy),
+                                    ]
+                                }
+                            }
         }
 
         #[derive(Clone, Debug)]
@@ -736,27 +735,27 @@ macro_rules! create {
         impl From<[[$f; 3]; 3]> for Mat3 {
             #[rustfmt::skip]
             fn from(m: [[$f; 3]; 3]) -> Self {
-                    Self {
-                    data: [
-                    m[0][0], m[0][1], m[0][2],
-                    m[1][0], m[1][1], m[1][2],
-                    m[2][0], m[2][1], m[2][2],
-                    ]
-                    }
-                    }
+                            Self {
+                            data: [
+                            m[0][0], m[0][1], m[0][2],
+                            m[1][0], m[1][1], m[1][2],
+                            m[2][0], m[2][1], m[2][2],
+                            ]
+                            }
+                            }
         }
 
         // todo: temp?
         impl From<Mat3> for [[$f; 3]; 3] {
             #[rustfmt::skip]
             fn from(m: Mat3) -> Self {
-                    let d = m.data;
-                    [
-                    [d[0], d[1], d[2]],
-                    [d[3], d[4], d[5]],
-                    [d[6], d[7], d[8]]
-                    ]
-                    }
+                            let d = m.data;
+                            [
+                            [d[0], d[1], d[2]],
+                            [d[3], d[4], d[5]],
+                            [d[6], d[7], d[8]]
+                            ]
+                            }
         }
 
         impl Mat3 {
@@ -765,39 +764,39 @@ macro_rules! create {
             }
 
             /// Create a matrix from column vectors
-                    #[rustfmt::skip]
+                            #[rustfmt::skip]
             pub fn from_cols(x: Vec3, y: Vec3, z: Vec3) -> Self {
-                    Self::new([
-                    x.x, x.y, x.z,
-                    y.x, y.y, y.z,
-                    z.x, z.y, z.z
-                    ])
-                    }
+                            Self::new([
+                            x.x, x.y, x.z,
+                            y.x, y.y, y.z,
+                            z.x, z.y, z.z
+                            ])
+                            }
 
 
-                    #[rustfmt::skip]
+                            #[rustfmt::skip]
             /// Calculate the matrix's determinant.
             pub fn determinant(&self) -> $f {
-                    let d = self.data; // code shortener.
+                            let d = self.data; // code shortener.
 
-                    d[0] * d[4] * d[8] +
-                    d[3] * d[7] * d[2] +
-                    d[6] * d[1] * d[5] -
-                    d[0] * d[7] * d[5] -
-                    d[3] * d[1] * d[8] -
-                    d[6] * d[4] * d[2]
-                    }
+                            d[0] * d[4] * d[8] +
+                            d[3] * d[7] * d[2] +
+                            d[6] * d[1] * d[5] -
+                            d[0] * d[7] * d[5] -
+                            d[3] * d[1] * d[8] -
+                            d[6] * d[4] * d[2]
+                            }
 
-                    #[rustfmt::skip]
+                            #[rustfmt::skip]
             pub fn new_identity() -> Self {
-                    Self {
-                    data: [
-                    1., 0., 0.,
-                    0., 1., 0.,
-                    0., 0., 1.,
-                    ]
-                    }
-                    }
+                            Self {
+                            data: [
+                            1., 0., 0.,
+                            0., 1., 0.,
+                            0., 0., 1.,
+                            ]
+                            }
+                            }
 
             #[cfg(feature = "computer_graphics")]
             pub fn to_bytes(&self) -> [u8; 9 * 4] {
@@ -903,29 +902,29 @@ macro_rules! create {
         impl From<[[$f; 4]; 4]> for Mat4 {
             #[rustfmt::skip]
             fn from(m: [[$f; 4]; 4]) -> Self {
-                    Self {
-                    data: [
-                    m[0][0], m[0][1], m[0][2], m[0][3],
-                    m[1][0], m[1][1], m[1][2], m[0][3],
-                    m[2][0], m[2][1], m[2][2], m[0][3],
-                    m[3][0], m[3][1], m[3][2], m[3][3],
-                    ]
-                    }
-                    }
+                            Self {
+                            data: [
+                            m[0][0], m[0][1], m[0][2], m[0][3],
+                            m[1][0], m[1][1], m[1][2], m[0][3],
+                            m[2][0], m[2][1], m[2][2], m[0][3],
+                            m[3][0], m[3][1], m[3][2], m[3][3],
+                            ]
+                            }
+                            }
         }
 
         // todo temp?
         impl From<Mat4> for [[$f; 4]; 4] {
             #[rustfmt::skip]
             fn from(m: Mat4) -> Self {
-                    let d = m.data;
-                    [
-                    [d[0], d[1], d[2], d[3]],
-                    [d[4], d[5], d[6], d[7]],
-                    [d[8], d[9], d[10], d[11]],
-                    [d[12], d[13], d[14], d[15]],
-                    ]
-                    }
+                            let d = m.data;
+                            [
+                            [d[0], d[1], d[2], d[3]],
+                            [d[4], d[5], d[6], d[7]],
+                            [d[8], d[9], d[10], d[11]],
+                            [d[12], d[13], d[14], d[15]],
+                            ]
+                            }
         }
 
         // todo: DRY. Call above instead?
@@ -933,14 +932,14 @@ macro_rules! create {
         impl From<&Mat4> for [[$f; 4]; 4] {
             #[rustfmt::skip]
             fn from(m: &Mat4) -> Self {
-                    let d = m.data;
-                    [
-                    [d[0], d[1], d[2], d[3]],
-                    [d[4], d[5], d[6], d[7]],
-                    [d[8], d[9], d[10], d[11]],
-                    [d[12], d[13], d[14], d[15]],
-                    ]
-                    }
+                            let d = m.data;
+                            [
+                            [d[0], d[1], d[2], d[3]],
+                            [d[4], d[5], d[6], d[7]],
+                            [d[8], d[9], d[10], d[11]],
+                            [d[12], d[13], d[14], d[15]],
+                            ]
+                            }
         }
 
         impl Mat4 {
@@ -948,26 +947,26 @@ macro_rules! create {
                 Self { data }
             }
 
-                    #[cfg(feature = "computer_graphics")]
+                            #[cfg(feature = "computer_graphics")]
             /// Creates a left-hand perspective projection matrix with 0-1 depth range.
             /// Field of view is in radians. Aspect is width / height.
             /// https://docs.rs/glam/latest/src/glam/$f/sse2/mat4.rs.html#818-830
-                    #[rustfmt::skip]
+                            #[rustfmt::skip]
             pub fn new_perspective_lh(fov_y: $f, aspect_ratio: $f, z_near: $f, z_far: $f) -> Self {
-                    let (sin_fov, cos_fov) = (0.5 * fov_y).sin_cos();
-                    let h = cos_fov / sin_fov;
-                    let w = h / aspect_ratio;
-                    let r = z_far / (z_far - z_near);
+                            let (sin_fov, cos_fov) = (0.5 * fov_y).sin_cos();
+                            let h = cos_fov / sin_fov;
+                            let w = h / aspect_ratio;
+                            let r = z_far / (z_far - z_near);
 
-                    Self {
-                    data: [
-                    w, 0., 0., 0.,
-                    0., h, 0., 0.,
-                    0., 0., r, 1.,
-                    0., 0., -r * z_near, 0.
-                    ]
-                    }
-                    }
+                            Self {
+                            data: [
+                            w, 0., 0., 0.,
+                            0., h, 0., 0.,
+                            0., 0., r, 1.,
+                            0., 0., -r * z_near, 0.
+                            ]
+                            }
+                            }
 
             // "Note that we first do a translation and then a scale transformation when multiplying matrices.
             // Matrix multiplication is not commutative, which means their order is important. When
@@ -977,116 +976,116 @@ macro_rules! create {
             // affect each other. For example, if you would first do a translation and then scale, the translation
             // vector would also scale!"
 
-                    #[cfg(feature = "computer_graphics")]
+                            #[cfg(feature = "computer_graphics")]
             /// https://learnopengl.com/Getting-started/Transformations
-                    #[rustfmt::skip]
+                            #[rustfmt::skip]
             pub fn new_rotation(val: Vec3) -> Self {
-                    let (sin_x, cos_x) = val.x.sin_cos();
-                    let (sin_y, cos_y) = val.y.sin_cos();
-                    let (sin_z, cos_z) = val.z.sin_cos();
+                            let (sin_x, cos_x) = val.x.sin_cos();
+                            let (sin_y, cos_y) = val.y.sin_cos();
+                            let (sin_z, cos_z) = val.z.sin_cos();
 
-                    let rot_x = Self {
-                    data: [
-                    1., 0., 0., 0.,
-                    0., cos_x, sin_x, 0.,
-                    0., -sin_x, cos_x, 0.,
-                    0., 0., 0., 1.
-                    ]
-                    };
+                            let rot_x = Self {
+                            data: [
+                            1., 0., 0., 0.,
+                            0., cos_x, sin_x, 0.,
+                            0., -sin_x, cos_x, 0.,
+                            0., 0., 0., 1.
+                            ]
+                            };
 
-                    let rot_y = Self {
-                    data: [
-                    cos_y, 0., -sin_y, 0.,
-                    0., 1., 0., 0.,
-                    sin_y, 0., cos_y, 0.,
-                    0., 0., 0., 1.
-                    ]
-                    };
+                            let rot_y = Self {
+                            data: [
+                            cos_y, 0., -sin_y, 0.,
+                            0., 1., 0., 0.,
+                            sin_y, 0., cos_y, 0.,
+                            0., 0., 0., 1.
+                            ]
+                            };
 
-                    let rot_z = Self {
-                    data: [
-                    cos_z, sin_z, 0., 0.,
-                    -sin_z, cos_z, 0., 0.,
-                    0., 0., 1., 0.,
-                    0., 0., 0., 1.
-                    ]
-                    };
+                            let rot_z = Self {
+                            data: [
+                            cos_z, sin_z, 0., 0.,
+                            -sin_z, cos_z, 0., 0.,
+                            0., 0., 1., 0.,
+                            0., 0., 0., 1.
+                            ]
+                            };
 
-                    // todo: What order to apply these three ?
-                    // todo: TO avoid gimbal lock, consider rotating aroudn an arbitrary unit axis immediately.
+                            // todo: What order to apply these three ?
+                            // todo: TO avoid gimbal lock, consider rotating aroudn an arbitrary unit axis immediately.
 
-                    rot_x * rot_y * rot_z
-                    }
+                            rot_x * rot_y * rot_z
+                            }
 
 
-                    #[cfg(feature = "computer_graphics")]
-                    #[rustfmt::skip]
+                            #[cfg(feature = "computer_graphics")]
+                            #[rustfmt::skip]
             pub fn new_scaler(scale: $f) -> Self {
-                    Self {
-                    data: [
-                    scale, 0., 0., 0.,
-                    0., scale, 0., 0.,
-                    0., 0., scale, 0.,
-                    0., 0., 0., 1.,
-                    ]
-                    }
-                    }
+                            Self {
+                            data: [
+                            scale, 0., 0., 0.,
+                            0., scale, 0., 0.,
+                            0., 0., scale, 0.,
+                            0., 0., 0., 1.,
+                            ]
+                            }
+                            }
 
-                    #[cfg(feature = "computer_graphics")]
-                    #[rustfmt::skip]
+                            #[cfg(feature = "computer_graphics")]
+                            #[rustfmt::skip]
             /// Create a translation matrix. Note that the matrix is 4x4, but it takes len-3 vectors -
             /// this is so we can compose it with other 4x4 matrices.
             pub fn new_translation(val: Vec3) -> Self {
-                    Self {
-                    data: [
-                    1., 0., 0., 0.,
-                    0., 1., 0., 0.,
-                    0., 0., 1., 0.,
-                    val.x, val.y, val.z, 1.
-                    ]
-                    }
-                    }
+                            Self {
+                            data: [
+                            1., 0., 0., 0.,
+                            0., 1., 0., 0.,
+                            0., 0., 1., 0.,
+                            val.x, val.y, val.z, 1.
+                            ]
+                            }
+                            }
 
-                    #[rustfmt::skip]
+                            #[rustfmt::skip]
             pub fn new_identity() -> Self {
-                    Self {
-                    data: [
-                    1., 0., 0., 0.,
-                    0., 1., 0., 0.,
-                    0., 0., 1., 0.,
-                    0., 0., 0., 1.,
-                    ]
-                    }
-                    }
+                            Self {
+                            data: [
+                            1., 0., 0., 0.,
+                            0., 1., 0., 0.,
+                            0., 0., 1., 0.,
+                            0., 0., 0., 1.,
+                            ]
+                            }
+                            }
 
-                    #[rustfmt::skip]
+                            #[rustfmt::skip]
             /// Calculate the matrix's determinant.
             pub fn determinant(&self) -> $f {
-                    let d = self.data; // code shortener.
+                            let d = self.data; // code shortener.
 
-                    d[0] * d[5] * d[10] * d[15] +
-                    d[4] * d[9] * d[14] * d[3] +
-                    d[8] * d[13] * d[2] * d[7] +
-                    d[12] * d[1] * d[6] * d[11] -
-                    d[0] * d[13] * d[10] * d[7] -
-                    d[4] * d[1] * d[14] * d[11] -
-                    d[8] * d[5] * d[2] * d[15] -
-                    d[12] * d[9] * d[6] * d[3]
-                    }
+                            d[0] * d[5] * d[10] * d[15] +
+                            d[4] * d[9] * d[14] * d[3] +
+                            d[8] * d[13] * d[2] * d[7] +
+                            d[12] * d[1] * d[6] * d[11] -
+                            d[0] * d[13] * d[10] * d[7] -
+                            d[4] * d[1] * d[14] * d[11] -
+                            d[8] * d[5] * d[2] * d[15] -
+                            d[12] * d[9] * d[6] * d[3]
+                            }
 
             /// Transpose the matrix
-                    #[rustfmt::skip]
+                            #[rustfmt::skip]
             pub fn transpose(&self) -> Self {
-                    let d = self.data; // code shortener.
-                    Self {
-                    data: [
-                    d[0], d[4], d[8], d[12],
-                    d[1], d[5], d[9], d[13],
-                    d[2], d[6], d[10], d[14],
-                    d[3], d[7], d[11], d[15]
-                    ]
-                    }
-                    }
+                            let d = self.data; // code shortener.
+                            Self {
+                            data: [
+                            d[0], d[4], d[8], d[12],
+                            d[1], d[5], d[9], d[13],
+                            d[2], d[6], d[10], d[14],
+                            d[3], d[7], d[11], d[15]
+                            ]
+                            }
+                            }
 
             /// Returns cols: x, y, z, w
             pub fn to_cols(&self) -> (Vec4, Vec4, Vec4, Vec4) {
@@ -1100,49 +1099,49 @@ macro_rules! create {
             }
 
             /// See cgmath's impl.
-                    #[rustfmt::skip]
+                            #[rustfmt::skip]
             pub fn inverse(&self) -> Option<Self> {
-                    let det = self.determinant();
-                    if det == 0. {
-                    None
-                    } else {
-                    let inv_det = 1. / det;
-                    let t = self.transpose();
-                    let (t_x, t_y, t_z, t_w) = t.to_cols();
+                            let det = self.determinant();
+                            if det == 0. {
+                            None
+                            } else {
+                            let inv_det = 1. / det;
+                            let t = self.transpose();
+                            let (t_x, t_y, t_z, t_w) = t.to_cols();
 
-                    // todo!!
-                    let cf = |i, j| {
-                    let mat = match i {
-                    0 => {
-                    Mat3::from_cols(t_y.truncate_n(j), t_z.truncate_n(j), t_w.truncate_n(j))
-                    }
-                    1 => {
-                    Mat3::from_cols(t_x.truncate_n(j), t_z.truncate_n(j), t_w.truncate_n(j))
-                    }
-                    2 => {
-                    Mat3::from_cols(t_x.truncate_n(j), t_y.truncate_n(j), t_w.truncate_n(j))
-                    }
-                    3 => {
-                    Mat3::from_cols(t_x.truncate_n(j), t_y.truncate_n(j), t_z.truncate_n(j))
-                    }
-                    _ => panic!("out of range"),
-                    };
-                    let sign = if (i + j) & 1 == 1 {
-                    -1.
-                    } else {
-                    1.
-                    };
-                    mat.determinant() * sign * inv_det
-                    };
+                            // todo!!
+                            let cf = |i, j| {
+                            let mat = match i {
+                            0 => {
+                            Mat3::from_cols(t_y.truncate_n(j), t_z.truncate_n(j), t_w.truncate_n(j))
+                            }
+                            1 => {
+                            Mat3::from_cols(t_x.truncate_n(j), t_z.truncate_n(j), t_w.truncate_n(j))
+                            }
+                            2 => {
+                            Mat3::from_cols(t_x.truncate_n(j), t_y.truncate_n(j), t_w.truncate_n(j))
+                            }
+                            3 => {
+                            Mat3::from_cols(t_x.truncate_n(j), t_y.truncate_n(j), t_z.truncate_n(j))
+                            }
+                            _ => panic!("out of range"),
+                            };
+                            let sign = if (i + j) & 1 == 1 {
+                            -1.
+                            } else {
+                            1.
+                            };
+                            mat.determinant() * sign * inv_det
+                            };
 
-                    Some(Mat4::new([
-                    cf(0, 0), cf(0, 1), cf(0, 2), cf(0, 3),
-                    cf(1, 0), cf(1, 1), cf(1, 2), cf(1, 3),
-                    cf(2, 0), cf(2, 1), cf(2, 2), cf(2, 3),
-                    cf(3, 0), cf(3, 1), cf(3, 2), cf(3, 3),
-                    ]))
-                    }
-                    }
+                            Some(Mat4::new([
+                            cf(0, 0), cf(0, 1), cf(0, 2), cf(0, 3),
+                            cf(1, 0), cf(1, 1), cf(1, 2), cf(1, 3),
+                            cf(2, 0), cf(2, 1), cf(2, 2), cf(2, 3),
+                            cf(3, 0), cf(3, 1), cf(3, 2), cf(3, 3),
+                            ]))
+                            }
+                            }
 
             #[cfg(feature = "computer_graphics")]
             pub fn to_bytes(&self) -> [u8; 16 * 4] {
@@ -1258,7 +1257,7 @@ macro_rules! create {
             }
         }
 
-/// Calculate the determinate of a matrix defined by its columns.
+        /// Calculate the determinate of a matrix defined by its columns.
 /// We use this for determining the full 0 - tau angle between bonds.
 #[rustfmt::skip]
 pub fn det_from_cols(c0: Vec3, c1: Vec3, c2: Vec3) -> $f {
