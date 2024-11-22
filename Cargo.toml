@@ -1,17 +1,18 @@
 [package]
-name = "lin-alg2"
+name = "lin_alg"
 version = "1.0.0"
 authors = ["David O'Connor <the_alchemist@fastmail.com>"]
-description = "Vector and quaternion operations for general purposes"
-keywords = ["math", "vectors", "quaternions", "graphics"]
+description = "Vector, matrix, and quaternion operations for general purposes"
+keywords = ["algebra", "vector", "matrix", "quaternion", "rendering"]
 categories = [
     "algorithms",
-    "graphics",
     "mathematics",
+    "algorithms",
     "no-std",
+    "rendering",
 ]
 repository = "https://github.com/David-OConnor/lin-alg"
-documentation = "https://docs.rs/lin-alg2"
+documentation = "https://docs.rs/lin_alg"
 readme = "README.md"
 license = "MIT"
 exclude = [".gitignore"]
