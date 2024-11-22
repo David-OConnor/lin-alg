@@ -1,7 +1,7 @@
 # Vectors and quaternions, and matrices for general purposes, and computer graphics. 
 
-[![Crate](https://img.shields.io/crates/v/lin-alg2.svg)](https://crates.io/crates/lin-alg2)
-[![Docs](https://docs.rs/lin-alg2/badge.svg)](https://docs.rs/lin-alg2)
+[![Crate](https://img.shields.io/crates/v/lin_alg.svg)](https://crates.io/crates/lin_alg)
+[![Docs](https://docs.rs/lin_alg/badge.svg)](https://docs.rs/lin_alg)
 
 Vector, matrix, and quaternion data structures and operations. Uses f32 or f64 based types.
 
