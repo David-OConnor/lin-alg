@@ -10,6 +10,7 @@
 //!
 //! Quaternion operations use the Hamilton (vice JPL) convention.
 
+pub mod complex_nums;
 
 macro_rules! create {
     ($f:ident) => {
