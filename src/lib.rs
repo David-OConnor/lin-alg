@@ -11,6 +11,10 @@
 //! Quaternion operations use the Hamilton (vice JPL) convention.
 
 pub mod complex_nums;
+mod util;
+
+pub use util::linspace;
+
 
 macro_rules! create {
     ($f:ident) => {
