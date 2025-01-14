@@ -15,6 +15,8 @@ mod util;
 
 pub use util::*;
 
+pub struct BufError {}
+
 macro_rules! create {
     ($f:ident) => {
         // Macro start
@@ -190,6 +192,19 @@ macro_rules! create {
                     y: 0.,
                     z: 0.,
                 }
+            }
+
+            /// Construct from the first 3 values in a buffer: &[x, y, z].
+            pub fn from_buf(buf: &[$f]) -> Result<Self, crate::BufError> {
+                if buf.len() < 3 {
+                    return Err(crate::BufError {})
+                }
+                Ok(Self { x: buf[0], y: buf[1], z: buf[2] })
+            }
+
+            /// Convert to a len-3 array: [x, y, z].
+            pub fn to_arr(&self) -> [$f; 3] {
+                [self.x, self.y, self.z]
             }
 
             /// Calculates the Hadamard product (element-wise multiplication).
