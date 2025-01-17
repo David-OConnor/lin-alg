@@ -2,11 +2,11 @@
 
 //! Vector, matrix, and quaternion data structures and operations.
 //!
-//! Module for matrices, vectors, and quaternions, as used in 3d graphics, geometry,
-//! and aircraft attitude systems. Similar to the
+//! Module for matrices, vectors, and quaternions, as used in 3D graphics, geometry,
+//! robitics, and spacial embedded systems. Similar to the
 //! `cgmath` and `glam` crates, but with a more transparent API.
 //! [This elegant lib](https://github.com/MartinWeigel/Quaternion/blob/master/Quaternion.c)
-//! may also be used as a cross-check.
+//! may also be used as a reference for quaternion operations.
 //!
 //! Quaternion operations use the Hamilton (vice JPL) convention.
 
@@ -30,8 +30,6 @@ macro_rules! create {
 
         #[cfg(feature = "no_std")]
         use num_traits::float::Float;
-
-        const EPS: $f = 0.00000000001;
 
         pub const UP: Vec3 = Vec3 {
             x: 0.,
@@ -194,12 +192,12 @@ macro_rules! create {
                 }
             }
 
-            /// Construct from the first 3 values in a buffer: &[x, y, z].
-            pub fn from_buf(buf: &[$f]) -> Result<Self, crate::BufError> {
-                if buf.len() < 3 {
+            /// Construct from the first 3 values in a slice: &[x, y, z].
+            pub fn from_slice(slice: &[$f]) -> Result<Self, crate::BufError> {
+                if slice.len() < 3 {
                     return Err(crate::BufError {})
                 }
-                Ok(Self { x: buf[0], y: buf[1], z: buf[2] })
+                Ok(Self { x: slice[0], y: slice[1], z: slice[2] })
             }
 
             /// Convert to a len-3 array: [x, y, z].
@@ -332,6 +330,14 @@ macro_rules! create {
             }
         }
 
+        #[cfg(not(feature = "no_std"))]
+        impl fmt::Display for Vec3 {
+            fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+                writeln!(f, "|{:.4} {:.4} {:.4}|", self.x, self.y, self.z)?;
+                Ok(())
+            }
+        }
+
         /// A quaternion using Hamilton (not JPL) transformation conventions. The most common operations
         /// usedful for representing orientations and rotations are defined, including for operations
         /// with `Vec3`.
@@ -443,7 +449,7 @@ macro_rules! create {
             /// Create the quaternion that creates the shortest (great circle) rotation from vec0
             /// to vec1.
             pub fn from_unit_vecs(v0: Vec3, v1: Vec3) -> Self {
-                const ONE_MINUS_EPS: $f = 1.0 - EPS;
+                const ONE_MINUS_EPS: $f = 1.0 - $f::EPSILON;
 
                 let dot = v0.dot(v1);
                 if dot > ONE_MINUS_EPS {
@@ -543,7 +549,7 @@ macro_rules! create {
 
             /// Extract the axis of rotation.
             pub fn axis(&self) -> Vec3 {
-                if self.w.abs() > 1. - EPS {
+                if self.w.abs() > 1. - $f::EPSILON {
                     return Vec3 {
                         x: 1.,
                         y: 0.,
@@ -553,7 +559,7 @@ macro_rules! create {
 
                 let denom = (1. - self.w.powi(2)).sqrt();
 
-                if denom.abs() < EPS {
+                if denom.abs() < $f::EPSILON {
                     return Vec3 {
                         x: 1.,
                         y: 0.,
@@ -572,7 +578,7 @@ macro_rules! create {
             pub fn angle(&self) -> $f {
                 // Generally, this will be due to it being slightly higher than 1,
                 // but any value > 1 will return NaN from acos.
-                if self.w.abs() > 1. - EPS {
+                if self.w.abs() > 1. - $f::EPSILON {
                     return 0.;
                 }
 
@@ -723,6 +729,14 @@ macro_rules! create {
                         xz + wy, yz - wx, 1.0 - (xx + yy),
                     ]
                 }
+            }
+        }
+
+        #[cfg(not(feature = "no_std"))]
+        impl fmt::Display for Quaternion {
+            fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+                writeln!(f, "Q|{:.4} {:.4} {:.4} {:.4}|", self.w, self.x, self.y, self.z)?;
+                Ok(())
             }
         }
 

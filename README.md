@@ -9,13 +9,15 @@ Example use cases:
 
 - Computer graphics
 - Biomechanics
+- Robotics and unmanned aerial vehicles.
 - Structural chemistry and biochemistry
+- Cosmology modeling
 - Various scientific and engineering applications
 - Aircraft attitude systems and autopilots
 
 Vector and Quaternion types are *copy*.
 
-For Compatibility with no_std tgts, eg embedded. Use the `no_std` feature. For computer-graphics
+For Compatibility with no_std tgts, eg embedded. Use the `no_std` feature. This feature ommits `std::fmt::Display` implementations. For computer-graphics
 functionality (e.g. specialty matrix constructors, and [de]serialization to byte arrays), use the `computer_graphics` feature.
 
 Do not run `cargo fmt` on this code base; the macro used to prevent duplication of code between `f32` and f64` mules causes undesirable behavior.
