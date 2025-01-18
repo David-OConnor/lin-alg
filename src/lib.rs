@@ -446,6 +446,19 @@ macro_rules! create {
                 Self { w, x, y, z }
             }
 
+            /// Construct from the first 4 values in a slice: &[w, x, y, z].
+            pub fn from_slice(slice: &[$f]) -> Result<Self, crate::BufError> {
+                if slice.len() < 4 {
+                    return Err(crate::BufError {})
+                }
+                Ok(Self { w: slice[0], x: slice[1], y: slice[2], z: slice[3] })
+            }
+
+            /// Convert to a len-4 array: [w, x, y, z].
+            pub fn to_arr(&self) -> [$f; 4] {
+                [self.w, self.x, self.y, self.z]
+            }
+
             /// Create the quaternion that creates the shortest (great circle) rotation from vec0
             /// to vec1.
             pub fn from_unit_vecs(v0: Vec3, v1: Vec3) -> Self {
@@ -611,12 +624,12 @@ macro_rules! create {
                 }
             }
 
-            /// Returns the vector magnitude.
+            /// Returns the magnitude.
             pub fn magnitude(&self) -> $f {
                 (self.w.powi(2) + self.x.powi(2) + self.y.powi(2) + self.z.powi(2)).sqrt()
             }
 
-            /// Returns the normalised version of the vector
+            /// Returns the normalised version of the quaternion
             pub fn to_normalized(self) -> Self {
                 let mag_recip = 1. / self.magnitude();
                 self * mag_recip
