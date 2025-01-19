@@ -21,7 +21,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-num-traits = { version = "^0.2.19", optional = true, default-features = false }
+num-traits = { version = "^0.2.19", default-features = false }
 
 [features]
 no_std = ["num-traits/libm"]

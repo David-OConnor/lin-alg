@@ -219,6 +219,7 @@ macro_rules! create {
                 (self.hadamard_product(self)).sum()
             }
 
+            /// Returns the vector magnitude
             pub fn magnitude(&self) -> $f {
                 (self.x.powi(2) + self.y.powi(2) + self.z.powi(2)).sqrt()
             }
@@ -238,6 +239,7 @@ macro_rules! create {
                 self * mag_recip
             }
 
+            /// Returns the dot product with another vector.
             pub fn dot(&self, rhs: Self) -> $f {
                 self.x * rhs.x + self.y * rhs.y + self.z * rhs.z
             }
