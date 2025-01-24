@@ -2,5 +2,4 @@
 Cargo.lock
 
 # IDE
-*.iws
-workspace.xml
+.idea

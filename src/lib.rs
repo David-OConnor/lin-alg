@@ -31,6 +31,9 @@ macro_rules! create {
         #[cfg(feature = "no_std")]
         use num_traits::float::Float;
 
+        #[cfg(feature = "encode")]
+        use bincode::{Decode, Encode};
+
         pub const UP: Vec3 = Vec3 {
             x: 0.,
             y: 0.,
@@ -49,6 +52,7 @@ macro_rules! create {
 
         /// A len-2 column vector.
         #[derive(Default, Clone, Copy)]
+        #[cfg_attr(feature = "bincode", derive(Encode, Decode))]
         pub struct Vec2 {
             pub x: $f,
             pub y: $f,
@@ -70,6 +74,7 @@ macro_rules! create {
         }
 
         #[derive(Clone, Copy, Default, Debug, PartialEq)]
+        #[cfg_attr(feature = "bincode", derive(Encode, Decode))]
         /// A len-3 column vector.
         pub struct Vec3 {
             pub x: $f,
@@ -297,6 +302,7 @@ macro_rules! create {
         }
 
         #[derive(Clone, Copy, Debug)]
+        #[cfg_attr(feature = "bincode", derive(Encode, Decode))]
         /// A len-4 column vector
         pub struct Vec4 {
             pub x: $f,
@@ -344,6 +350,7 @@ macro_rules! create {
         /// usedful for representing orientations and rotations are defined, including for operations
         /// with `Vec3`.
         #[derive(Clone, Copy, Debug)]
+        #[cfg_attr(feature = "bincode", derive(Encode, Decode))]
         pub struct Quaternion {
             pub w: $f,
             pub x: $f,
@@ -756,6 +763,7 @@ macro_rules! create {
         }
 
         #[derive(Clone, Debug)]
+        #[cfg_attr(feature = "bincode", derive(Encode, Decode))]
         /// Represents a set of Euler angles.
         pub struct EulerAngle {
             pub roll: $f,
@@ -764,6 +772,7 @@ macro_rules! create {
         }
 
         #[derive(Clone, Debug)]
+        #[cfg_attr(feature = "bincode", derive(Encode, Decode))]
         /// A 3x3 matrix. Data and operations are column-major.
         pub struct Mat3 {
             pub data: [$f; 9],
@@ -931,6 +940,7 @@ macro_rules! create {
         }
 
         #[derive(Clone, Debug)]
+        #[cfg_attr(feature = "bincode", derive(Encode, Decode))]
         /// A 4x4 matrix. Data and operations are column-major.
         pub struct Mat4 {
             pub data: [$f; 16],

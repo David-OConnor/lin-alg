@@ -3,7 +3,7 @@ use num_traits::Float;
 /// Create a set of values in a given range, with a given number of values.
 /// Similar to `numpy.linspace`.
 /// The result terminates one step before the end of the range.
-pub fn linspace<T>(start: T, stop: T, num_points: usize) -> Vec<T> where T: Float{
+pub fn linspace<T>(start: T, stop: T, num_points: usize) -> Vec<T> where T: Float {
     if num_points < 2 {
         return vec![start];
     }
@@ -12,21 +12,24 @@ pub fn linspace<T>(start: T, stop: T, num_points: usize) -> Vec<T> where T: Floa
     (0..num_points).map(|i| start + T::from(i).unwrap() * step).collect()
 }
 
-pub fn logspace(mut start: f64, stop: f64, num_points: usize) -> Vec<f64> {
+// todo: Evaluate if you want this function
+pub fn logspace<T>(mut start: T, stop: T, num_points: usize) -> Vec<T> where T: Float {
     if num_points < 2 {
         return vec![start.exp()];
     }
 
-    if start < f64::EPSILON {
-        start = 0.0001; // todo?
-    }
+
+    // if start < T::EPSILON {
+    // if start < 0.0000001 {
+    //     start = 0.0001; // todo?
+    // }
 
     let log_start = start.ln();
     let log_stop = stop.ln();
-    let step = (log_stop - log_start) / (num_points - 1) as f64;
+    let step = (log_stop - log_start) / T::from(num_points - 1).unwrap();
 
     (0..num_points)
-        .map(|i| (log_start + i as f64 * step).exp())
+        .map(|i| (log_start + T::from(i).unwrap() * step).exp())
         .collect()
 }
 
