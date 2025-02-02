@@ -316,6 +316,11 @@ macro_rules! create {
                 Self { x, y, z, w: u }
             }
 
+            /// Returns the dot product with another vector.
+            pub fn dot(&self, rhs: Self) -> $f {
+                self.x * rhs.x + self.y * rhs.y + self.z * rhs.z + self.w * rhs.w
+            }
+
             pub fn normalize(&mut self) {
                 let len =
                     (self.x.powi(2) + self.y.powi(2) + self.z.powi(2) + self.w.powi(2)).sqrt();
