@@ -362,7 +362,7 @@ macro_rules! create {
         #[cfg(not(feature = "no_std"))]
         impl fmt::Display for Vec4 {
             fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-                writeln!(f, "|{:.4} {:.4} {:.4} {:.4}}|", self.x, self.y, self.z, self.w)?;
+                writeln!(f, "|{:.4} {:.4} {:.4} {:.4}|", self.x, self.y, self.z, self.w)?;
                 Ok(())
             }
         }
