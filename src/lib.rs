@@ -73,6 +73,14 @@ macro_rules! create {
             }
         }
 
+        #[cfg(not(feature = "no_std"))]
+        impl fmt::Display for Vec2 {
+            fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+                writeln!(f, "|{:.4} {:.4}|", self.x, self.y)?;
+                Ok(())
+            }
+        }
+
         #[derive(Clone, Copy, Default, Debug, PartialEq)]
         #[cfg_attr(feature = "bincode", derive(Encode, Decode))]
         /// A len-3 column vector.
@@ -301,6 +309,14 @@ macro_rules! create {
             }
         }
 
+        #[cfg(not(feature = "no_std"))]
+        impl fmt::Display for Vec3 {
+            fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+                writeln!(f, "|{:.4} {:.4} {:.4}|", self.x, self.y, self.z)?;
+                Ok(())
+            }
+        }
+
         #[derive(Clone, Copy, Debug)]
         #[cfg_attr(feature = "bincode", derive(Encode, Decode))]
         /// A len-4 column vector
@@ -344,9 +360,9 @@ macro_rules! create {
         }
 
         #[cfg(not(feature = "no_std"))]
-        impl fmt::Display for Vec3 {
+        impl fmt::Display for Vec4 {
             fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-                writeln!(f, "|{:.4} {:.4} {:.4}|", self.x, self.y, self.z)?;
+                writeln!(f, "|{:.4} {:.4} {:.4} {:.4}}|", self.x, self.y, self.z, self.w)?;
                 Ok(())
             }
         }
