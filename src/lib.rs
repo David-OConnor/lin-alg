@@ -76,7 +76,7 @@ macro_rules! create {
         #[cfg(not(feature = "no_std"))]
         impl fmt::Display for Vec2 {
             fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-                writeln!(f, "|{:.4} {:.4}|", self.x, self.y)?;
+                write!(f, "|{:.4}, {:.4}|", self.x, self.y)?;
                 Ok(())
             }
         }
@@ -312,7 +312,7 @@ macro_rules! create {
         #[cfg(not(feature = "no_std"))]
         impl fmt::Display for Vec3 {
             fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-                writeln!(f, "|{:.4} {:.4} {:.4}|", self.x, self.y, self.z)?;
+                write!(f, "|{:.4}, {:.4}, {:.4}|", self.x, self.y, self.z)?;
                 Ok(())
             }
         }
@@ -362,7 +362,7 @@ macro_rules! create {
         #[cfg(not(feature = "no_std"))]
         impl fmt::Display for Vec4 {
             fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-                writeln!(f, "|{:.4} {:.4} {:.4} {:.4}|", self.x, self.y, self.z, self.w)?;
+                write!(f, "|{:.4}, {:.4}, {:.4}, {:.4}|", self.x, self.y, self.z, self.w)?;
                 Ok(())
             }
         }
@@ -778,7 +778,7 @@ macro_rules! create {
         #[cfg(not(feature = "no_std"))]
         impl fmt::Display for Quaternion {
             fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-                writeln!(f, "Q|{:.4} {:.4} {:.4} {:.4}|", self.w, self.x, self.y, self.z)?;
+                write!(f, "Q|{:.4}, {:.4}, {:.4}, {:.4}|", self.w, self.x, self.y, self.z)?;
                 Ok(())
             }
         }
