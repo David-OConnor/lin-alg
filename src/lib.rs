@@ -347,7 +347,7 @@ macro_rules! create {
                 self.w /= len;
             }
 
-            /// Remove the 3rd element. Used in our inverse calulations.
+            /// Remove the nth element. Used in our inverse calulations.
             pub fn truncate_n(&self, n: usize) -> Vec3 {
                 match n {
                     0 => Vec3::new(self.y, self.z, self.w),
@@ -356,6 +356,11 @@ macro_rules! create {
                     3 => Vec3::new(self.x, self.y, self.z),
                     _ => panic!("{:?} is out of range", n),
                 }
+            }
+
+            /// Remove the w element.
+            pub fn xyz(&self) -> Vec3 {
+                Vec3::new(self.x, self.y, self.z)
             }
         }
 

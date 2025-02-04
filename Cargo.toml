@@ -1,6 +1,6 @@
 [package]
 name = "lin_alg"
-version = "1.0.4"
+version = "1.0.5"
 edition = "2021"
 authors = ["David O'Connor <the_alchemist@fastmail.com>"]
 description = "Vector, matrix, and quaternion operations for general purposes"
