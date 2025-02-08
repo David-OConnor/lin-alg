@@ -34,16 +34,20 @@ macro_rules! create {
         #[cfg(feature = "encode")]
         use bincode::{Decode, Encode};
 
+        // This is "up" if Z is up, and "forward" if Y is up.
         pub const UP: Vec3 = Vec3 {
             x: 0.,
             y: 0.,
             z: 1.,
         };
+
+        // This is "forward" if Z is up, and "up" if Y is up.
         pub const FORWARD: Vec3 = Vec3 {
             x: 0.,
             y: 1.,
             z: 0.,
         };
+
         pub const RIGHT: Vec3 = Vec3 {
             x: 1.,
             y: 0.,
@@ -873,6 +877,7 @@ macro_rules! create {
 
             #[cfg(feature = "computer_graphics")]
             pub fn to_bytes(&self) -> [u8; 9 * 4] {
+                // todo: f64 vs f32 serialization.
                 let mut result = [0; 9 * 4];
 
                 for i in 0..self.data.len() {
@@ -1104,6 +1109,20 @@ macro_rules! create {
                 }
             }
 
+
+            #[cfg(feature = "computer_graphics")]
+            #[rustfmt::skip]
+            pub fn new_scaler_partial(scale: Vec3) -> Self {
+                Self {
+                    data: [
+                        scale.x, 0., 0., 0.,
+                        0., scale.y, 0., 0.,
+                        0., 0., scale.z, 0.,
+                        0., 0., 0., 1.,
+                    ]
+                }
+            }
+
             #[cfg(feature = "computer_graphics")]
             #[rustfmt::skip]
             /// Create a translation matrix. Note that the matrix is 4x4, but it takes len-3 vectors -
@@ -1218,6 +1237,7 @@ macro_rules! create {
 
             #[cfg(feature = "computer_graphics")]
             pub fn to_bytes(&self) -> [u8; 16 * 4] {
+                // todo: f64 vs f32 serialization.
                 let mut result = [0; 16 * 4];
 
                 for i in 0..self.data.len() {
