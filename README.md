@@ -25,6 +25,8 @@ Do not run `cargo fmt` on this code base; the macro used to prevent duplication 
 
 For information on practical quaternion operations: [Quaternions: A practical guide](https://www.anyleaf.org/blog/quaternions:-a-practical-guide)
 
+The `From` trait is implemented for most types, for converting between `f32` and `f64` variants using the `into()` syntax.
+
 See the official documention (Linked above) for details. Below is a brief, impractical syntax overview:
 
 ```rust

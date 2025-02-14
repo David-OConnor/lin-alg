@@ -1366,8 +1366,64 @@ macro_rules! create {
 
 pub mod f32 {
     create!(f32);
+
+    use super::f64;
+
+    impl From<f64::Vec2> for Vec2 {
+        fn from(other: f64::Vec2) -> Self {
+            Self{ x: other.x as f32, y: other.y as f32 }
+        }
+    }
+
+    impl From<f64::Vec3> for Vec3 {
+        fn from(other: f64::Vec3) -> Self {
+            Self { x: other.x as f32, y: other.y as f32, z: other.z as f32 }
+        }
+    }
+
+    impl From<f64::Vec4> for Vec4 {
+        fn from(other: f64::Vec4) -> Self {
+            Self{ w: other.w as f32, x: other.x as f32, y: other.y as f32, z: other.z as f32 }
+        }
+    }
+
+    impl From<f64::Quaternion> for Quaternion {
+        fn from(other: f64::Quaternion) -> Self {
+            Self{ w: other.w as f32, x: other.x as f32, y: other.y as f32, z: other.z as f32 }
+        }
+    }
+
+    // todo: Matrix type conversions as well.
 }
 
 pub mod f64 {
     create!(f64);
+
+    use super::f32;
+
+    impl From<f32::Vec2> for Vec2 {
+        fn from(other: f32::Vec2) -> Self {
+            Self{ x: other.x as f64, y: other.y as f64 }
+        }
+    }
+
+    impl From<f32::Vec3> for Vec3 {
+        fn from(other: f32::Vec3) -> Self {
+            Self{ x: other.x as f64, y: other.y as f64, z: other.z as f64 }
+        }
+    }
+
+    impl From<f32::Vec4> for Vec4 {
+        fn from(other: f32::Vec4) -> Self {
+            Self{ w: other.w as f64, x: other.x as f64, y: other.y as f64, z: other.z as f64 }
+        }
+    }
+
+    impl From<f32::Quaternion> for Quaternion {
+        fn from(other: f32::Quaternion) -> Self {
+            Self{ w: other.w as f64, x: other.x as f64, y: other.y as f64, z: other.z as f64 }
+        }
+    }
+
+    // todo: Matrix type conversions as well.
 }
