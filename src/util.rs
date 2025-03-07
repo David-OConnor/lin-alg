@@ -18,7 +18,7 @@ where
 }
 
 // todo: Evaluate if you want this function
-pub fn logspace<T>(mut start: T, stop: T, num_points: usize) -> Vec<T>
+pub fn logspace<T>(start: T, stop: T, num_points: usize) -> Vec<T>
 where
     T: Float,
 {

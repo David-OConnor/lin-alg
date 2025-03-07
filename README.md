@@ -21,9 +21,6 @@ For Compatibility with no_std tgts, e.g. embedded, Use the `no_std` feature. Thi
 functionality (e.g. specialty matrix constructors, and [de]serialization to byte arrays for passing to and from GPUs), use the `computer_graphics` 
 feature. For [bincode](https://docs.rs/bincode/latest/bincode/) binary encoding and decoding, use the `encode` feature.
 
-Do not run `cargo fmt` on this code base; the macro used to prevent duplication of code between `f32` and `f64` modules causes 
-undesirable behavior.
-
 For information on practical quaternion operations: [Quaternions: A practical guide](https://www.anyleaf.org/blog/quaternions:-a-practical-guide).
 
 The `From` trait is implemented for most types, for converting between `f32` and `f64` variants using the `into()` syntax.
@@ -71,7 +68,7 @@ If using for computer graphics, this functionality may be helpful:
 
 ```rust
     let a = Vec3::new(1., 1., 1.);
-    let bytes = a.to_bytes(); // Send this to the GPU
+    let bytes = a.to_bytes(); // Send this to the GPU. `Quaternion` and `Matrix` have similar methods.
 
     let model_mat = Mat4::new_translation(self.position)
         * self.orientation.to_matrix()
@@ -79,13 +76,15 @@ If using for computer graphics, this functionality may be helpful:
 
     let proj_mat = Mat4::new_perspective_lh(self.fov_y, self.aspect, self.near, self.far);
 
-    let view_mat = self.orientation.inverse().to_matrix() * Mat4::new_translation(self.position * -1.);
+    let view_mat = self.orientation.inverse().to_matrix() * Mat4::new_translation(-self.position);
 
     // Example of rolling a camera around the forward axis:
     let fwd = orientation.rotate_vec(FWD_VEC);
     let rotation = Quaternion::from_axis_angle(fwd, -rotate_key_amt);
     orientation = rotation * orientation;
 ```
+
+A practical geometry example:
 
 ```rust
 /// Calculate the dihedral angle between 4 positions (3 bonds).
