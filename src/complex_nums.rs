@@ -1,12 +1,14 @@
-// C+P from WF_LAB
-
 //! This module contains a `Complex` number type, and methods for it.
 
-use std::{
+use core::{
     f64::consts::E,
-    fmt,
     ops::{Add, AddAssign, Div, Mul, MulAssign, Neg, Sub, SubAssign},
 };
+#[cfg(feature = "std")]
+use std::fmt;
+
+#[cfg(feature = "no_std")]
+use num_traits::float::Float;
 
 pub const IM: Cplx = Cplx { real: 0., im: 1. };
 
@@ -187,6 +189,7 @@ impl Neg for Cplx {
     }
 }
 
+#[cfg(feature = "std")]
 impl fmt::Display for Cplx {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{} + {}i", self.real, self.im)

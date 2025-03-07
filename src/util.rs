@@ -1,8 +1,11 @@
+// Note: unlike elsewhere in this lib, we don't need `libm` on `num_traits` here. So, this is compatible
+// with both `std` and `no_std` targets.
 use num_traits::Float;
 
 /// Create a set of values in a given range, with a given number of values.
 /// Similar to `numpy.linspace`.
 /// The result terminates one step before the end of the range.
+#[cfg(feature = "std")]
 pub fn linspace<T>(start: T, stop: T, num_points: usize) -> Vec<T>
 where
     T: Float,
@@ -18,6 +21,7 @@ where
 }
 
 // todo: Evaluate if you want this function
+#[cfg(feature = "std")]
 pub fn logspace<T>(start: T, stop: T, num_points: usize) -> Vec<T>
 where
     T: Float,
