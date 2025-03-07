@@ -20,6 +20,13 @@ pub use util::*;
 #[derive(Debug)]
 pub struct BufError {}
 
+#[cfg(not(feature = "no_std"))]
+impl From<std::io::Error> for BufError {
+    fn from(_: std::io::Error) -> Self {
+        Self {}
+    }
+}
+
 macro_rules! create {
     ($f:ident) => {
         use core::{
@@ -443,7 +450,21 @@ pub mod f32 {
         }
     }
 
-    // todo: Matrix type conversions as well.
+    impl From<f64::Mat3> for Mat3 {
+        fn from(other: f64::Mat3) -> Self {
+            Self {
+                data: other.data.map(|x| x as f32),
+            }
+        }
+    }
+
+    impl From<f64::Mat4> for Mat4 {
+        fn from(other: f64::Mat4) -> Self {
+            Self {
+                data: other.data.map(|x| x as f32),
+            }
+        }
+    }
 }
 
 pub mod f64 {
@@ -494,5 +515,19 @@ pub mod f64 {
         }
     }
 
-    // todo: Matrix type conversions as well.
+    impl From<f32::Mat3> for Mat3 {
+        fn from(other: f32::Mat3) -> Self {
+            Self {
+                data: other.data.map(|x| x as f64),
+            }
+        }
+    }
+
+    impl From<f32::Mat4> for Mat4 {
+        fn from(other: f32::Mat4) -> Self {
+            Self {
+                data: other.data.map(|x| x as f64),
+            }
+        }
+    }
 }

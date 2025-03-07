@@ -1,6 +1,6 @@
 [package]
 name = "lin_alg"
-version = "1.0.7"
+version = "1.0.8"
 edition = "2024"
 authors = ["David O'Connor <the_alchemist@fastmail.com>"]
 description = "Vector, matrix, and quaternion operations for general purposes"
@@ -18,8 +18,6 @@ readme = "README.md"
 license = "MIT"
 exclude = [".gitignore"]
 
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 num-traits = { version = "^0.2.19", default-features = false }

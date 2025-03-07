@@ -38,11 +38,11 @@ fn main() {
     let a = Vec3::new(1., 1., 1.);
     let b = Vec3::new(0., -1., 10.);
     
-    let c = a + b;
+    let mut c = a + b;
     
-    let mut d = a.dot(b);
+    let d = a.dot(b);
     
-    d.normalize();
+    c.normalize(); // or:
     let e = c.to_normalized();
     
     a.magnitude();
