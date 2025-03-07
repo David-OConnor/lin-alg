@@ -1,4 +1,4 @@
-#![cfg_attr(feature = "no_std", no_std)]
+#![cfg_attr(not(feature = "std"), no_std)]
 
 //! Vector, matrix, and quaternion data structures and operations.
 //!
@@ -15,12 +15,18 @@ mod matrix;
 mod quaternion;
 mod util;
 
+#[cfg(feature = "std")]
+mod simd;
+
+#[cfg(test)]
+mod tests;
+
 pub use util::*;
 
 #[derive(Debug)]
 pub struct BufError {}
 
-#[cfg(not(feature = "no_std"))]
+#[cfg(feature = "std")]
 impl From<std::io::Error> for BufError {
     fn from(_: std::io::Error) -> Self {
         Self {}
@@ -33,7 +39,7 @@ macro_rules! create {
             ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign},
             $f::consts::TAU,
         };
-        #[cfg(not(feature = "no_std"))]
+        #[cfg(feature = "std")]
         use std::fmt;
 
         #[cfg(feature = "encode")]
@@ -63,7 +69,7 @@ macro_rules! create {
 
         /// A len-2 column vector.
         #[derive(Default, Clone, Copy)]
-        #[cfg_attr(feature = "bincode", derive(Encode, Decode))]
+        #[cfg_attr(feature = "encode", derive(Encode, Decode))]
         pub struct Vec2 {
             pub x: $f,
             pub y: $f,
@@ -84,7 +90,7 @@ macro_rules! create {
             }
         }
 
-        #[cfg(not(feature = "no_std"))]
+        #[cfg(feature = "std")]
         impl fmt::Display for Vec2 {
             fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
                 write!(f, "|{:.4}, {:.4}|", self.x, self.y)?;
@@ -93,7 +99,7 @@ macro_rules! create {
         }
 
         #[derive(Clone, Copy, Default, Debug, PartialEq)]
-        #[cfg_attr(feature = "bincode", derive(Encode, Decode))]
+        #[cfg_attr(feature = "encode", derive(Encode, Decode))]
         /// A len-3 column vector.
         pub struct Vec3 {
             pub x: $f,
@@ -296,35 +302,9 @@ macro_rules! create {
             pub fn project_to_vec(self, other: Self) -> Self {
                 other * (self.dot(other) / other.magnitude_squared())
             }
-
-            #[cfg(feature = "computer_graphics")]
-            /// Note that this function pads with an extra 4 bytes, IOC with the  hardware
-            /// 16-byte alignment requirement. This assumes we're using this in a uniform; Vertexes
-            /// don't use padding.
-            pub fn to_bytes_uniform(&self) -> [u8; 4 * 4] {
-                let mut result = [0; 4 * 4];
-
-                result[0..4].clone_from_slice(&self.x.to_ne_bytes());
-                result[4..8].clone_from_slice(&self.y.to_ne_bytes());
-                result[8..12].clone_from_slice(&self.z.to_ne_bytes());
-                result[12..16].clone_from_slice(&[0_u8; 4]);
-
-                result
-            }
-
-            #[cfg(feature = "computer_graphics")]
-            pub fn to_bytes_vertex(&self) -> [u8; 3 * 4] {
-                let mut result = [0; 3 * 4];
-
-                result[0..4].clone_from_slice(&self.x.to_ne_bytes());
-                result[4..8].clone_from_slice(&self.y.to_ne_bytes());
-                result[8..12].clone_from_slice(&self.z.to_ne_bytes());
-
-                result
-            }
         }
 
-        #[cfg(not(feature = "no_std"))]
+        #[cfg(feature = "std")]
         impl fmt::Display for Vec3 {
             fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
                 write!(f, "|{:.4}, {:.4}, {:.4}|", self.x, self.y, self.z)?;
@@ -333,7 +313,7 @@ macro_rules! create {
         }
 
         #[derive(Clone, Copy, Debug)]
-        #[cfg_attr(feature = "bincode", derive(Encode, Decode))]
+        #[cfg_attr(feature = "encode", derive(Encode, Decode))]
         /// A len-4 column vector
         pub struct Vec4 {
             pub x: $f,
@@ -379,7 +359,7 @@ macro_rules! create {
             }
         }
 
-        #[cfg(not(feature = "no_std"))]
+        #[cfg(feature = "std")]
         impl fmt::Display for Vec4 {
             fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
                 write!(
@@ -392,7 +372,7 @@ macro_rules! create {
         }
 
         #[derive(Clone, Debug)]
-        #[cfg_attr(feature = "bincode", derive(Encode, Decode))]
+        #[cfg_attr(feature = "encode", derive(Encode, Decode))]
         /// Represents a set of Euler angles.
         pub struct EulerAngle {
             pub roll: $f,
@@ -463,6 +443,75 @@ pub mod f32 {
             Self {
                 data: other.data.map(|x| x as f32),
             }
+        }
+    }
+
+    impl Vec3 {
+        #[cfg(feature = "computer_graphics")]
+        /// Convert to a byte array, e.g. for sending to a GPU. Note that this function pads with an
+        /// extra 4 bytes, IOC with the  hardware
+        /// 16-byte alignment requirement. This assumes we're using this in a uniform; Vertexes
+        /// don't use padding.
+        pub fn to_bytes_uniform(&self) -> [u8; 4 * 4] {
+            let mut result = [0; 4 * 4];
+
+            result[0..4].clone_from_slice(&self.x.to_ne_bytes());
+            result[4..8].clone_from_slice(&self.y.to_ne_bytes());
+            result[8..12].clone_from_slice(&self.z.to_ne_bytes());
+            result[12..16].clone_from_slice(&[0; 4]);
+
+            result
+        }
+
+        /// Convert to a native-endian byte array, e.g. for sending to a GPU.
+        pub fn to_bytes(&self) -> [u8; 3 * 4] {
+            let mut result = [0; 3 * 4];
+
+            result[0..4].clone_from_slice(&self.x.to_ne_bytes());
+            result[4..8].clone_from_slice(&self.y.to_ne_bytes());
+            result[8..12].clone_from_slice(&self.z.to_ne_bytes());
+
+            result
+        }
+    }
+
+    impl Vec4 {
+        /// Convert to a native-endian byte array, e.g. for sending to a GPU. (x, y, z, w order)
+        pub fn to_bytes(&self) -> [u8; 4 * 4] {
+            let mut result = [0; 4 * 4];
+
+            result[0..4].clone_from_slice(&self.x.to_ne_bytes());
+            result[4..8].clone_from_slice(&self.y.to_ne_bytes());
+            result[8..12].clone_from_slice(&self.z.to_ne_bytes());
+            result[12..16].clone_from_slice(&self.w.to_ne_bytes());
+
+            result
+        }
+    }
+
+    impl Mat3 {
+        #[cfg(feature = "computer_graphics")]
+        pub fn to_bytes(&self) -> [u8; 9 * 4] {
+            let mut result = [0; 9 * 4];
+
+            for i in 0..self.data.len() {
+                result[i * 4..i * 4 + 4].clone_from_slice(&self.data[i].to_ne_bytes());
+            }
+
+            result
+        }
+    }
+
+    impl Mat4 {
+        #[cfg(feature = "computer_graphics")]
+        pub fn to_bytes(&self) -> [u8; 16 * 4] {
+            let mut result = [0; 16 * 4];
+
+            for i in 0..self.data.len() {
+                result[i * 4..i * 4 + 4].clone_from_slice(&self.data[i].to_ne_bytes());
+            }
+
+            result
         }
     }
 }

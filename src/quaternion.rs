@@ -7,7 +7,7 @@ macro_rules! create_quaternion {
         /// usedful for representing orientations and rotations are defined, including for operations
         /// with `Vec3`.
         #[derive(Clone, Copy, Debug)]
-        #[cfg_attr(feature = "bincode", derive(Encode, Decode))]
+        #[cfg_attr(feature = "encode", derive(Encode, Decode))]
         pub struct Quaternion {
             pub w: $f,
             pub x: $f,
@@ -432,7 +432,7 @@ macro_rules! create_quaternion {
             }
         }
 
-        #[cfg(not(feature = "no_std"))]
+        #[cfg(feature = "std")]
         impl fmt::Display for Quaternion {
             fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
                 write!(

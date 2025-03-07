@@ -17,8 +17,11 @@ Example use cases:
 
 Vector and Quaternion types are *copy*.
 
-For Compatibility with no_std tgts, e.g. embedded, Use the `no_std` feature. This feature omits `std::fmt::Display` implementations. For computer-graphics
-functionality (e.g. specialty matrix constructors, and [de]serialization to byte arrays for passing to and from GPUs), use the `computer_graphics` 
+For Compatibility with no_std targets, e.g. embedded, disable default features, and enable the `no_std` feature. This  omits
+`std::fmt::Display` implementations, and enables [num_traits](https://docs.rs/num-traits/latest/num_traits/)'s `libm` capabilities
+for certain operations. `lin_alg = { version = "^1.0.8", default-features = false, features = ["no_std"] }`
+
+For computer-graphics functionality (e.g. specialty matrix constructors, and [de]serialization to byte arrays for passing to and from GPUs), use the `computer_graphics` 
 feature. For [bincode](https://docs.rs/bincode/latest/bincode/) binary encoding and decoding, use the `encode` feature.
 
 For information on practical quaternion operations: [Quaternions: A practical guide](https://www.anyleaf.org/blog/quaternions:-a-practical-guide).
@@ -45,8 +48,6 @@ fn main() {
     c.normalize(); // or:
     let e = c.to_normalized();
     
-    a.magnitude();
-    
     let f = a.cross(b);
     
     let g = Quaternion::from_unit_vecs(d, e);
@@ -68,7 +69,7 @@ If using for computer graphics, this functionality may be helpful:
 
 ```rust
     let a = Vec3::new(1., 1., 1.);
-    let bytes = a.to_bytes(); // Send this to the GPU. `Quaternion` and `Matrix` have similar methods.
+    let bytes = a.to_bytes(); // Send this to the GPU. `Quaternion` and `MatN` have similar methods.
 
     let model_mat = Mat4::new_translation(self.position)
         * self.orientation.to_matrix()

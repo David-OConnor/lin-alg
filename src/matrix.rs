@@ -4,7 +4,7 @@
 macro_rules! create_matrix {
     ($f:ident) => {
         #[derive(Clone, Debug)]
-        #[cfg_attr(feature = "bincode", derive(Encode, Decode))]
+        #[cfg_attr(feature = "encode", derive(Encode, Decode))]
         /// A 3x3 matrix. Data and operations are column-major.
         pub struct Mat3 {
             pub data: [$f; 9],
@@ -54,18 +54,6 @@ macro_rules! create_matrix {
                 Self {
                     data: [1., 0., 0., 0., 1., 0., 0., 0., 1.],
                 }
-            }
-
-            #[cfg(feature = "computer_graphics")]
-            pub fn to_bytes(&self) -> [u8; 9 * 4] {
-                // todo: f64 vs f32 serialization.
-                let mut result = [0; 9 * 4];
-
-                for i in 0..self.data.len() {
-                    result[i * 4..i * 4 + 4].clone_from_slice(&self.data[i].to_ne_bytes());
-                }
-
-                result
             }
         }
 
@@ -152,7 +140,7 @@ macro_rules! create_matrix {
         }
 
         #[derive(Clone, Debug)]
-        #[cfg_attr(feature = "bincode", derive(Encode, Decode))]
+        #[cfg_attr(feature = "encode", derive(Encode, Decode))]
         /// A 4x4 matrix. Data and operations are column-major.
         pub struct Mat4 {
             pub data: [$f; 16],
@@ -403,18 +391,6 @@ macro_rules! create_matrix {
                     ]))
                 }
             }
-
-            #[cfg(feature = "computer_graphics")]
-            pub fn to_bytes(&self) -> [u8; 16 * 4] {
-                // todo: f64 vs f32 serialization.
-                let mut result = [0; 16 * 4];
-
-                for i in 0..self.data.len() {
-                    result[i * 4..i * 4 + 4].clone_from_slice(&self.data[i].to_ne_bytes());
-                }
-
-                result
-            }
         }
 
         impl Mul<Self> for Mat4 {
@@ -506,7 +482,7 @@ macro_rules! create_matrix {
             }
         }
 
-        #[cfg(not(feature = "no_std"))]
+        #[cfg(feature = "std")]
         impl fmt::Display for Mat4 {
             fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
                 let d = self.data;
