@@ -389,6 +389,8 @@ pub mod f32 {
     create_matrix!(f32);
 
     use super::f64;
+    #[cfg(all(any(target_arch = "x86", target_arch = "x86_64"), feature = "std"))]
+    pub use crate::simd::{Vec3S, Vec4S};
 
     impl From<f64::Vec2> for Vec2 {
         fn from(other: f64::Vec2) -> Self {

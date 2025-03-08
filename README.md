@@ -28,9 +28,18 @@ For information on practical quaternion operations: [Quaternions: A practical gu
 
 The `From` trait is implemented for most types, for converting between `f32` and `f64` variants using the `into()` syntax.
 
-Includes experimental, early-stage SIMD constructs (SoA layout), in the `simd` module. They are configured with 256-bit
+
+## SIMD
+
+Includes experimental, early-stage SIMD constructs (SoA layout): The `Vec3S` and `Vec4S` types. They are configured with 256-bit
 wide (AVX) values, performing operations on 8 `f32` Vec3 or Vec4s, or 4 `f64` ones. See the example below for details.
-not all functionality is implemented.
+not all functionality is implemented, and only `f32` variants are implemented at this time.
+
+Various operator overloads are implement. For example, you can (scalar) multiply a `Vec3S` by a `f32`, a `[f32; 8]`, or
+a `__m256`.
+
+
+## Examples
 
 See the official documentation (Linked above) for details. Below is a brief, impractical syntax overview:
 
@@ -114,15 +123,18 @@ pub fn calc_dihedral_angle(bond_middle: Vec3, bond_adjacent1: Vec3, bond_adjacen
 
 A simple SIMD example:
 ```rust
-use lin_alg::simd::Vec3sF32;
+use lin_alg::f32:{Vec3, Vec3S};
 
 // Non-SIMD Vec3s we'll start with.
 let vec_a = Vec3::new(1., 2., 3.);
 let vec_b = Vec3::new(4., 5., 6.);
 
-// Expect these SIMD types to change name.
-let a = Vec3sF32::new([vec_a; 8]);
-let b = Vec3sF32::new([vec_b; 8]);
+// An example where we copy the same Vec3 into all 8 slots. In most practical uses,
+// each slot will contain a different value.
+let a = Vec3S::new([vec_a; 8]);
+let b = Vec3S::new([vec_b; 8]);
+
+// Perform vector addition on 8 Vec3s at once.
 let c = a + b;
 
 // Create a [Vec3; 8], due to the `unpack` method.
@@ -133,6 +145,10 @@ let dot_result: [f32; 8] = unsafe { transmute(a.dot(b)) };
 
 // Create a [f32; 8].
 let dot_result = a.dot_unpack(b);
+
+let e = vec_a * 3.;
+let f = vec_a * [3.; 8];
+let g = vec_a * _mm256_set1_ps(3.);
 ```
 
 

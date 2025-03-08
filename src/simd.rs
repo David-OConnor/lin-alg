@@ -23,7 +23,7 @@ use std::{
         _mm256_sub_ps,
     },
     mem::transmute,
-    ops::{Add, DivAssign, Mul, MulAssign, Neg, Sub},
+    ops::{Add, Div, DivAssign, Mul, MulAssign, Neg, Sub},
 };
 
 use crate::f32::Vec3;
@@ -31,7 +31,7 @@ use crate::f32::Vec3;
 
 /// SoA. Performs operations on 8 Vecs.
 #[derive(Clone, Copy, Debug)]
-pub struct Vec3sF32 {
+pub struct Vec3S {
     pub x: __m256,
     pub y: __m256,
     pub z: __m256,
@@ -47,7 +47,7 @@ pub struct Vec3sF64 {
 
 /// SoA. Performs operations on 8 Vecs.
 #[derive(Clone, Copy, Debug)]
-pub struct Vec4sF32 {
+pub struct Vec4S {
     pub x: __m256,
     pub y: __m256,
     pub z: __m256,
@@ -63,7 +63,7 @@ pub struct Vec4sF64 {
     pub w: __m256d,
 }
 
-impl Add for Vec3sF32 {
+impl Add for Vec3S {
     type Output = Self;
 
     fn add(self, rhs: Self) -> Self::Output {
@@ -77,7 +77,7 @@ impl Add for Vec3sF32 {
     }
 }
 
-impl Sub for Vec3sF32 {
+impl Sub for Vec3S {
     type Output = Self;
 
     fn sub(self, rhs: Self) -> Self::Output {
@@ -91,7 +91,7 @@ impl Sub for Vec3sF32 {
     }
 }
 
-impl Neg for Vec3sF32 {
+impl Neg for Vec3S {
     type Output = Self;
 
     fn neg(self) -> Self::Output {
@@ -107,9 +107,9 @@ impl Neg for Vec3sF32 {
     }
 }
 
-// Scalar multiplication
-impl Mul<f32> for Vec3sF32 {
+impl Mul<f32> for Vec3S {
     type Output = Self;
+
     fn mul(self, rhs: f32) -> Self::Output {
         unsafe {
             let s = _mm256_set1_ps(rhs);
@@ -123,7 +123,85 @@ impl Mul<f32> for Vec3sF32 {
     }
 }
 
-impl Add for Vec4sF32 {
+impl Mul<[f32; 8]> for Vec3S {
+    type Output = Self;
+
+    fn mul(self, rhs: [f32; 8]) -> Self::Output {
+        unsafe {
+            // Load the array into a __m256 register for lane-wise multiplication:
+            let r = _mm256_loadu_ps(rhs.as_ptr());
+            Self {
+                x: _mm256_mul_ps(self.x, r),
+                y: _mm256_mul_ps(self.y, r),
+                z: _mm256_mul_ps(self.z, r),
+            }
+        }
+    }
+}
+
+impl Mul<__m256> for Vec3S {
+    type Output = Self;
+
+    fn mul(self, rhs: __m256) -> Self::Output {
+        unsafe {
+            // Load the array into a __m256 register for lane-wise multiplication:
+            Self {
+                x: _mm256_mul_ps(self.x, rhs),
+                y: _mm256_mul_ps(self.y, rhs),
+                z: _mm256_mul_ps(self.z, rhs),
+            }
+        }
+    }
+}
+
+impl Div<f32> for Vec3S {
+    type Output = Self;
+
+    fn div(self, rhs: f32) -> Self::Output {
+        unsafe {
+            let s = _mm256_set1_ps(rhs);
+
+            Self {
+                x: _mm256_div_ps(self.x, s),
+                y: _mm256_div_ps(self.y, s),
+                z: _mm256_div_ps(self.z, s),
+            }
+        }
+    }
+}
+
+impl Div<[f32; 8]> for Vec3S {
+    type Output = Self;
+
+    fn div(self, rhs: [f32; 8]) -> Self::Output {
+        unsafe {
+            // Load the array into a __m256 register for lane-wise divtiplication:
+            let r = _mm256_loadu_ps(rhs.as_ptr());
+            Self {
+                x: _mm256_div_ps(self.x, r),
+                y: _mm256_div_ps(self.y, r),
+                z: _mm256_div_ps(self.z, r),
+            }
+        }
+    }
+}
+
+impl Div<__m256> for Vec3S {
+    type Output = Self;
+
+    fn div(self, rhs: __m256) -> Self::Output {
+        unsafe {
+            // Load the array into a __m256 register for lane-wise divtiplication:
+            Self {
+                x: _mm256_div_ps(self.x, rhs),
+                y: _mm256_div_ps(self.y, rhs),
+                z: _mm256_div_ps(self.z, rhs),
+            }
+        }
+    }
+}
+
+impl Add for Vec4S {
     type Output = Self;
 
     fn add(self, rhs: Self) -> Self::Output {
@@ -138,7 +216,7 @@ impl Add for Vec4sF32 {
     }
 }
 
-impl Sub for Vec4sF32 {
+impl Sub for Vec4S {
     type Output = Self;
 
     fn sub(self, rhs: Self) -> Self::Output {
@@ -153,7 +231,7 @@ impl Sub for Vec4sF32 {
     }
 }
 
-impl Neg for Vec4sF32 {
+impl Neg for Vec4S {
     type Output = Self;
 
     fn neg(self) -> Self::Output {
@@ -171,8 +249,9 @@ impl Neg for Vec4sF32 {
 }
 
 // Scalar multiplication
-impl Mul<f32> for Vec4sF32 {
+impl Mul<f32> for Vec4S {
     type Output = Self;
+
     fn mul(self, rhs: f32) -> Self::Output {
         unsafe {
             let s = _mm256_set1_ps(rhs);
@@ -188,7 +267,7 @@ impl Mul<f32> for Vec4sF32 {
 }
 
 /// MulAssign by scalar
-impl MulAssign<f32> for Vec3sF32 {
+impl MulAssign<f32> for Vec3S {
     fn mul_assign(&mut self, rhs: f32) {
         unsafe {
             let s = _mm256_set1_ps(rhs);
@@ -200,7 +279,7 @@ impl MulAssign<f32> for Vec3sF32 {
 }
 
 /// DivAssign by scalar
-impl DivAssign<f32> for Vec3sF32 {
+impl DivAssign<f32> for Vec3S {
     fn div_assign(&mut self, rhs: f32) {
         unsafe {
             let s = _mm256_set1_ps(rhs);
@@ -211,7 +290,7 @@ impl DivAssign<f32> for Vec3sF32 {
     }
 }
 
-impl Vec3sF32 {
+impl Vec3S {
     /// Create a new 8-lane, SoA, f32 Vec3
     pub fn new(slots: [Vec3; 8]) -> Self {
         // unsafe {
@@ -292,23 +371,6 @@ impl Vec3sF32 {
         unsafe { transmute(self.dot(rhs)) }
     }
 
-    /// Lane-wise cross product
-    /// cross.x = self.y * rhs.z - self.z * rhs.y
-    /// cross.y = self.z * rhs.x - self.x * rhs.z
-    /// cross.z = self.x * rhs.y - self.y * rhs.x
-    pub fn cross(self, rhs: Self) -> Self {
-        unsafe {
-            let yz = _mm256_sub_ps(_mm256_mul_ps(self.y, rhs.z), _mm256_mul_ps(self.z, rhs.y)); // x-lane
-            let zx = _mm256_sub_ps(_mm256_mul_ps(self.z, rhs.x), _mm256_mul_ps(self.x, rhs.z)); // y-lane
-            let xy = _mm256_sub_ps(_mm256_mul_ps(self.x, rhs.y), _mm256_mul_ps(self.y, rhs.x)); // z-lane
-            Vec3sF32 {
-                x: yz,
-                y: zx,
-                z: xy,
-            }
-        }
-    }
-
     /// Hadamard product (lane-wise multiplication of x, y, z).
     pub fn hadamard_product(self, rhs: Self) -> Self {
         unsafe {
@@ -359,6 +421,7 @@ impl Vec3sF32 {
         unsafe {
             let ms = self.magnitude();
             let recip = _mm256_div_ps(_mm256_set1_ps(1.0), ms);
+
             Self {
                 x: _mm256_mul_ps(self.x, recip),
                 y: _mm256_mul_ps(self.y, recip),
@@ -366,9 +429,33 @@ impl Vec3sF32 {
             }
         }
     }
+
+    /// Lane-wise cross product
+    /// cross.x = self.y * rhs.z - self.z * rhs.y
+    /// cross.y = self.z * rhs.x - self.x * rhs.z
+    /// cross.z = self.x * rhs.y - self.y * rhs.x
+    pub fn cross(self, rhs: Self) -> Self {
+        unsafe {
+            let yz = _mm256_sub_ps(_mm256_mul_ps(self.y, rhs.z), _mm256_mul_ps(self.z, rhs.y)); // x-lane
+            let zx = _mm256_sub_ps(_mm256_mul_ps(self.z, rhs.x), _mm256_mul_ps(self.x, rhs.z)); // y-lane
+            let xy = _mm256_sub_ps(_mm256_mul_ps(self.x, rhs.y), _mm256_mul_ps(self.y, rhs.x)); // z-lane
+
+            Self {
+                x: yz,
+                y: zx,
+                z: xy,
+            }
+        }
+    }
+
+    /// Project a vector onto a plane defined by its normal vector. Assumes self and `plane_norm`
+    /// are unit vectors.
+    pub fn project_to_plane(self, plane_norm: Self) -> Self {
+        unsafe { self - plane_norm * self.dot(plane_norm) }
+    }
 }
 
-impl Vec4sF32 {
+impl Vec4S {
     /// Dot product across x, y, z lanes. Each lane result is x_i*x_j + y_i*y_j + z_i*z_j.
     /// Returns an __m256 of 8 dot products (one for each lane).
     pub fn dot(self, rhs: Self) -> __m256 {

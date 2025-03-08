@@ -241,8 +241,8 @@ fn test_soa_vec3_cross() {
     let vec_a = f32::Vec3::new(1., 2., 3.);
     let vec_b = f32::Vec3::new(4., 5., 6.);
 
-    let a = Vec3sF32::new([vec_a; 8]);
-    let b = Vec3sF32::new([vec_b; 8]);
+    let a = Vec3S::new([vec_a; 8]);
+    let b = Vec3S::new([vec_b; 8]);
 
     let c = a.cross(b);
 
@@ -263,8 +263,8 @@ fn test_soa_vec3_dot() {
     let vec_a = f32::Vec3::new(1., 2., 3.);
     let vec_b = f32::Vec3::new(4., 5., 6.);
 
-    let a = Vec3sF32::new([vec_a; 8]);
-    let b = Vec3sF32::new([vec_b; 8]);
+    let a = Vec3S::new([vec_a; 8]);
+    let b = Vec3S::new([vec_b; 8]);
 
     let c: [f32; 8] = a.dot_unpack(b);
 
@@ -279,8 +279,8 @@ fn test_soa_add() {
     let vec_a = f32::Vec3::new(1., 2., 3.);
     let vec_b = f32::Vec3::new(4., 5., 6.);
 
-    let a = Vec3sF32::new([vec_a; 8]);
-    let b = Vec3sF32::new([vec_b; 8]);
+    let a = Vec3S::new([vec_a; 8]);
+    let b = Vec3S::new([vec_b; 8]);
     let c = a + b;
 
     let vec3s = c.unpack();
