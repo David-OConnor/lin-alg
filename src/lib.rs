@@ -15,7 +15,7 @@ mod matrix;
 mod quaternion;
 mod util;
 
-#[cfg(all(any(target_arch = "x86", target_arch = "x86_64"), target_feature = "sse"))]
+#[cfg(all(any(target_arch = "x86", target_arch = "x86_64"), target_feature = "avx"))]
 pub mod simd;
 
 #[cfg(test)]
