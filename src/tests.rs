@@ -1,5 +1,12 @@
 // Bring in the items needed from your crate
+#[cfg(all(any(target_arch = "x86", target_arch = "x86_64"), feature = "std"))]
+use std::arch::x86_64::_mm256_set_ps;
+#[cfg(all(any(target_arch = "x86", target_arch = "x86_64"), feature = "std"))]
+use std::mem::transmute;
+
 use super::*;
+#[cfg(all(any(target_arch = "x86", target_arch = "x86_64"), feature = "std"))]
+use crate::simd::*;
 
 // todo: More tests, including for matrices.
 
@@ -57,7 +64,7 @@ fn test_vec3_normalize() {
     // The magnitude should be 1.0 now (3,0,4 is a 3-4-5 triangle, so the original magnitude is 5)
     let magnitude = v.magnitude();
     assert!(
-        (magnitude - 1.0).abs() < 1e-6,
+        (magnitude - 1.0).abs() < f32::EPSILON,
         "Magnitude was not 1, got {}",
         magnitude
     );
@@ -145,9 +152,9 @@ fn test_quaternion_mul_vec() {
     assert_eq!(result_q.w, -0.0 - 0.0 - 0.0); // = 0
 
     let rotated_v = q.rotate_vec(v);
-    assert!((rotated_v.x - 0.0).abs() < 1e-6);
-    assert!((rotated_v.y + 1.0).abs() < 1e-6); // we expect y = -1
-    assert!((rotated_v.z - 0.0).abs() < 1e-6);
+    assert!((rotated_v.x - 0.0).abs() < f32::EPSILON);
+    assert!((rotated_v.y + 1.0).abs() < f32::EPSILON); // we expect y = -1
+    assert!((rotated_v.z - 0.0).abs() < f32::EPSILON);
 }
 
 #[test]
@@ -226,4 +233,61 @@ fn test_quaternion_from_and_to_euler() {
     // assert!((euler2.roll - std::f32::consts::FRAC_PI_2).abs() < 0.2);
     assert!((euler2.pitch - 0.0).abs() < 0.2);
     assert!((euler2.yaw - std::f32::consts::FRAC_PI_2).abs() < 0.2);
+}
+
+#[cfg(all(any(target_arch = "x86", target_arch = "x86_64"), feature = "std"))]
+#[test]
+fn test_soa_vec3_cross() {
+    let vec_a = f32::Vec3::new(1., 2., 3.);
+    let vec_b = f32::Vec3::new(4., 5., 6.);
+
+    let a = Vec3sF32::new([vec_a; 8]);
+    let b = Vec3sF32::new([vec_b; 8]);
+
+    let c = a.cross(b);
+
+    let cx: [f32; 8] = unsafe { transmute(c.x) };
+    let cy: [f32; 8] = unsafe { transmute(c.y) };
+    let cz: [f32; 8] = unsafe { transmute(c.z) };
+
+    for i in 0..8 {
+        assert!((cx[i] - -3.0).abs() < f32::EPSILON);
+        assert!((cy[i] - 6.0).abs() < f32::EPSILON);
+        assert!((cz[i] - -3.0).abs() < f32::EPSILON);
+    }
+}
+
+#[cfg(all(any(target_arch = "x86", target_arch = "x86_64"), feature = "std"))]
+#[test]
+fn test_soa_vec3_dot() {
+    let vec_a = f32::Vec3::new(1., 2., 3.);
+    let vec_b = f32::Vec3::new(4., 5., 6.);
+
+    let a = Vec3sF32::new([vec_a; 8]);
+    let b = Vec3sF32::new([vec_b; 8]);
+
+    let c: [f32; 8] = a.dot_unpack(b);
+
+    for i in 0..8 {
+        assert!((c[i] - (32.0)).abs() < f32::EPSILON);
+    }
+}
+
+#[cfg(all(any(target_arch = "x86", target_arch = "x86_64"), feature = "std"))]
+#[test]
+fn test_soa_add() {
+    let vec_a = f32::Vec3::new(1., 2., 3.);
+    let vec_b = f32::Vec3::new(4., 5., 6.);
+
+    let a = Vec3sF32::new([vec_a; 8]);
+    let b = Vec3sF32::new([vec_b; 8]);
+    let c = a + b;
+
+    let vec3s = c.unpack();
+
+    for vec3 in &vec3s {
+        assert!((vec3.x - 5.0).abs() < f32::EPSILON);
+        assert!((vec3.y - 7.0).abs() < f32::EPSILON);
+        assert!((vec3.z - 9.0).abs() < f32::EPSILON);
+    }
 }

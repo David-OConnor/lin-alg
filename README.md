@@ -29,7 +29,8 @@ For information on practical quaternion operations: [Quaternions: A practical gu
 The `From` trait is implemented for most types, for converting between `f32` and `f64` variants using the `into()` syntax.
 
 Includes experimental, early-stage SIMD constructs (SoA layout), in the `simd` module. They are configured with 256-bit
-wide values, performing operations on 8 `f32` Vec3 or Vec4s, or 4 `f64` ones. Ignore these for now.
+wide (AVX) values, performing operations on 8 `f32` Vec3 or Vec4s, or 4 `f64` ones. See the example below for details.
+not all functionality is implemented.
 
 See the official documentation (Linked above) for details. Below is a brief, impractical syntax overview:
 
@@ -110,4 +111,28 @@ pub fn calc_dihedral_angle(bond_middle: Vec3, bond_adjacent1: Vec3, bond_adjacen
     if det < 0. { result } else { TAU - result }
 }
 ```
+
+A simple SIMD example:
+```rust
+use lin_alg::simd::Vec3sF32;
+
+// Non-SIMD Vec3s we'll start with.
+let vec_a = Vec3::new(1., 2., 3.);
+let vec_b = Vec3::new(4., 5., 6.);
+
+// Expect these SIMD types to change name.
+let a = Vec3sF32::new([vec_a; 8]);
+let b = Vec3sF32::new([vec_b; 8]);
+let c = a + b;
+
+// Create a [Vec3; 8], due to the `unpack` method.
+let d = a.cross(b).unpack();
+
+// Create a `__m256`, then convert to an array.
+let dot_result: [f32; 8] = unsafe { transmute(a.dot(b)) };
+
+// Create a [f32; 8].
+let dot_result = a.dot_unpack(b);
+```
+
 
