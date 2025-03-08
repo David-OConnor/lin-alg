@@ -28,6 +28,8 @@ For information on practical quaternion operations: [Quaternions: A practical gu
 
 The `From` trait is implemented for most types, for converting between `f32` and `f64` variants using the `into()` syntax.
 
+Includes experimental, early-stage SIMD constructs (SoA layout), in the `simd` module. Ignore these for now.
+
 See the official documentation (Linked above) for details. Below is a brief, impractical syntax overview:
 
 ```rust
