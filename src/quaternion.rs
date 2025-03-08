@@ -47,7 +47,7 @@ macro_rules! create_quaternion {
             }
         }
 
-        impl Mul<Self> for Quaternion {
+        impl Mul for Quaternion {
             type Output = Self;
 
             fn mul(self, rhs: Self) -> Self::Output {
@@ -128,6 +128,21 @@ macro_rules! create_quaternion {
             /// Convert to a len-4 array: [w, x, y, z].
             pub fn to_arr(&self) -> [$f; 4] {
                 [self.w, self.x, self.y, self.z]
+            }
+
+            /// Create a rotation quaternion from an axis and angle.
+            pub fn from_axis_angle(axis: Vec3, angle: $f) -> Self {
+                // Here we calculate the sin( theta / 2) once for optimization
+                let c = (angle / 2.).sin();
+
+                Self {
+                    // Calcualte the w value by cos( theta / 2 )
+                    w: (angle / 2.).cos(),
+                    // Calculate the x, y and z of the quaternion
+                    x: axis.x * c,
+                    y: axis.y * c,
+                    z: axis.z * c,
+                }
             }
 
             /// Create the quaternion that creates the shortest (great circle) rotation from vec0
@@ -214,21 +229,6 @@ macro_rules! create_quaternion {
             /// Uses the right hand rule.
             pub fn rotate_vec(self, vec: Vec3) -> Vec3 {
                 (self * vec * self.inverse()).to_vec()
-            }
-
-            /// Create a rotation quaternion from an axis and angle.
-            pub fn from_axis_angle(axis: Vec3, angle: $f) -> Self {
-                // Here we calculate the sin( theta / 2) once for optimization
-                let c = (angle / 2.).sin();
-
-                Self {
-                    // Calcualte the w value by cos( theta / 2 )
-                    w: (angle / 2.).cos(),
-                    // Calculate the x, y and z of the quaternion
-                    x: axis.x * c,
-                    y: axis.y * c,
-                    z: axis.z * c,
-                }
             }
 
             /// Extract the axis of rotation.

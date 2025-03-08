@@ -57,7 +57,7 @@ macro_rules! create_matrix {
             }
         }
 
-        impl Mul<Self> for Mat3 {
+        impl Mul for Mat3 {
             type Output = Self;
 
             fn mul(self, rhs: Self) -> Self::Output {
@@ -393,7 +393,7 @@ macro_rules! create_matrix {
             }
         }
 
-        impl Mul<Self> for Mat4 {
+        impl Mul for Mat4 {
             type Output = Self;
 
             fn mul(self, rhs: Self) -> Self::Output {

@@ -19,7 +19,7 @@ Vector and Quaternion types are *copy*.
 
 For Compatibility with no_std targets, e.g. embedded, disable default features, and enable the `no_std` feature. This  omits
 `std::fmt::Display` implementations, and enables [num_traits](https://docs.rs/num-traits/latest/num_traits/)'s `libm` capabilities
-for certain operations. `lin_alg = { version = "^1.0.8", default-features = false, features = ["no_std"] }`
+for certain operations. `lin_alg = { version = "^1.1.0", default-features = false, features = ["no_std"] }`
 
 For computer-graphics functionality (e.g. specialty matrix constructors, and [de]serialization to byte arrays for passing to and from GPUs), use the `computer_graphics` 
 feature. For [bincode](https://docs.rs/bincode/latest/bincode/) binary encoding and decoding, use the `encode` feature.
@@ -31,12 +31,12 @@ The `From` trait is implemented for most types, for converting between `f32` and
 
 ## SIMD
 
-Includes experimental, early-stage SIMD constructs (SoA layout): The `Vec3S` and `Vec4S` types. They are configured with 256-bit
-wide (AVX) values, performing operations on 8 `f32` Vec3 or Vec4s, or 4 `f64` ones. See the example below for details.
+Includes WIP SIMD constructs (SoA layout): The `Vec3S`,`Vec4S`, and `QuaternionS` types. They are configured with 256-bit
+wide (AVX) values, performing (for vectors) operations on 8 `f32` Vec3 or Vec4s, or 4 `f64` ones. See the example below for details.
 not all functionality is implemented, and only `f32` variants are implemented at this time.
 
-Various operator overloads are implement. For example, you can (scalar) multiply a `Vec3S` by a `f32`, a `[f32; 8]`, or
-a `__m256`.
+Various operator overloads are implemented. For example, you can (scalar) multiply a `Vec3S` by a `f32`, a `[f32; 8]`, or
+a `__m256`. This applies to quaternion operations, like multiplication, as well.
 
 
 ## Examples
@@ -121,7 +121,7 @@ pub fn calc_dihedral_angle(bond_middle: Vec3, bond_adjacent1: Vec3, bond_adjacen
 }
 ```
 
-A simple SIMD example:
+A SIMD example over vector operations:
 ```rust
 use lin_alg::f32:{Vec3, Vec3S};
 
@@ -151,4 +151,40 @@ let f = vec_a * [3.; 8];
 let g = vec_a * _mm256_set1_ps(3.);
 ```
 
+A SIMD example of rotating vectors.
+```rust
+use core::f32::consts::TAU;
+use lin_alg::f32::{Quaternion, Vec3, QuaternionS, Vec3S};
+
+let rot_init = [
+    Quaternion::from_unit_vecs(UP, FORWARD),
+    Quaternion::from_unit_vecs(UP, -FORWARD),
+    Quaternion::from_unit_vecs(UP, RIGHT),
+    Quaternion::from_unit_vecs(UP, -RIGHT),
+    Quaternion::from_unit_vecs(UP, UP),
+    Quaternion::from_unit_vecs(UP, -UP),
+    Quaternion::from_axis_angle(RIGHT, TAU/4.),
+    Quaternion::from_axis_angle(RIGHT, TAU/8.),
+];
+
+let rotation = QuaternionS::new(rot_init);
+
+// This could be 8 separate values.
+let vec = Vec3S::new([UP; 8]);
+
+let result = rotation.rotate_vec(vec).unpack();
+
+let sqrt_2_div_2 = 2_f32.sqrt()/2.;
+let angled = Vec3::new(0., -sqrt_2_div_2, sqrt_2_div_2);
+
+assert!((result[0] - FORWARD).magnitude() < f32::EPSILON);
+assert!((result[1] - -FORWARD).magnitude() < f32::EPSILON);
+assert!((result[2] - RIGHT).magnitude() < f32::EPSILON);
+assert!((result[3] - -RIGHT).magnitude() < f32::EPSILON);
+assert!((result[4] - UP).magnitude() < f32::EPSILON);
+assert!((result[5] - -UP).magnitude() < f32::EPSILON);
+assert!((result[6] - -FORWARD).magnitude() < f32::EPSILON);
+assert!((result[7] - angled).magnitude() < f32::EPSILON);
+
+```
 

@@ -26,7 +26,7 @@ use std::{
     ops::{Add, Div, DivAssign, Mul, MulAssign, Neg, Sub},
 };
 
-use crate::f32::Vec3;
+use crate::f32::{Quaternion, Vec3};
 // You could also implement Mul<f32> similarly, scaling all lanes by a constant
 
 /// SoA. Performs operations on 8 Vecs.
@@ -61,6 +61,12 @@ pub struct Vec4sF64 {
     pub y: __m256d,
     pub z: __m256d,
     pub w: __m256d,
+}
+
+impl Default for Vec3S {
+    fn default() -> Self {
+        Self::new_zero()
+    }
 }
 
 impl Add for Vec3S {
@@ -201,6 +207,100 @@ impl Div<__m256> for Vec3S {
     }
 }
 
+impl Add<f32> for Vec3S {
+    type Output = Self;
+
+    fn add(self, rhs: f32) -> Self::Output {
+        unsafe {
+            let s = _mm256_set1_ps(rhs);
+
+            Self {
+                x: _mm256_add_ps(self.x, s),
+                y: _mm256_add_ps(self.y, s),
+                z: _mm256_add_ps(self.z, s),
+            }
+        }
+    }
+}
+
+impl Add<[f32; 8]> for Vec3S {
+    type Output = Self;
+
+    fn add(self, rhs: [f32; 8]) -> Self::Output {
+        unsafe {
+            // Load the array into a __m256 register for lane-wise addition
+            let r = _mm256_loadu_ps(rhs.as_ptr());
+            Self {
+                x: _mm256_add_ps(self.x, r),
+                y: _mm256_add_ps(self.y, r),
+                z: _mm256_add_ps(self.z, r),
+            }
+        }
+    }
+}
+
+impl Add<__m256> for Vec3S {
+    type Output = Self;
+
+    fn add(self, rhs: __m256) -> Self::Output {
+        unsafe {
+            // Load the array into a __m256 register for lane-wise addition
+            Self {
+                x: _mm256_add_ps(self.x, rhs),
+                y: _mm256_add_ps(self.y, rhs),
+                z: _mm256_add_ps(self.z, rhs),
+            }
+        }
+    }
+}
+
+impl Sub<f32> for Vec3S {
+    type Output = Self;
+
+    fn sub(self, rhs: f32) -> Self::Output {
+        unsafe {
+            let s = _mm256_set1_ps(rhs);
+
+            Self {
+                x: _mm256_sub_ps(self.x, s),
+                y: _mm256_sub_ps(self.y, s),
+                z: _mm256_sub_ps(self.z, s),
+            }
+        }
+    }
+}
+
+impl Sub<[f32; 8]> for Vec3S {
+    type Output = Self;
+
+    fn sub(self, rhs: [f32; 8]) -> Self::Output {
+        unsafe {
+            // Load the array into a __m256 register for lane-wise subtiplication:
+            let r = _mm256_loadu_ps(rhs.as_ptr());
+            Self {
+                x: _mm256_sub_ps(self.x, r),
+                y: _mm256_sub_ps(self.y, r),
+                z: _mm256_sub_ps(self.z, r),
+            }
+        }
+    }
+}
+
+impl Sub<__m256> for Vec3S {
+    type Output = Self;
+
+    fn sub(self, rhs: __m256) -> Self::Output {
+        unsafe {
+            // Load the array into a __m256 register for lane-wise subtiplication:
+            Self {
+                x: _mm256_sub_ps(self.x, rhs),
+                y: _mm256_sub_ps(self.y, rhs),
+                z: _mm256_sub_ps(self.z, rhs),
+            }
+        }
+    }
+}
+
 impl Add for Vec4S {
     type Output = Self;
 
@@ -248,7 +348,6 @@ impl Neg for Vec4S {
     }
 }
 
-// Scalar multiplication
 impl Mul<f32> for Vec4S {
     type Output = Self;
 
@@ -266,7 +365,6 @@ impl Mul<f32> for Vec4S {
     }
 }
 
-/// MulAssign by scalar
 impl MulAssign<f32> for Vec3S {
     fn mul_assign(&mut self, rhs: f32) {
         unsafe {
@@ -330,7 +428,17 @@ impl Vec3S {
         }
     }
 
-    /// Convert the SoA data back into an array of eight Vec3's.
+    fn new_zero() -> Self {
+        unsafe {
+            Self {
+                x: _mm256_setzero_ps(),
+                y: _mm256_setzero_ps(),
+                z: _mm256_setzero_ps(),
+            }
+        }
+    }
+
+    /// Convert the SoA data back into an array of eight Vec3s.
     pub fn unpack(self) -> [Vec3; 8] {
         unsafe {
             // Extract each lane from the AVX registers into arrays of length 8
@@ -466,5 +574,291 @@ impl Vec4S {
             r = _mm256_add_ps(r, _mm256_mul_ps(self.w, rhs.w));
             r
         }
+    }
+}
+
+/// SoA.
+#[derive(Clone, Copy, Debug)]
+pub struct QuaternionS {
+    pub w: __m256,
+    pub x: __m256,
+    pub y: __m256,
+    pub z: __m256,
+}
+
+impl Default for QuaternionS {
+    fn default() -> Self {
+        Self::new_identity()
+    }
+}
+
+impl Add for QuaternionS {
+    type Output = Self;
+
+    fn add(self, rhs: Self) -> Self::Output {
+        unsafe {
+            Self {
+                w: _mm256_add_ps(self.w, rhs.w),
+                x: _mm256_add_ps(self.x, rhs.x),
+                y: _mm256_add_ps(self.y, rhs.y),
+                z: _mm256_add_ps(self.z, rhs.z),
+            }
+        }
+    }
+}
+
+impl Sub for QuaternionS {
+    type Output = Self;
+
+    fn sub(self, rhs: Self) -> Self::Output {
+        unsafe {
+            Self {
+                w: _mm256_sub_ps(self.w, rhs.w),
+                x: _mm256_sub_ps(self.x, rhs.x),
+                y: _mm256_sub_ps(self.y, rhs.y),
+                z: _mm256_sub_ps(self.z, rhs.z),
+            }
+        }
+    }
+}
+
+impl Mul for QuaternionS {
+    type Output = Self;
+
+    // todo: QC This against your non-SIMD impl
+    fn mul(self, rhs: Self) -> Self::Output {
+        unsafe {
+            let w = _mm256_sub_ps(
+                _mm256_sub_ps(
+                    _mm256_sub_ps(_mm256_mul_ps(self.w, rhs.w), _mm256_mul_ps(self.x, rhs.x)),
+                    _mm256_mul_ps(self.y, rhs.y),
+                ),
+                _mm256_mul_ps(self.z, rhs.z),
+            );
+
+            let x = _mm256_add_ps(
+                _mm256_add_ps(_mm256_mul_ps(self.w, rhs.x), _mm256_mul_ps(self.x, rhs.w)),
+                _mm256_sub_ps(_mm256_mul_ps(self.y, rhs.z), _mm256_mul_ps(self.z, rhs.y)),
+            );
+
+            let y = _mm256_add_ps(
+                _mm256_sub_ps(_mm256_mul_ps(self.w, rhs.y), _mm256_mul_ps(self.x, rhs.z)),
+                _mm256_add_ps(_mm256_mul_ps(self.y, rhs.w), _mm256_mul_ps(self.z, rhs.x)),
+            );
+
+            let z = _mm256_add_ps(
+                _mm256_add_ps(_mm256_mul_ps(self.w, rhs.z), _mm256_mul_ps(self.x, rhs.y)),
+                _mm256_sub_ps(_mm256_mul_ps(self.z, rhs.w), _mm256_mul_ps(self.y, rhs.x)),
+            );
+
+            Self { w, x, y, z }
+        }
+    }
+}
+
+impl Mul<f32> for QuaternionS {
+    type Output = Self;
+
+    fn mul(self, rhs: f32) -> Self::Output {
+        unsafe {
+            // Broadcast the scalar value into an AVX register.
+            let s = _mm256_set1_ps(rhs);
+            Self {
+                w: _mm256_mul_ps(self.w, s),
+                x: _mm256_mul_ps(self.x, s),
+                y: _mm256_mul_ps(self.y, s),
+                z: _mm256_mul_ps(self.z, s),
+            }
+        }
+    }
+}
+
+impl Mul<__m256> for QuaternionS {
+    type Output = Self;
+
+    fn mul(self, rhs: __m256) -> Self::Output {
+        unsafe {
+            Self {
+                w: _mm256_mul_ps(self.w, rhs),
+                x: _mm256_mul_ps(self.x, rhs),
+                y: _mm256_mul_ps(self.y, rhs),
+                z: _mm256_mul_ps(self.z, rhs),
+            }
+        }
+    }
+}
+
+impl Mul<Vec3S> for QuaternionS {
+    type Output = Self;
+
+    /// Returns the multiplication of a Quaternion with a vector.  This is a
+    /// normal Quaternion multiplication where the vector is treated a
+    /// Quaternion with a W element value of zero.  The Quaternion is post-
+    /// multiplied by the vector.
+    fn mul(self, rhs: Vec3S) -> Self::Output {
+        unsafe {
+            // Compute the w component: -self.x * rhs.x - self.y * rhs.y - self.z * rhs.z
+            let prod_x = _mm256_mul_ps(self.x, rhs.x);
+            let prod_y = _mm256_mul_ps(self.y, rhs.y);
+            let prod_z = _mm256_mul_ps(self.z, rhs.z);
+            let sum_xyz = _mm256_add_ps(_mm256_add_ps(prod_x, prod_y), prod_z);
+            let w = _mm256_sub_ps(_mm256_setzero_ps(), sum_xyz);
+
+            // Compute the x component: self.w * rhs.x + self.y * rhs.z - self.z * rhs.y
+            let wx = _mm256_mul_ps(self.w, rhs.x);
+            let yz = _mm256_mul_ps(self.y, rhs.z);
+            let zy = _mm256_mul_ps(self.z, rhs.y);
+            let x = _mm256_sub_ps(_mm256_add_ps(wx, yz), zy);
+
+            // Compute the y component: self.w * rhs.y - self.x * rhs.z + self.z * rhs.x
+            let wy = _mm256_mul_ps(self.w, rhs.y);
+            let xz = _mm256_mul_ps(self.x, rhs.z);
+            let zx = _mm256_mul_ps(self.z, rhs.x);
+            let y = _mm256_add_ps(_mm256_sub_ps(wy, xz), zx);
+
+            // Compute the z component: self.w * rhs.z + self.x * rhs.y - self.y * rhs.x
+            let wz = _mm256_mul_ps(self.w, rhs.z);
+            let xy = _mm256_mul_ps(self.x, rhs.y);
+            let yx = _mm256_mul_ps(self.y, rhs.x);
+            let z = _mm256_sub_ps(_mm256_add_ps(wz, xy), yx);
+
+            Self { w, x, y, z }
+        }
+    }
+}
+
+impl Div for QuaternionS {
+    type Output = Self;
+
+    fn div(self, rhs: Self) -> Self::Output {
+        // Division is implemented as multiplication by the inverse.
+        self * rhs.inverse()
+    }
+}
+
+impl QuaternionS {
+    /// Create a new 8-lane, SoA, f32 Vec3
+    pub fn new(slots: [Quaternion; 8]) -> Self {
+        let mut w_arr = [0.; 8];
+        let mut x_arr = [0.; 8];
+        let mut y_arr = [0.; 8];
+        let mut z_arr = [0.; 8];
+
+        for i in 0..8 {
+            w_arr[i] = slots[i].w;
+            x_arr[i] = slots[i].x;
+            y_arr[i] = slots[i].y;
+            z_arr[i] = slots[i].z;
+        }
+
+        unsafe {
+            Self {
+                w: _mm256_loadu_ps(w_arr.as_ptr()),
+                x: _mm256_loadu_ps(x_arr.as_ptr()),
+                y: _mm256_loadu_ps(y_arr.as_ptr()),
+                z: _mm256_loadu_ps(z_arr.as_ptr()),
+            }
+        }
+    }
+
+    fn new_identity() -> Self {
+        unsafe {
+            Self {
+                w: _mm256_setzero_ps(),
+                x: _mm256_setzero_ps(),
+                y: _mm256_setzero_ps(),
+                z: _mm256_setzero_ps(),
+            }
+        }
+    }
+
+    /// Convert the SoA data back into an array of eight Quatenrions.
+    pub fn unpack(self) -> [Quaternion; 8] {
+        unsafe {
+            // Extract each lane from the AVX registers into arrays of length 8
+            let w_arr: [f32; 8] = transmute(self.w);
+            let x_arr: [f32; 8] = transmute(self.x);
+            let y_arr: [f32; 8] = transmute(self.y);
+            let z_arr: [f32; 8] = transmute(self.z);
+
+            // Reconstruct each Vec3 from corresponding lanes
+            let mut out = [Quaternion {
+                w: 0.0,
+                x: 0.0,
+                y: 0.0,
+                z: 0.0,
+            }; 8];
+            for i in 0..8 {
+                out[i] = Quaternion {
+                    w: w_arr[i],
+                    x: x_arr[i],
+                    y: y_arr[i],
+                    z: z_arr[i],
+                };
+            }
+            out
+        }
+    }
+
+    pub fn inverse(self) -> Self {
+        unsafe {
+            let minus_one = _mm256_set1_ps(-1.0);
+            Self {
+                w: self.w,
+                x: _mm256_mul_ps(self.x, minus_one),
+                y: _mm256_mul_ps(self.y, minus_one),
+                z: _mm256_mul_ps(self.z, minus_one),
+            }
+        }
+    }
+
+    /// Converts the SIMD quaternion to a SIMD 3D vector, discarding `w`.
+    pub fn to_vec(self) -> Vec3S {
+        Vec3S {
+            x: self.x,
+            y: self.y,
+            z: self.z,
+        }
+    }
+
+    /// Returns the magnitude (norm) of each quaternion lane as an __m256.
+    pub fn magnitude(&self) -> __m256 {
+        unsafe {
+            let w2 = _mm256_mul_ps(self.w, self.w);
+            let x2 = _mm256_mul_ps(self.x, self.x);
+            let y2 = _mm256_mul_ps(self.y, self.y);
+            let z2 = _mm256_mul_ps(self.z, self.z);
+
+            let sum1 = _mm256_add_ps(w2, x2);
+            let sum2 = _mm256_add_ps(y2, z2);
+            let sum = _mm256_add_ps(sum1, sum2);
+
+            // Take the square root of each lane.
+            _mm256_sqrt_ps(sum)
+        }
+    }
+
+    /// Returns the normalized quaternion for each lane.
+    pub fn to_normalized(self) -> Self {
+        unsafe {
+            let mag = self.magnitude();
+            let one = _mm256_set1_ps(1.0);
+            let mag_recip = _mm256_div_ps(one, mag);
+
+            Self {
+                w: _mm256_mul_ps(self.w, mag_recip),
+                x: _mm256_mul_ps(self.x, mag_recip),
+                y: _mm256_mul_ps(self.y, mag_recip),
+                z: _mm256_mul_ps(self.z, mag_recip),
+            }
+        }
+    }
+
+    /// Rotate a vector using this quaternion. Note that our multiplication Q * v
+    /// operation is effectively quaternion multiplication, with a quaternion
+    /// created by a vec with w=0.
+    /// Uses the right hand rule.
+    pub fn rotate_vec(self, vec: Vec3S) -> Vec3S {
+        (self * vec * self.inverse()).to_vec()
     }
 }

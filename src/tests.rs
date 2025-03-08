@@ -1,10 +1,12 @@
 // Bring in the items needed from your crate
 #[cfg(all(any(target_arch = "x86", target_arch = "x86_64"), feature = "std"))]
 use std::arch::x86_64::_mm256_set_ps;
+use std::f32::consts::TAU;
 #[cfg(all(any(target_arch = "x86", target_arch = "x86_64"), feature = "std"))]
 use std::mem::transmute;
 
 use super::*;
+use crate::f32::{FORWARD, RIGHT, UP};
 #[cfg(all(any(target_arch = "x86", target_arch = "x86_64"), feature = "std"))]
 use crate::simd::*;
 
@@ -237,7 +239,7 @@ fn test_quaternion_from_and_to_euler() {
 
 #[cfg(all(any(target_arch = "x86", target_arch = "x86_64"), feature = "std"))]
 #[test]
-fn test_soa_vec3_cross() {
+fn test_simd_vec3_cross() {
     let vec_a = f32::Vec3::new(1., 2., 3.);
     let vec_b = f32::Vec3::new(4., 5., 6.);
 
@@ -259,7 +261,7 @@ fn test_soa_vec3_cross() {
 
 #[cfg(all(any(target_arch = "x86", target_arch = "x86_64"), feature = "std"))]
 #[test]
-fn test_soa_vec3_dot() {
+fn test_simd_vec3_dot() {
     let vec_a = f32::Vec3::new(1., 2., 3.);
     let vec_b = f32::Vec3::new(4., 5., 6.);
 
@@ -275,7 +277,7 @@ fn test_soa_vec3_dot() {
 
 #[cfg(all(any(target_arch = "x86", target_arch = "x86_64"), feature = "std"))]
 #[test]
-fn test_soa_add() {
+fn test_simd_add() {
     let vec_a = f32::Vec3::new(1., 2., 3.);
     let vec_b = f32::Vec3::new(4., 5., 6.);
 
@@ -290,4 +292,38 @@ fn test_soa_add() {
         assert!((vec3.y - 7.0).abs() < f32::EPSILON);
         assert!((vec3.z - 9.0).abs() < f32::EPSILON);
     }
+}
+
+#[cfg(all(any(target_arch = "x86", target_arch = "x86_64"), feature = "std"))]
+#[test]
+fn test_simd_rotate_vec() {
+    let rot_init = [
+        f32::Quaternion::from_unit_vecs(UP, FORWARD),
+        f32::Quaternion::from_unit_vecs(UP, -FORWARD),
+        f32::Quaternion::from_unit_vecs(UP, RIGHT),
+        f32::Quaternion::from_unit_vecs(UP, -RIGHT),
+        f32::Quaternion::from_unit_vecs(UP, UP),
+        f32::Quaternion::from_unit_vecs(UP, -UP),
+        f32::Quaternion::from_axis_angle(RIGHT, TAU / 4.),
+        f32::Quaternion::from_axis_angle(RIGHT, TAU / 8.),
+    ];
+
+    let rotation = QuaternionS::new(rot_init);
+
+    // This could be 8 separate values.
+    let vec = Vec3S::new([UP; 8]);
+
+    let result = rotation.rotate_vec(vec).unpack();
+
+    let sqrt_2_div_2 = 2_f32.sqrt() / 2.;
+    let angled = f32::Vec3::new(0., -sqrt_2_div_2, sqrt_2_div_2);
+
+    assert!((result[0] - FORWARD).magnitude() < f32::EPSILON);
+    assert!((result[1] - -FORWARD).magnitude() < f32::EPSILON);
+    assert!((result[2] - RIGHT).magnitude() < f32::EPSILON);
+    assert!((result[3] - -RIGHT).magnitude() < f32::EPSILON);
+    assert!((result[4] - UP).magnitude() < f32::EPSILON);
+    assert!((result[5] - -UP).magnitude() < f32::EPSILON);
+    assert!((result[6] - -FORWARD).magnitude() < f32::EPSILON);
+    assert!((result[7] - angled).magnitude() < f32::EPSILON);
 }
