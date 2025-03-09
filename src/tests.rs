@@ -1,6 +1,3 @@
-// Bring in the items needed from your crate
-#[cfg(all(any(target_arch = "x86", target_arch = "x86_64"), feature = "std"))]
-use std::arch::x86_64::_mm256_set_ps;
 use std::f32::consts::TAU;
 #[cfg(all(any(target_arch = "x86", target_arch = "x86_64"), feature = "std"))]
 use std::mem::transmute;
@@ -16,10 +13,15 @@ use crate::simd::*;
 fn test_vec3_addition() {
     let v1 = f32::Vec3::new(1.0, 2.0, 3.0);
     let v2 = f32::Vec3::new(4.0, 5.0, 6.0);
-    let sum = v1 + v2;
-    assert_eq!(sum.x, 5.0);
-    assert_eq!(sum.y, 7.0);
-    assert_eq!(sum.z, 9.0);
+    let v3: f32::Vec3 = f64::Vec3::new(4.0, 5.0, 6.0).into();
+
+    let sum1 = v1 + v2;
+    let sum2 = v1 + v3;
+
+    assert_eq!(sum1.x, 5.0);
+    assert_eq!(sum1.y, 7.0);
+    assert_eq!(sum1.z, 9.0);
+    assert_eq!(sum2, f32::Vec3::new(5., 7., 9.));
 }
 
 #[test]
@@ -39,6 +41,13 @@ fn test_vec3_scalar_multiply() {
     assert_eq!(scaled.x, 4.0);
     assert_eq!(scaled.y, 6.0);
     assert_eq!(scaled.z, -2.0);
+
+    let v2 = f32::Vec4::new(2.0, 3.0, -1.0, 10.);
+    let scaled = v2 * 2.0;
+    assert_eq!(scaled.x, 4.0);
+    assert_eq!(scaled.y, 6.0);
+    assert_eq!(scaled.z, -2.0);
+    assert_eq!(scaled.w, 20.0);
 }
 
 #[test]
@@ -57,16 +66,31 @@ fn test_vec3_cross_product() {
     assert_eq!(cross.x, 0.0);
     assert_eq!(cross.y, 0.0);
     assert_eq!(cross.z, 1.0);
+
+    let v3 = f64::Vec3::new(1.0, 0.0, 0.0);
+    let v4 = f64::Vec3::new(0.0, 1.0, 0.0);
+    let cross = v3.cross(v4);
+    assert_eq!(cross.x, 0.0);
+    assert_eq!(cross.y, 0.0);
+    assert_eq!(cross.z, 1.0);
 }
 
 #[test]
-fn test_vec3_normalize() {
+fn test_vec_normalize() {
     let mut v = f32::Vec3::new(3.0, 0.0, 4.0);
     v.normalize();
-    // The magnitude should be 1.0 now (3,0,4 is a 3-4-5 triangle, so the original magnitude is 5)
     let magnitude = v.magnitude();
     assert!(
         (magnitude - 1.0).abs() < f32::EPSILON,
+        "Magnitude was not 1, got {}",
+        magnitude
+    );
+
+    let mut v = f64::Vec4::new(3.0, 0.0, 4.0, 2.);
+    v.normalize();
+    let magnitude = v.magnitude();
+    assert!(
+        (magnitude - 1.0).abs() < f64::EPSILON,
         "Magnitude was not 1, got {}",
         magnitude
     );

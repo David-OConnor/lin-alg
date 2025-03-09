@@ -19,15 +19,14 @@
 use std::{
     arch::x86_64::{
         __m256, __m256d, _mm256_add_ps, _mm256_div_ps, _mm256_loadu_ps, _mm256_mul_ps,
-        _mm256_set_ps, _mm256_set1_ps, _mm256_setzero_ps, _mm256_sqrt_ps, _mm256_storeu_ps,
-        _mm256_sub_ps,
+        _mm256_set1_ps, _mm256_setzero_ps, _mm256_sqrt_ps, _mm256_sub_ps,
     },
     mem::transmute,
+    convert::TryInto,
     ops::{Add, Div, DivAssign, Mul, MulAssign, Neg, Sub},
 };
 
 use crate::f32::{Quaternion, Vec3};
-// You could also implement Mul<f32> similarly, scaling all lanes by a constant
 
 /// SoA. Performs operations on 8 Vecs.
 #[derive(Clone, Copy, Debug)]
@@ -559,7 +558,7 @@ impl Vec3S {
     /// Project a vector onto a plane defined by its normal vector. Assumes self and `plane_norm`
     /// are unit vectors.
     pub fn project_to_plane(self, plane_norm: Self) -> Self {
-        unsafe { self - plane_norm * self.dot(plane_norm) }
+        self - plane_norm * self.dot(plane_norm)
     }
 }
 
@@ -697,26 +696,26 @@ impl Mul<Vec3S> for QuaternionS {
     /// multiplied by the vector.
     fn mul(self, rhs: Vec3S) -> Self::Output {
         unsafe {
-            // Compute the w component: -self.x * rhs.x - self.y * rhs.y - self.z * rhs.z
+            // -self.x * rhs.x - self.y * rhs.y - self.z * rhs.z
             let prod_x = _mm256_mul_ps(self.x, rhs.x);
             let prod_y = _mm256_mul_ps(self.y, rhs.y);
             let prod_z = _mm256_mul_ps(self.z, rhs.z);
             let sum_xyz = _mm256_add_ps(_mm256_add_ps(prod_x, prod_y), prod_z);
             let w = _mm256_sub_ps(_mm256_setzero_ps(), sum_xyz);
 
-            // Compute the x component: self.w * rhs.x + self.y * rhs.z - self.z * rhs.y
+            // self.w * rhs.x + self.y * rhs.z - self.z * rhs.y
             let wx = _mm256_mul_ps(self.w, rhs.x);
             let yz = _mm256_mul_ps(self.y, rhs.z);
             let zy = _mm256_mul_ps(self.z, rhs.y);
             let x = _mm256_sub_ps(_mm256_add_ps(wx, yz), zy);
 
-            // Compute the y component: self.w * rhs.y - self.x * rhs.z + self.z * rhs.x
+            // self.w * rhs.y - self.x * rhs.z + self.z * rhs.x
             let wy = _mm256_mul_ps(self.w, rhs.y);
             let xz = _mm256_mul_ps(self.x, rhs.z);
             let zx = _mm256_mul_ps(self.z, rhs.x);
             let y = _mm256_add_ps(_mm256_sub_ps(wy, xz), zx);
 
-            // Compute the z component: self.w * rhs.z + self.x * rhs.y - self.y * rhs.x
+            // self.w * rhs.z + self.x * rhs.y - self.y * rhs.x
             let wz = _mm256_mul_ps(self.w, rhs.z);
             let xy = _mm256_mul_ps(self.x, rhs.y);
             let yx = _mm256_mul_ps(self.y, rhs.x);
@@ -764,7 +763,7 @@ impl QuaternionS {
     fn new_identity() -> Self {
         unsafe {
             Self {
-                w: _mm256_setzero_ps(),
+                w: _mm256_set1_ps(1.),
                 x: _mm256_setzero_ps(),
                 y: _mm256_setzero_ps(),
                 z: _mm256_setzero_ps(),
@@ -861,4 +860,19 @@ impl QuaternionS {
     pub fn rotate_vec(self, vec: Vec3S) -> Vec3S {
         (self * vec * self.inverse()).to_vec()
     }
+}
+
+/// Used for creating a set of `Vec3S` from one of `Vec3`; the result should have ~1/8 as
+/// many elements.
+pub fn vec3s_to_simd(vecs: &[Vec3]) -> Vec<Vec3S> {
+    // Ensure the slice length is a multiple of 8.
+    assert_eq!(vecs.len() % 8,  0, "Input slice length must be a multiple of 8");
+
+    vecs.chunks_exact(8)
+        .map(|chunk| {
+            // Convert the slice chunk into an array of 8 Vec3 elements.
+            let arr: [Vec3; 8] = chunk.try_into().unwrap();
+            Vec3S::new(arr)
+        })
+        .collect()
 }

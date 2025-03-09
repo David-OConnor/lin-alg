@@ -1,4 +1,4 @@
-//! Haandles Matrix operations
+//! Handles Matrix operations
 
 #![macro_use]
 macro_rules! create_matrix {

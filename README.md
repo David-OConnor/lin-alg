@@ -39,6 +39,12 @@ Various operator overloads are implemented. For example, you can (scalar) multip
 a `__m256`. This applies to quaternion operations, like multiplication, as well.
 
 
+## A note on performance
+For performance-sensitive operations, depending on the details of your computation and hardware, you may wish to 
+use a mix of GPU (CUDA, or graphics shaders), parallelization via threads (e.g. Rayon), and SIMD operations. This 
+library aims to assist in these operations, and leaves details to the application.
+
+
 ## Examples
 
 See the official documentation (Linked above) for details. Below is a brief, impractical syntax overview:
@@ -121,7 +127,7 @@ pub fn calc_dihedral_angle(bond_middle: Vec3, bond_adjacent1: Vec3, bond_adjacen
 }
 ```
 
-A SIMD example over vector operations:
+A SIMD example of vector operations:
 ```rust
 use lin_alg::f32:{Vec3, Vec3S};
 
@@ -185,6 +191,62 @@ assert!((result[4] - UP).magnitude() < f32::EPSILON);
 assert!((result[5] - -UP).magnitude() < f32::EPSILON);
 assert!((result[6] - -FORWARD).magnitude() < f32::EPSILON);
 assert!((result[7] - angled).magnitude() < f32::EPSILON);
-
 ```
 
+An example function using SIMD for a practical use, integrating `Vec3S` with SIMD types directly.
+
+```rust
+use std::arch::x86_64::__m256;
+use lin_alg::f32::{Vec3, Vec3S, vec3s_to_simd};
+
+// ...
+
+fn run_lj(atom_0_posits: &[Vec3], atom_1_posits: &[Vec3]) {
+    // Convert all Vec3s to their SIMD variants, and loop through them.
+    let atom_0_posits_simd = vec3s_to_simd(&atom_0_posits);
+    let atom_1_posits_simd = vec3s_to_simd(&atom_1_posits);
+    
+    // todo: Or, parellilize with Rayon.
+    for i in 0..atom_0_posits_simd {
+        let atom_1 = atom_0_posits_simd[i];       
+        let atom_0 = atom_1_posits_simd[i];       
+        
+        lj_potential(atom_0_posit, atom_1_posit, // ...);)
+    }
+// ...
+
+
+fn lj_potential(
+    atom_0_posit: Vec3S,
+    atom_1_posit: Vec3S,
+    atom_0_els: [Element; 8],
+    atom_1_els: [Element; 8],
+) -> __m256 {
+    unsafe {
+        // This line demonstrates use of this library; the rest of the code below
+        // is for context. We have already partitioned a set of `Vec3` into 
+        // `Vec3S`, grouped in blocks of 8, prior to this function.
+        let r = (atom_0_posit - atom_1_posit).magnitude();
+
+        let mut sig = [0.0; 8];
+        let mut eps = [0.0; 8];
+        for i in 0..8 {
+            (sig[i], eps[i]) = get_lj_params(atom_0_els[i], atom_1_els[i], lj_lut)
+        }
+
+        let sig_ = _mm256_loadu_ps(sig.as_ptr());
+        let eps_ = _mm256_loadu_ps(eps.as_ptr());
+
+        // Intermediate steps; no SIMD exponent.
+        let sr = _mm256_div_ps(sig_, r);
+        let sr2 = _mm256_mul_ps(sr, sr);
+        let sr4 = _mm256_mul_ps(sr2, sr2);
+
+        let sr6 = _mm256_mul_ps(sr4, sr2);
+        let sr12 = _mm256_mul_ps(sr6, sr6);
+
+        let four = _mm256_set1_ps(4.);
+        _mm256_mul_ps(four, _mm256_mul_ps(eps_, _mm256_div_ps(sr12, sr6)))
+    }
+}
+```
