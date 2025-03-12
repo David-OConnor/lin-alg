@@ -21,8 +21,8 @@ use std::{
         __m256, __m256d, _mm256_add_ps, _mm256_div_ps, _mm256_loadu_ps, _mm256_mul_ps,
         _mm256_set1_ps, _mm256_setzero_ps, _mm256_sqrt_ps, _mm256_sub_ps,
     },
-    mem::transmute,
     convert::TryInto,
+    mem::transmute,
     ops::{Add, Div, DivAssign, Mul, MulAssign, Neg, Sub},
 };
 
@@ -865,14 +865,35 @@ impl QuaternionS {
 /// Used for creating a set of `Vec3S` from one of `Vec3`; the result should have ~1/8 as
 /// many elements.
 pub fn vec3s_to_simd(vecs: &[Vec3]) -> Vec<Vec3S> {
-    // Ensure the slice length is a multiple of 8.
-    assert_eq!(vecs.len() % 8,  0, "Input slice length must be a multiple of 8");
+    let remainder = vecs.len() % 8;
+    let padding_needed = if remainder == 0 { 0 } else { 8 - remainder };
 
-    vecs.chunks_exact(8)
+    let mut padded = Vec::with_capacity(vecs.len() + padding_needed);
+    padded.extend_from_slice(vecs);
+    padded.extend((0..padding_needed).map(|_| Vec3::new(0.0, 0.0, 0.0)));
+
+    // Now `padded.len()` is a multiple of 8, so chunks_exact(8) will consume it fully.
+    padded
+        .chunks_exact(8)
         .map(|chunk| {
             // Convert the slice chunk into an array of 8 Vec3 elements.
             let arr: [Vec3; 8] = chunk.try_into().unwrap();
             Vec3S::new(arr)
         })
+        .collect()
+}
+/// Helper function; not directly related to this lib.
+pub fn f32s_to_simd(vals: &[f32]) -> Vec<__m256> {
+    let remainder = vals.len() % 8;
+    let padding_needed = if remainder == 0 { 0 } else { 8 - remainder };
+
+    let mut padded = Vec::with_capacity(vals.len() + padding_needed);
+    padded.extend_from_slice(vals);
+    padded.extend((0..padding_needed).map(|_| 0.0f32));
+
+    // Now `padded.len()` is a multiple of 8, so chunks_exact(8) will consume it fully.
+    padded
+        .chunks_exact(8)
+        .map(|chunk| unsafe { _mm256_loadu_ps(chunk.as_ptr()) })
         .collect()
 }

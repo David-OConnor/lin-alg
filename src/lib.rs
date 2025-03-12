@@ -86,6 +86,12 @@ pub mod f32 {
     create_quaternion!(f32);
     create_matrix!(f32);
 
+    #[cfg(feature = "cuda")]
+    use std::sync::Arc;
+
+    #[cfg(feature = "cuda")]
+    use cudarc::driver::{CudaDevice, CudaSlice};
+
     use super::f64;
     #[cfg(all(any(target_arch = "x86", target_arch = "x86_64"), feature = "std"))]
     pub use crate::simd::{Vec3S, Vec4S};
@@ -222,6 +228,12 @@ pub mod f64 {
     create_vec!(f64);
     create_quaternion!(f64);
     create_matrix!(f64);
+
+    #[cfg(feature = "cuda")]
+    use std::sync::Arc;
+
+    #[cfg(feature = "cuda")]
+    use cudarc::driver::{CudaDevice, CudaSlice};
 
     use super::f32;
 

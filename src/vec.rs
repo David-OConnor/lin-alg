@@ -485,5 +485,19 @@ macro_rules! create_vec {
                 Ok(())
             }
         }
+
+        #[cfg(feature = "cuda")]
+        /// Convert a collection of `Vec3`s into Cuda arrays of their components. Always outputs
+        /// to an `f32` variant, for now.
+        pub fn alloc_vec3s(dev: &Arc<CudaDevice>, data: &[Vec3]) -> CudaSlice<f32> {
+            let mut result = Vec::new();
+            // todo: Ref etcs A/R; you are making a double copy here.
+            for v in data {
+                result.push(v.x as f32);
+                result.push(v.y as f32);
+                result.push(v.z as f32);
+            }
+            dev.htod_copy(result).unwrap()
+        }
     };
 }
