@@ -862,8 +862,8 @@ impl QuaternionS {
     }
 }
 
-/// Used for creating a set of `Vec3S` from one of `Vec3`; the result should have ~1/8 as
-/// many elements.
+/// Used for creating a set of `Vec3S` from one of `Vec3`. Padded as required. The result
+/// will have approximately 8x fewer elements than the input.
 pub fn vec3s_to_simd(vecs: &[Vec3]) -> Vec<Vec3S> {
     let remainder = vecs.len() % 8;
     let padding_needed = if remainder == 0 { 0 } else { 8 - remainder };
@@ -882,7 +882,19 @@ pub fn vec3s_to_simd(vecs: &[Vec3]) -> Vec<Vec3S> {
         })
         .collect()
 }
-/// Helper function; not directly related to this lib.
+
+/// Unpack an array of SIMD `Vec3S` to normal `Vec3`. The result
+/// will have approximately 8x as many elements as the input.
+pub fn simd_to_vec3s(vecs: &[Vec3S]) -> Vec<Vec3> {
+    let mut result = Vec::new();
+    for vec in vecs {
+        result.extend(&vec.unpack());
+    }
+    result
+}
+
+/// Convert a slice of `f32` to an array of SIMD `f32` values, 8-wide. Padded as required. The result
+/// will have approximately 8x fewer elements than the input.
 pub fn f32s_to_simd(vals: &[f32]) -> Vec<__m256> {
     let remainder = vals.len() % 8;
     let padding_needed = if remainder == 0 { 0 } else { 8 - remainder };
@@ -896,4 +908,15 @@ pub fn f32s_to_simd(vals: &[f32]) -> Vec<__m256> {
         .chunks_exact(8)
         .map(|chunk| unsafe { _mm256_loadu_ps(chunk.as_ptr()) })
         .collect()
+}
+
+/// Convert a slice of SIMD `f32` values, 8-wide to an Vec of `f32`. The result
+/// will have approximately 8x as many elements as the input.
+pub fn simd_to_f32s(vals: &[__m256]) -> Vec<f32> {
+    let mut result = Vec::new();
+    for val in vals {
+        let vals_f32: [f32; 8] = unsafe { transmute(*val) };
+        result.extend(&vals_f32);
+    }
+    result
 }

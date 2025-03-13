@@ -206,6 +206,10 @@ fn run_lj(atom_0_posits: &[Vec3], atom_1_posits: &[Vec3]) {
     let atom_0_posits_simd = vec3s_to_simd(&atom_0_posits);
     let atom_1_posits_simd = vec3s_to_simd(&atom_1_posits);
     
+    // We also provide a `f32s_to_simd`, `simd_to_f32s`, `simd_to_vec3s` functions. These, for example,
+    // call `unpack()` on each `Vec3S` to turn it into 8 `Vec3`s. (or transmute for the non-Vec3
+    // f32 types).
+    
     // todo: Or, parellilize with Rayon.
     for i in 0..atom_0_posits_simd {
         let atom_1 = atom_0_posits_simd[i];       

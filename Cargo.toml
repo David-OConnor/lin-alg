@@ -22,7 +22,7 @@ exclude = [".gitignore"]
 [dependencies]
 num-traits = { version = "^0.2.19", default-features = false }
 bincode = { version = "^2.0.0-rc.3", optional = true }
-cudarc = { version = "^0.13.3", optional=true, features=["cuda-12060"] }  # todo: Feature-gate the CUDA version too.
+cudarc = { version = "^0.13.3", optional=true }
 
 [features]
 default = ["std"]
@@ -30,7 +30,12 @@ default = ["std"]
 std = ["num-traits/std"]
 no_std = ["num-traits/libm"]
 encode = ["bincode"]
-cuda = ["cudarc"]
+
+# https://github.com/coreylowman/cudarc/blob/main/Cargo.toml
+cuda = []  # Used internally for feature gates
+cuda-12050 = ["cuda", "cudarc/cuda-12050"]
+cuda-12060 = ["cuda", "cudarc/cuda-12060"]
+cuda-12080 = ["cuda", "cudarc/cuda-12080"]
 
 # The `computer_graphics` feature enables projection matrices,
 # and other operations used in computer graphics.
