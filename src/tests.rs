@@ -267,8 +267,8 @@ fn test_simd_vec3_cross() {
     let vec_a = f32::Vec3::new(1., 2., 3.);
     let vec_b = f32::Vec3::new(4., 5., 6.);
 
-    let a = Vec3S::new([vec_a; 8]);
-    let b = Vec3S::new([vec_b; 8]);
+    let a = Vec3x8::new([vec_a; 8]);
+    let b = Vec3x8::new([vec_b; 8]);
 
     let c = a.cross(b);
 
@@ -289,10 +289,10 @@ fn test_simd_vec3_dot() {
     let vec_a = f32::Vec3::new(1., 2., 3.);
     let vec_b = f32::Vec3::new(4., 5., 6.);
 
-    let a = Vec3S::new([vec_a; 8]);
-    let b = Vec3S::new([vec_b; 8]);
+    let a = Vec3x8::new([vec_a; 8]);
+    let b = Vec3x8::new([vec_b; 8]);
 
-    let c: [f32; 8] = a.dot_unpack(b);
+    let c: [f32; 8] = a.dot_to_array(b);
 
     for i in 0..8 {
         assert!((c[i] - (32.0)).abs() < f32::EPSILON);
@@ -305,11 +305,11 @@ fn test_simd_add() {
     let vec_a = f32::Vec3::new(1., 2., 3.);
     let vec_b = f32::Vec3::new(4., 5., 6.);
 
-    let a = Vec3S::new([vec_a; 8]);
-    let b = Vec3S::new([vec_b; 8]);
+    let a = Vec3x8::new([vec_a; 8]);
+    let b = Vec3x8::new([vec_b; 8]);
     let c = a + b;
 
-    let vec3s = c.unpack();
+    let vec3s = c.to_array();
 
     for vec3 in &vec3s {
         assert!((vec3.x - 5.0).abs() < f32::EPSILON);
@@ -332,12 +332,12 @@ fn test_simd_rotate_vec() {
         f32::Quaternion::from_axis_angle(RIGHT, TAU / 8.),
     ];
 
-    let rotation = QuaternionS::new(rot_init);
+    let rotation = Quaternionx8::from_array(rot_init);
 
     // This could be 8 separate values.
-    let vec = Vec3S::new([UP; 8]);
+    let vec = Vec3x8::new([UP; 8]);
 
-    let result = rotation.rotate_vec(vec).unpack();
+    let result = rotation.rotate_vec(vec).to_array();
 
     let sqrt_2_div_2 = 2_f32.sqrt() / 2.;
     let angled = f32::Vec3::new(0., -sqrt_2_div_2, sqrt_2_div_2);

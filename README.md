@@ -31,12 +31,23 @@ The `From` trait is implemented for most types, for converting between `f32` and
 
 ## SIMD
 
-Includes WIP SIMD constructs (SoA layout): The `Vec3S`,`Vec4S`, and `QuaternionS` types. They are configured with 256-bit
+Includes SIMD constructs (SoA layout) for `f32` types: `Vec3x8`,`Vec4x8`, and `Quaternionx8`. They are configured with 256-bit
 wide (AVX) values, performing (for vectors) operations on 8 `f32` Vec3 or Vec4s, or 4 `f64` ones. See the example below for details.
-not all functionality is implemented, and only `f32` variants are implemented at this time.
 
-Various operator overloads are implemented. For example, you can (scalar) multiply a `Vec3S` by a `f32`, a `[f32; 8]`, or
-a `__m256`. This applies to quaternion operations, like multiplication, as well.
+This library exposes an `f32x8` SIMD type that wraps `__m256` with appropriate constructors, operator overloads etc. This,
+and the `Vec3x8` etc APIs, mimic the nightly [core::simd](https://doc.rust-lang.org/beta/core/simd/index.html) library. 
+We take this approach so this library will work on stable rust. We'll remove `f32x8` when `core::simd` is stable.
+
+
+
+## CUDA (GPU)
+This library includes two helper functions for use with the `cudarc` library; these are to allocated `Vec3` and `Quaternion`
+types. (f32 and f64). They perform host-to-device copies.
+```rust
+pub fn alloc_vec3s(dev: &Arc<CudaDevice>, data: &[Vec3]) -> CudaSlice<f32> {}
+
+pub fn alloc_quaternions(dev: &Arc<CudaDevice>, data: &[Quaternion]) -> CudaSlice<f32> {}
+```
 
 
 ## A note on performance
@@ -129,7 +140,7 @@ pub fn calc_dihedral_angle(bond_middle: Vec3, bond_adjacent1: Vec3, bond_adjacen
 
 A SIMD example of vector operations:
 ```rust
-use lin_alg::f32:{Vec3, Vec3S};
+use lin_alg::f32:{Vec3, Vec3x8};
 
 // Non-SIMD Vec3s we'll start with.
 let vec_a = Vec3::new(1., 2., 3.);
@@ -137,20 +148,17 @@ let vec_b = Vec3::new(4., 5., 6.);
 
 // An example where we copy the same Vec3 into all 8 slots. In most practical uses,
 // each slot will contain a different value.
-let a = Vec3S::new([vec_a; 8]);
-let b = Vec3S::new([vec_b; 8]);
+let a = Vec3x8::from_array([vec_a; 8]);
+let b = Vec3x8::from_array([vec_b; 8]);
 
 // Perform vector addition on 8 Vec3s at once.
 let c = a + b;
 
-// Create a [Vec3; 8], due to the `unpack` method.
-let d = a.cross(b).unpack();
+// Create a [Vec3; 8].
+let d = a.cross(b).to_array();
 
-// Create a `__m256`, then convert to an array.
-let dot_result: [f32; 8] = unsafe { transmute(a.dot(b)) };
-
-// Create a [f32; 8].
-let dot_result = a.dot_unpack(b);
+// Create a `f32x8`, then convert to an array.
+let dot_result = a.dot(b).to_array();
 
 let e = vec_a * 3.;
 let f = vec_a * [3.; 8];
@@ -160,7 +168,7 @@ let g = vec_a * _mm256_set1_ps(3.);
 A SIMD example of rotating vectors.
 ```rust
 use core::f32::consts::TAU;
-use lin_alg::f32::{Quaternion, Vec3, QuaternionS, Vec3S};
+use lin_alg::f32::{Quaternion, Vec3, Quaternionx8, Vecx8};
 
 let rot_init = [
     Quaternion::from_unit_vecs(UP, FORWARD),
@@ -173,12 +181,12 @@ let rot_init = [
     Quaternion::from_axis_angle(RIGHT, TAU/8.),
 ];
 
-let rotation = QuaternionS::new(rot_init);
+let rotation = Quaternionx8::from_array(rot_init);
 
 // This could be 8 separate values.
-let vec = Vec3S::new([UP; 8]);
+let vec = Vec3x8::from_array([UP; 8]);
 
-let result = rotation.rotate_vec(vec).unpack();
+let result = rotation.rotate_vec(vec).to_array();
 
 let sqrt_2_div_2 = 2_f32.sqrt()/2.;
 let angled = Vec3::new(0., -sqrt_2_div_2, sqrt_2_div_2);
@@ -193,22 +201,20 @@ assert!((result[6] - -FORWARD).magnitude() < f32::EPSILON);
 assert!((result[7] - angled).magnitude() < f32::EPSILON);
 ```
 
-An example function using SIMD for a practical use, integrating `Vec3S` with SIMD types directly.
+An example function using SIMD for a practical use, integrating `Vec3x8s` with SIMD types directly.
 
 ```rust
-use std::arch::x86_64::__m256;
-use lin_alg::f32::{Vec3, Vec3S, vec3s_to_simd};
+use lin_alg::f32::{Vec3, Vec3x8, f32x8};
 
 // ...
 
 fn run_lj(atom_0_posits: &[Vec3], atom_1_posits: &[Vec3]) {
-    // Convert all Vec3s to their SIMD variants, and loop through them.
-    let atom_0_posits_simd = vec3s_to_simd(&atom_0_posits);
-    let atom_1_posits_simd = vec3s_to_simd(&atom_1_posits);
-    
-    // We also provide a `f32s_to_simd`, `simd_to_f32s`, `simd_to_vec3s` functions. These, for example,
-    // call `unpack()` on each `Vec3S` to turn it into 8 `Vec3`s. (or transmute for the non-Vec3
-    // f32 types).
+    // Convert all Vec3s to their SIMD variants, and loop through them. This converts then to 
+    // `Vec<Vec3x8>`
+    let atom_0_posits_simd = pack_vec3(&atom_0_posits);
+    let atom_1_posits_simd = pack_vec3(&atom_1_posits);
+
+    // We also provide a `pack_f32`, `unpack_f32`, `unpack_vec3` functions to convert between SIMD and native types.
     
     // todo: Or, parellilize with Rayon.
     for i in 0..atom_0_posits_simd {
@@ -221,36 +227,29 @@ fn run_lj(atom_0_posits: &[Vec3], atom_1_posits: &[Vec3]) {
 
 
 fn lj_potential(
-    atom_0_posit: Vec3S,
-    atom_1_posit: Vec3S,
+    atom_0_posit: Vec3x8,
+    atom_1_posit: Vec3x8,
     atom_0_els: [Element; 8],
     atom_1_els: [Element; 8],
-) -> __m256 {
-    unsafe {
-        // This line demonstrates use of this library; the rest of the code below
-        // is for context. We have already partitioned a set of `Vec3` into 
-        // `Vec3S`, grouped in blocks of 8, prior to this function.
-        let r = (atom_0_posit - atom_1_posit).magnitude();
+) -> f32x8 {
+    // This line demonstrates use of this library; the rest of the code below
+    // is for context. We have already partitioned a set of `Vec3` into 
+    // `Vec3x8`, grouped in blocks of 8, prior to this function.
+    let r = (atom_0_posit - atom_1_posit).magnitude(); // This is a Vec3x8.
 
-        let mut sig = [0.0; 8];
-        let mut eps = [0.0; 8];
-        for i in 0..8 {
-            (sig[i], eps[i]) = get_lj_params(atom_0_els[i], atom_1_els[i], lj_lut)
-        }
-
-        let sig_ = _mm256_loadu_ps(sig.as_ptr());
-        let eps_ = _mm256_loadu_ps(eps.as_ptr());
-
-        // Intermediate steps; no SIMD exponent.
-        let sr = _mm256_div_ps(sig_, r);
-        let sr2 = _mm256_mul_ps(sr, sr);
-        let sr4 = _mm256_mul_ps(sr2, sr2);
-
-        let sr6 = _mm256_mul_ps(sr4, sr2);
-        let sr12 = _mm256_mul_ps(sr6, sr6);
-
-        let four = _mm256_set1_ps(4.);
-        _mm256_mul_ps(four, _mm256_mul_ps(eps_, _mm256_div_ps(sr12, sr6)))
+    let mut sig = [0.0; 8];
+    let mut eps = [0.0; 8];
+    for i in 0..8 {
+        (sig[i], eps[i]) = get_lj_params(atom_0_els[i], atom_1_els[i], lj_lut)
     }
+
+    let sig_ = f32x8::from_slice(&sig);
+    let eps_ = f32x8::from_array(eps);
+
+    let sr = sig_ / r;
+    let sr6 = sr.powi(6);
+    let sr12 = sr6.powi(2);
+    
+    f32x8::splat(4.) * eps_ * (sr12 - sr6)
 }
 ```

@@ -443,5 +443,19 @@ macro_rules! create_quaternion {
                 Ok(())
             }
         }
+
+        #[cfg(feature = "cuda")]
+        /// Convert a collection of `Quaternion`s into Cuda arrays of their components.
+        pub fn alloc_quaternions(dev: &Arc<CudaDevice>, data: &[Quaternion]) -> CudaSlice<$f> {
+            let mut result = Vec::new();
+            // todo: Ref etcs A/R; you are making a double copy here.
+            for v in data {
+                result.push(v.w as $f);
+                result.push(v.x as $f);
+                result.push(v.y as $f);
+                result.push(v.z as $f);
+            }
+            dev.htod_copy(result).unwrap()
+        }
     };
 }

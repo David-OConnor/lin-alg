@@ -412,7 +412,7 @@ macro_rules! create_vec {
 
             /// Returns the vector magnitude squared
             pub fn magnitude_squared(self) -> $f {
-                (self.hadamard_product(self)).sum()
+                self.hadamard_product(self).sum()
             }
 
             /// Returns the vector magnitude
