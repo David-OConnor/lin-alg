@@ -267,14 +267,14 @@ fn test_simd_vec3_cross() {
     let vec_a = f32::Vec3::new(1., 2., 3.);
     let vec_b = f32::Vec3::new(4., 5., 6.);
 
-    let a = Vec3x8::new([vec_a; 8]);
-    let b = Vec3x8::new([vec_b; 8]);
+    let a = Vec3x8::from_array([vec_a; 8]);
+    let b = Vec3x8::from_array([vec_b; 8]);
 
     let c = a.cross(b);
 
-    let cx: [f32; 8] = unsafe { transmute(c.x) };
-    let cy: [f32; 8] = unsafe { transmute(c.y) };
-    let cz: [f32; 8] = unsafe { transmute(c.z) };
+    let cx = c.x.to_array();
+    let cy = c.y.to_array();
+    let cz = c.z.to_array();
 
     for i in 0..8 {
         assert!((cx[i] - -3.0).abs() < f32::EPSILON);
@@ -289,10 +289,10 @@ fn test_simd_vec3_dot() {
     let vec_a = f32::Vec3::new(1., 2., 3.);
     let vec_b = f32::Vec3::new(4., 5., 6.);
 
-    let a = Vec3x8::new([vec_a; 8]);
-    let b = Vec3x8::new([vec_b; 8]);
+    let a = Vec3x8::from_array([vec_a; 8]);
+    let b = Vec3x8::from_array([vec_b; 8]);
 
-    let c: [f32; 8] = a.dot_to_array(b);
+    let c: [f32; 8] = a.dot(b).to_array();
 
     for i in 0..8 {
         assert!((c[i] - (32.0)).abs() < f32::EPSILON);
@@ -305,8 +305,8 @@ fn test_simd_add() {
     let vec_a = f32::Vec3::new(1., 2., 3.);
     let vec_b = f32::Vec3::new(4., 5., 6.);
 
-    let a = Vec3x8::new([vec_a; 8]);
-    let b = Vec3x8::new([vec_b; 8]);
+    let a = Vec3x8::from_array([vec_a; 8]);
+    let b = Vec3x8::from_array([vec_b; 8]);
     let c = a + b;
 
     let vec3s = c.to_array();
@@ -335,7 +335,7 @@ fn test_simd_rotate_vec() {
     let rotation = Quaternionx8::from_array(rot_init);
 
     // This could be 8 separate values.
-    let vec = Vec3x8::new([UP; 8]);
+    let vec = Vec3x8::from_array([UP; 8]);
 
     let result = rotation.rotate_vec(vec).to_array();
 

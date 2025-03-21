@@ -18,7 +18,7 @@ mod vec;
 
 // #[cfg(all(any(target_arch = "x86", target_arch = "x86_64"), target_feature = "avx"))]
 #[cfg(all(any(target_arch = "x86", target_arch = "x86_64"), feature = "std"))]
-pub mod simd;
+mod simd;
 
 #[cfg(test)]
 mod tests;

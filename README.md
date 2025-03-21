@@ -161,14 +161,14 @@ let d = a.cross(b).to_array();
 let dot_result = a.dot(b).to_array();
 
 let e = vec_a * 3.;
-let f = vec_a * [3.; 8];
-let g = vec_a * _mm256_set1_ps(3.);
+let f = vec_a * f32x8::from_array([3.; 8]);
+let g = vec_a * f32x8::splat(3.)
 ```
 
 A SIMD example of rotating vectors.
 ```rust
 use core::f32::consts::TAU;
-use lin_alg::f32::{Quaternion, Vec3, Quaternionx8, Vecx8};
+use lin_alg::f32::{Quaternion, Vec3, Quaternionx8, Vec3x8};
 
 let rot_init = [
     Quaternion::from_unit_vecs(UP, FORWARD),
