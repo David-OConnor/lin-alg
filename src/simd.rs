@@ -94,15 +94,11 @@ impl Add for Vec3x8 {
     }
 }
 
-impl Sub for Vec3x8 {
-    type Output = Self;
-
-    fn sub(self, rhs: Self) -> Self::Output {
-        Self {
-            x: self.x - rhs.x,
-            y: self.y - rhs.y,
-            z: self.z - rhs.z,
-        }
+impl AddAssign for Vec3x8 {
+    fn add_assign(&mut self, rhs: Self) {
+        self.x += rhs.x;
+        self.y += rhs.y;
+        self.z += rhs.z;
     }
 }
 
@@ -127,6 +123,34 @@ impl Add<f32x8> for Vec3x8 {
     }
 }
 
+impl AddAssign<f32x8> for Vec3x8 {
+    fn add_assign(&mut self, rhs: f32x8) {
+        self.x += rhs;
+        self.y += rhs;
+        self.z += rhs;
+    }
+}
+
+impl Sub for Vec3x8 {
+    type Output = Self;
+
+    fn sub(self, rhs: Self) -> Self::Output {
+        Self {
+            x: self.x - rhs.x,
+            y: self.y - rhs.y,
+            z: self.z - rhs.z,
+        }
+    }
+}
+
+impl SubAssign for Vec3x8 {
+    fn sub_assign(&mut self, rhs: Self) {
+        self.x -= rhs.x;
+        self.y -= rhs.y;
+        self.z -= rhs.z;
+    }
+}
+
 impl Sub<f32> for Vec3x8 {
     type Output = Self;
 
@@ -145,6 +169,14 @@ impl Sub<f32x8> for Vec3x8 {
             y: self.y - rhs,
             z: self.z - rhs,
         }
+    }
+}
+
+impl SubAssign<f32x8> for Vec3x8 {
+    fn sub_assign(&mut self, rhs: f32x8) {
+        self.x -= rhs;
+        self.y -= rhs;
+        self.z -= rhs;
     }
 }
 
