@@ -31,13 +31,15 @@ The `From` trait is implemented for most types, for converting between `f32` and
 
 ## SIMD
 
-Includes SIMD constructs (SoA layout) for `f32` types: `Vec3x8`,`Vec4x8`, and `Quaternionx8`. They are configured with 256-bit
-wide (AVX) values, performing (for vectors) operations on 8 `f32` Vec3 or Vec4s, or 4 `f64` ones. See the example below for details.
+Includes SIMD constructs (SoA layout) for Vec and Quaternion types. For example: `Vec3x8`, `Vec3x4``Vec4x8`, and `Quaternionx8` etc,
+for `f32` and `f64` types. They are configured with 256-bit wide (AVX) values, performing (for vectors) operations on 8 `f32` `Vec3`,
+4 `f64` `Vec3`, etc. See the examples below for details.
 
-This library exposes an `f32x8` SIMD type that wraps `__m256` with appropriate constructors, operator overloads etc. This,
-and the `Vec3x8` etc APIs, mimic the nightly [core::simd](https://doc.rust-lang.org/beta/core/simd/index.html) library. 
-We take this approach so this library will work on stable rust. We'll remove `f32x8` when `core::simd` is stable.
+This library exposes an `f32x8` SIMD type that wraps `__m256` with appropriate constructors, operator overloads etc, and similar. This,
+and the `Vec3x8` etc APIs, mimic the nightly [core::simd](https://doc.rust-lang.org/beta/core/simd/index.html) library. They're used internally by our SIMD vector and quaternion types.
+It also includes `f64x4`. We are waiting to add 512-bit wide types until their operations are in stable rust. Hopefully soon!
 
+We take this approach so this library will work on stable rust. We'll remove these when `core::simd` is stable.
 
 
 ## CUDA (GPU)

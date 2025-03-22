@@ -20,6 +20,7 @@ mod vec;
 #[cfg(all(any(target_arch = "x86", target_arch = "x86_64"), feature = "std"))]
 mod simd;
 
+mod simd_primitives;
 #[cfg(test)]
 mod tests;
 
@@ -92,9 +93,15 @@ pub mod f32 {
     #[cfg(feature = "cuda")]
     use cudarc::driver::{CudaDevice, CudaSlice};
 
+    // todo: cfg_if lib to make this easier.
     use super::f64;
     #[cfg(all(any(target_arch = "x86", target_arch = "x86_64"), feature = "std"))]
-    pub use crate::simd::*;
+    pub use crate::{
+        simd::*,
+        simd_primitives::{f32x8, f32x16},
+    };
+    #[cfg(all(any(target_arch = "x86", target_arch = "x86_64"), feature = "std"))]
+    create_simd!(f32, f32x8, Vec3x8, Vec4x8, Quaternionx8, 8);
 
     impl From<f64::Vec2> for Vec2 {
         fn from(other: f64::Vec2) -> Self {
@@ -236,6 +243,13 @@ pub mod f64 {
     use cudarc::driver::{CudaDevice, CudaSlice};
 
     use super::f32;
+    #[cfg(all(any(target_arch = "x86", target_arch = "x86_64"), feature = "std"))]
+    pub use crate::{
+        simd::*,
+        simd_primitives::{f64x4, f64x8},
+    };
+    #[cfg(all(any(target_arch = "x86", target_arch = "x86_64"), feature = "std"))]
+    create_simd!(f64, f64x4, Vec3x4, Vec4x4, Quaternionx4, 4);
 
     impl From<f32::Vec2> for Vec2 {
         fn from(other: f32::Vec2) -> Self {
