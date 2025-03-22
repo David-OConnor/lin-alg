@@ -18,8 +18,8 @@
 
 use std::{
     arch::x86_64::{
-        __m256, __m256d, _mm256_add_ps, _mm256_div_ps, _mm256_loadu_ps, _mm256_mul_ps,
-        _mm256_set1_ps, _mm256_sqrt_ps, _mm256_sub_ps,
+        __m256, __m256d, _CMP_EQ_OQ, _mm256_add_ps, _mm256_cmp_ps, _mm256_div_ps, _mm256_loadu_ps,
+        _mm256_movemask_ps, _mm256_mul_ps, _mm256_set1_ps, _mm256_sqrt_ps, _mm256_sub_ps,
     },
     convert::TryInto,
     mem::transmute,
@@ -116,9 +116,9 @@ impl Add<f32x8> for Vec3x8 {
 
     fn add(self, rhs: f32x8) -> Self::Output {
         Self {
-            x: self.x - rhs,
-            y: self.y - rhs,
-            z: self.z - rhs,
+            x: self.x + rhs,
+            y: self.y + rhs,
+            z: self.z + rhs,
         }
     }
 }
@@ -341,12 +341,20 @@ impl Vec3x8 {
         out
     }
 
-    fn new_zero() -> Self {
+    pub fn new_zero() -> Self {
         let zero = f32x8::splat(0.);
         Self {
             x: zero,
             y: zero,
             z: zero,
+        }
+    }
+
+    pub fn splat(val: Vec3) -> Self {
+        Self {
+            x: f32x8::splat(val.x),
+            y: f32x8::splat(val.y),
+            z: f32x8::splat(val.z),
         }
     }
 
@@ -459,6 +467,15 @@ impl Vec4x8 {
             };
         }
         out
+    }
+
+    pub fn splat(val: Vec4) -> Self {
+        Self {
+            x: f32x8::splat(val.x),
+            y: f32x8::splat(val.y),
+            z: f32x8::splat(val.z),
+            w: f32x8::splat(val.w),
+        }
     }
 
     /// Dot product across x, y, z lanes. Each lane result is x_i*x_j + y_i*y_j + z_i*z_j.
@@ -643,12 +660,21 @@ impl Quaternionx8 {
         out
     }
 
-    fn new_identity() -> Self {
+    pub fn new_identity() -> Self {
         Self {
             w: f32x8::splat(1.),
             x: f32x8::splat(0.),
             y: f32x8::splat(0.),
             z: f32x8::splat(0.),
+        }
+    }
+
+    pub fn splat(val: Quaternion) -> Self {
+        Self {
+            w: f32x8::splat(val.w),
+            x: f32x8::splat(val.x),
+            y: f32x8::splat(val.y),
+            z: f32x8::splat(val.z),
         }
     }
 
@@ -728,6 +754,15 @@ impl f32x8 {
     #[inline]
     pub fn sqrt(&self) -> Self {
         unsafe { Self(_mm256_sqrt_ps(self.0)) }
+    }
+
+    /// todo: This doesn't match the core::simd API. What's the equivalent there?
+    /// todo: This is potentially a slow approach compared to using intrinsics
+    pub fn replace(self, index: usize, value: f32) -> Self {
+        let mut arr = self.to_array();
+        // This will panic if index >= 8, similar to core::simd::Simd::replace.
+        arr[index] = value;
+        Self::from_array(arr)
     }
 
     pub fn powi(self, mut n: i32) -> Self {
@@ -835,7 +870,7 @@ pub fn pack_vec3(vecs: &[Vec3]) -> Vec<Vec3x8> {
 
     let mut padded = Vec::with_capacity(vecs.len() + padding_needed);
     padded.extend_from_slice(vecs);
-    padded.extend((0..padding_needed).map(|_| Vec3::new(0.0, 0.0, 0.0)));
+    padded.extend((0..padding_needed).map(|_| Vec3::new_zero()));
 
     // Now `padded.len()` is a multiple of 8, so chunks_exact(8) will consume it fully.
     padded
@@ -866,7 +901,7 @@ pub fn pack_f32(vals: &[f32]) -> Vec<f32x8> {
 
     let mut padded = Vec::with_capacity(vals.len() + padding_needed);
     padded.extend_from_slice(vals);
-    padded.extend((0..padding_needed).map(|_| 0.0f32));
+    padded.extend((0..padding_needed).map(|_| 0.));
 
     // Now `padded.len()` is a multiple of 8, so chunks_exact(8) will consume it fully.
     padded
