@@ -12,6 +12,20 @@ macro_rules! create_quaternion_shared {
                 (self.w.powi(2) + self.x.powi(2) + self.y.powi(2) + self.z.powi(2)).sqrt()
             }
 
+            /// Normalize, modifying in place.
+            pub fn normalize(&mut self) {
+                let mag = self.magnitude();
+
+                self.x /= mag;
+                self.y /= mag;
+                self.z /= mag;
+            }
+
+            /// Returns the normalized version of the vector.
+            pub fn to_normalized(self) -> Self {
+                self / self.magnitude()
+            }
+
             /// Used by `slerp`.
             pub fn dot(&self, rhs: Self) -> $f {
                 self.w * rhs.w + self.x * rhs.x + self.y * rhs.y + self.z * rhs.z
@@ -84,8 +98,8 @@ macro_rules! create_quaternion_shared {
             type Output = Self;
 
             /// Returns the multiplication of a Quaternion with a vector.  This is a
-            /// normal Quaternion multiplication where the vector is treated a
-            /// Quaternion with a W element value of zero.  The Quaternion is post-
+            /// normal Quaternion multiplication where the vector is treated as a
+            /// Quaternion with a W element value of zero. The Quaternion is post-
             /// multiplied by the vector.
             fn mul(self, rhs: $vec3_ty) -> Self::Output {
                 Self {
@@ -115,6 +129,39 @@ macro_rules! create_quaternion_shared {
 
             fn div(self, rhs: Self) -> Self::Output {
                 self * rhs.inverse()
+            }
+        }
+
+        // todo: Consider this, and add A/R
+        // impl Div<$vec3_ty> for $quat_ty {
+        //     type Output = Self;
+        //
+        //     /// Returns the division of a Quaternion with a vector. This is a
+        //     /// normal Quaternion division where the vector is treated a
+        //     /// Quaternion with a W element value of zero. The Quaternion is post-
+        //     /// divided by the vector.
+        //     fn div(self, rhs: $vec3_ty) -> Self::Output {
+        //         let as_vec = Self {
+        //             w: 0.0,
+        //             x: rhs.x,
+        //             y: rhs.y,
+        //             z: rhs.z,
+        //         };
+        //
+        //         self * as_vec.inverse()
+        //     }
+        // }
+
+        impl Div<$f> for $quat_ty {
+            type Output = Self;
+
+            fn div(self, rhs: $f) -> Self::Output {
+                Self {
+                    w: self.w / rhs,
+                    x: self.x / rhs,
+                    y: self.y / rhs,
+                    z: self.z / rhs,
+                }
             }
         }
     };
@@ -312,12 +359,6 @@ macro_rules! create_quaternion {
                     y: self.y,
                     z: self.z,
                 }
-            }
-
-            /// Returns the normalised version of the quaternion
-            pub fn to_normalized(self) -> Self {
-                let mag_recip = 1. / self.magnitude();
-                self * mag_recip
             }
 
             /// Used as part of `slerp`.

@@ -24,6 +24,20 @@ macro_rules! create_vec_shared {
                 (self.x.powi(2) + self.y.powi(2) + self.z.powi(2)).sqrt()
             }
 
+            /// Normalize, modifying in place.
+            pub fn normalize(&mut self) {
+                let mag = self.magnitude();
+
+                self.x /= mag;
+                self.y /= mag;
+                self.z /= mag;
+            }
+
+            /// Returns the normalized version of the vector.
+            pub fn to_normalized(self) -> Self {
+                self / self.magnitude()
+            }
+
             /// Returns the dot product with another vector.
             pub fn dot(&self, rhs: Self) -> $f {
                 self.x * rhs.x + self.y * rhs.y + self.z * rhs.z
@@ -454,21 +468,6 @@ macro_rules! create_vec {
                 [self.x, self.y, self.z]
             }
 
-            /// Normalize, modifying in place
-            pub fn normalize(&mut self) {
-                let mag_recip = 1. / self.magnitude();
-
-                self.x *= mag_recip;
-                self.y *= mag_recip;
-                self.z *= mag_recip;
-            }
-
-            /// Returns the normalised version of the vector
-            pub fn to_normalized(self) -> Self {
-                let mag_recip = 1. / self.magnitude();
-                self * mag_recip
-            }
-
             /// Returns a sum of all elements
             pub fn sum(&self) -> $f {
                 self.x + self.y + self.z
@@ -553,22 +552,6 @@ macro_rules! create_vec {
             /// Convert to a len-4 array: [x, y, z, w].
             pub fn to_arr(&self) -> [$f; 4] {
                 [self.x, self.y, self.z, self.w]
-            }
-
-            pub fn normalize(&mut self) {
-                let len =
-                    (self.x.powi(2) + self.y.powi(2) + self.z.powi(2) + self.w.powi(2)).sqrt();
-
-                self.x /= len;
-                self.y /= len;
-                self.z /= len;
-                self.w /= len;
-            }
-
-            /// Returns the normalised version of the vector
-            pub fn to_normalized(self) -> Self {
-                let mag_recip = 1. / self.magnitude();
-                self * mag_recip
             }
 
             /// Remove the nth element. Used in our inverse calculations.

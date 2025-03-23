@@ -176,20 +176,6 @@ macro_rules! create_simd {
                     z: $fx::splat(val.z),
                 }
             }
-
-            pub fn normalize(&mut self) {
-                let len = (self.x.powi(2) + self.y.powi(2) + self.z.powi(2)).sqrt();
-
-                self.x /= len;
-                self.y /= len;
-                self.z /= len;
-            }
-
-            /// Returns the normalised version of the vector
-            pub fn to_normalized(self) -> Self {
-                let mag_recip = $fx::splat(1.) / self.magnitude();
-                self * mag_recip
-            }
         }
 
         impl $vec4_ty {
@@ -382,12 +368,6 @@ macro_rules! create_simd {
                     y: self.y,
                     z: self.z,
                 }
-            }
-
-            /// Returns the normalised version of the quaternion
-            pub fn to_normalized(self) -> Self {
-                let mag_recip = $fx::splat(1.) / self.magnitude();
-                self * mag_recip
             }
         }
 
