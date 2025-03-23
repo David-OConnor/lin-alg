@@ -31,7 +31,7 @@ The `From` trait is implemented for most types, for converting between `f32` and
 
 ## SIMD
 
-Includes SIMD constructs (SoA layout) for Vec and Quaternion types. For example: `Vec3x8`, `Vec3x4``Vec4x8`, and `Quaternionx8` etc,
+Includes SIMD constructs (SoA layout) for Vec and Quaternion types. For example: `Vec3x8`, `Vec3x4`, `Vec4x8`, and `Quaternionx8` etc,
 for `f32` and `f64` types. They are configured with 256-bit wide (AVX) values, performing (for vectors) operations on 8 `f32` `Vec3`,
 4 `f64` `Vec3`, etc. See the examples below for details.
 
