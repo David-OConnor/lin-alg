@@ -32,7 +32,7 @@ The `From` trait is implemented for most types, for converting between `f32` and
 ## SIMD
 
 Includes SIMD constructs (SoA layout) for Vec and Quaternion types. For example: `Vec3x8`, `Vec3x4``Vec4x8`, and `Quaternionx8` etc,
-for `f32` and `f64` types. They are configured with 256-bit wide (AVX) values, performing (for vectors) operations on 8 `f32` `Vec3`,
+for `f32` and `f64` types. They are configured with 256-bit wide (AVX) values, performing operations on 8 `f32`, `Vec3`,
 4 `f64` `Vec3`, etc. See the examples below for details.
 
 This library exposes an `f32x8` SIMD type that wraps `__m256` with appropriate constructors, operator overloads etc, and similar. This,
@@ -40,6 +40,9 @@ and the `Vec3x8` etc APIs, mimic the nightly [core::simd](https://doc.rust-lang.
 It also includes `f64x4`. We are waiting to add 512-bit wide types until their operations are in stable rust. Hopefully soon!
 
 We take this approach so this library will work on stable rust. We'll remove these when `core::simd` is stable.
+
+This lib also includes `pack` and `unpack` utility functions for converting slices of `f32`, `Vec3`, `Quaternion` etc between
+SIMD and normal values, taking care of padding the last chunk.
 
 
 ## CUDA (GPU)
@@ -206,7 +209,7 @@ assert!((result[7] - angled).magnitude() < f32::EPSILON);
 An example function using SIMD for a practical use, integrating `Vec3x8s` with SIMD types directly.
 
 ```rust
-use lin_alg::f32::{Vec3, Vec3x8, f32x8};
+use lin_alg::f32::{Vec3, Vec3x8, f32x8, unpack_vec3};
 
 // ...
 
@@ -215,8 +218,6 @@ fn run_lj(atom_0_posits: &[Vec3], atom_1_posits: &[Vec3]) {
     // `Vec<Vec3x8>`
     let atom_0_posits_simd = pack_vec3(&atom_0_posits);
     let atom_1_posits_simd = pack_vec3(&atom_1_posits);
-
-    // We also provide a `pack_f32`, `unpack_f32`, `unpack_vec3` functions to convert between SIMD and native types.
     
     // todo: Or, parellilize with Rayon.
     for i in 0..atom_0_posits_simd {
@@ -226,6 +227,13 @@ fn run_lj(atom_0_posits: &[Vec3], atom_1_posits: &[Vec3]) {
         lj_potential(atom_0_posit, atom_1_posit, // ...);)
     }
 // ...
+    
+    // In practice here, you may wish to sum components, being careful to discard (or render harmless) values
+    // from the pad lanes in the last chunk. If collecting the values directly instead. (prior to processing),
+    // you can use these `unpack` methods, available for `f32`, `f64`, `Vec3`, and `Quaternion`. They automatically
+    // remove the padding lanes.
+    let atom_0_posits_processed = unpack_vec3(atom_0_posits_simd, atom_0_posits.len());
+}
 
 
 fn lj_potential(
