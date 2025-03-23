@@ -1,4 +1,5 @@
 #![macro_use]
+// todo:  You can combine these with your non-SIMD ones, for the most common operations.
 
 //! Notes.
 //! Array of structs (AoS): Each vector (x,y,z,w) is stored contiguously in memory.
@@ -39,12 +40,6 @@ macro_rules! create_simd {
             pub w: $fx,
         }
 
-        impl Default for $vec3_ty {
-            fn default() -> Self {
-                Self::new_zero()
-            }
-        }
-
         impl Neg for $vec3_ty {
             type Output = Self;
 
@@ -59,72 +54,12 @@ macro_rules! create_simd {
             }
         }
 
-        impl Add for $vec3_ty {
-            type Output = Self;
-
-            fn add(self, rhs: Self) -> Self::Output {
-                Self {
-                    x: self.x + rhs.x,
-                    y: self.y + rhs.y,
-                    z: self.z + rhs.z,
-                }
-            }
-        }
-
-        impl AddAssign for $vec3_ty {
-            fn add_assign(&mut self, rhs: Self) {
-                self.x += rhs.x;
-                self.y += rhs.y;
-                self.z += rhs.z;
-            }
-        }
-
         impl Add<$f> for $vec3_ty {
             type Output = Self;
 
             fn add(self, rhs: $f) -> Self::Output {
                 let s = $fx::splat(rhs);
                 self + s
-            }
-        }
-
-        impl Add<$fx> for $vec3_ty {
-            type Output = Self;
-
-            fn add(self, rhs: $fx) -> Self::Output {
-                Self {
-                    x: self.x + rhs,
-                    y: self.y + rhs,
-                    z: self.z + rhs,
-                }
-            }
-        }
-
-        impl AddAssign<$fx> for $vec3_ty {
-            fn add_assign(&mut self, rhs: $fx) {
-                self.x += rhs;
-                self.y += rhs;
-                self.z += rhs;
-            }
-        }
-
-        impl Sub for $vec3_ty {
-            type Output = Self;
-
-            fn sub(self, rhs: Self) -> Self::Output {
-                Self {
-                    x: self.x - rhs.x,
-                    y: self.y - rhs.y,
-                    z: self.z - rhs.z,
-                }
-            }
-        }
-
-        impl SubAssign for $vec3_ty {
-            fn sub_assign(&mut self, rhs: Self) {
-                self.x -= rhs.x;
-                self.y -= rhs.y;
-                self.z -= rhs.z;
             }
         }
 
@@ -137,26 +72,6 @@ macro_rules! create_simd {
             }
         }
 
-        impl Sub<$fx> for $vec3_ty {
-            type Output = Self;
-
-            fn sub(self, rhs: $fx) -> Self::Output {
-                Self {
-                    x: self.x - rhs,
-                    y: self.y - rhs,
-                    z: self.z - rhs,
-                }
-            }
-        }
-
-        impl SubAssign<$fx> for $vec3_ty {
-            fn sub_assign(&mut self, rhs: $fx) {
-                self.x -= rhs;
-                self.y -= rhs;
-                self.z -= rhs;
-            }
-        }
-
         impl Mul<$f> for $vec3_ty {
             type Output = Self;
 
@@ -166,78 +81,12 @@ macro_rules! create_simd {
             }
         }
 
-        impl Mul<$fx> for $vec3_ty {
-            type Output = Self;
-
-            fn mul(self, rhs: $fx) -> Self::Output {
-                Self {
-                    x: self.x * rhs,
-                    y: self.y * rhs,
-                    z: self.z * rhs,
-                }
-            }
-        }
-
-        impl MulAssign<$fx> for $vec3_ty {
-            fn mul_assign(&mut self, rhs: $fx) {
-                self.x = self.x * rhs;
-                self.y = self.y * rhs;
-                self.z = self.z * rhs;
-            }
-        }
-
         impl Div<$f> for $vec3_ty {
             type Output = Self;
 
             fn div(self, rhs: $f) -> Self::Output {
                 let s = $fx::splat(rhs);
                 self / s
-            }
-        }
-
-        impl Div<$fx> for $vec3_ty {
-            type Output = Self;
-
-            fn div(self, rhs: $fx) -> Self::Output {
-                Self {
-                    x: self.x / rhs,
-                    y: self.y / rhs,
-                    z: self.z / rhs,
-                }
-            }
-        }
-
-        impl DivAssign<$fx> for $vec3_ty {
-            fn div_assign(&mut self, rhs: $fx) {
-                self.x = self.x / rhs;
-                self.y = self.y / rhs;
-                self.z = self.z / rhs;
-            }
-        }
-
-        impl Add for $vec4_ty {
-            type Output = Self;
-
-            fn add(self, rhs: Self) -> Self::Output {
-                Self {
-                    x: self.x + rhs.x,
-                    y: self.y + rhs.y,
-                    z: self.z + rhs.z,
-                    w: self.w + rhs.w,
-                }
-            }
-        }
-
-        impl Sub for $vec4_ty {
-            type Output = Self;
-
-            fn sub(self, rhs: Self) -> Self::Output {
-                Self {
-                    x: self.x - rhs.x,
-                    y: self.y - rhs.y,
-                    z: self.z - rhs.z,
-                    w: self.w - rhs.w,
-                }
             }
         }
 
@@ -260,19 +109,12 @@ macro_rules! create_simd {
             type Output = Self;
 
             fn mul(self, rhs: $f) -> Self::Output {
-                let s = $fx::splat(rhs);
-
-                Self {
-                    x: self.x * s,
-                    y: self.y * s,
-                    z: self.z * s,
-                    w: self.w * s,
-                }
+                self * $fx::splat(rhs)
             }
         }
 
         impl $vec3_ty {
-            /// Create a new x-lane, SoA, $f Vec3
+            /// Create a new x-lane, SoA Vec3 from an array.
             pub fn from_array(arr: [Vec3; $lanes]) -> Self {
                 let x_vals = arr.iter().map(|v| v.x).collect::<Vec<_>>();
                 let y_vals = arr.iter().map(|v| v.y).collect::<Vec<_>>();
@@ -335,31 +177,6 @@ macro_rules! create_simd {
                 }
             }
 
-            /// Dot product across x, y, z lanes. Each lane result is x_i*x_j + y_i*y_j + z_i*z_j.
-            /// Returns an $fx of x dot products (one for each lane).
-            pub fn dot(self, rhs: Self) -> $fx {
-                self.x * rhs.x + self.y * rhs.y + self.z * rhs.z
-            }
-
-            /// Hadamard product (lane-wise multiplication of x, y, z).
-            pub fn hadamard_product(self, rhs: Self) -> Self {
-                Self {
-                    x: self.x * rhs.x,
-                    y: self.y * rhs.y,
-                    z: self.z * rhs.z,
-                }
-            }
-
-            /// Returns the vector magnitude squared
-            pub fn magnitude_squared(self) -> $fx {
-                self.x.powi(2) + self.y.powi(2) + self.z.powi(2)
-            }
-
-            /// Returns the vector magnitude
-            pub fn magnitude(&self) -> $fx {
-                (self.x.powi(2) + self.y.powi(2) + self.z.powi(2)).sqrt()
-            }
-
             pub fn normalize(&mut self) {
                 let len = (self.x.powi(2) + self.y.powi(2) + self.z.powi(2)).sqrt();
 
@@ -372,24 +189,6 @@ macro_rules! create_simd {
             pub fn to_normalized(self) -> Self {
                 let mag_recip = $fx::splat(1.) / self.magnitude();
                 self * mag_recip
-            }
-
-            /// Lane-wise cross product
-            /// cross.x = self.y * rhs.z - self.z * rhs.y
-            /// cross.y = self.z * rhs.x - self.x * rhs.z
-            /// cross.z = self.x * rhs.y - self.y * rhs.x
-            pub fn cross(&self, rhs: Self) -> Self {
-                Self {
-                    x: self.y * rhs.z - self.z * rhs.y,
-                    y: self.z * rhs.x - self.x * rhs.z,
-                    z: self.x * rhs.y - self.y * rhs.x,
-                }
-            }
-
-            /// Project a vector onto a plane defined by its normal vector. Assumes self and `plane_norm`
-            /// are unit vectors.
-            pub fn project_to_plane(self, plane_norm: Self) -> Self {
-                self - plane_norm * self.dot(plane_norm)
             }
         }
 
@@ -446,6 +245,16 @@ macro_rules! create_simd {
                 out
             }
 
+            pub fn new_zero() -> Self {
+                let zero = $fx::splat(0.);
+                Self {
+                    x: zero,
+                    y: zero,
+                    z: zero,
+                    w: zero,
+                }
+            }
+
             pub fn splat(val: Vec4) -> Self {
                 Self {
                     x: $fx::splat(val.x),
@@ -454,96 +263,15 @@ macro_rules! create_simd {
                     w: $fx::splat(val.w),
                 }
             }
-
-            /// Dot product across x, y, z lanes. Each lane result is x_i*x_j + y_i*y_j + z_i*z_j.
-            /// Returns an fx of x dot products (one for each lane).
-            pub fn dot(self, rhs: Self) -> $fx {
-                self.x * rhs.x + self.y * rhs.y + self.z * rhs.z + self.w * rhs.w
-            }
         }
 
-        /// SoA.
+        /// SoA. Performs operations on x quaternions
         #[derive(Clone, Copy, Debug)]
         pub struct $quat_ty {
             pub w: $fx,
             pub x: $fx,
             pub y: $fx,
             pub z: $fx,
-        }
-
-        impl Default for $quat_ty {
-            fn default() -> Self {
-                Self::new_identity()
-            }
-        }
-
-        impl Add<Self> for $quat_ty {
-            type Output = Self;
-
-            fn add(self, rhs: Self) -> Self::Output {
-                Self {
-                    w: self.w + rhs.w,
-                    x: self.x + rhs.x,
-                    y: self.y + rhs.y,
-                    z: self.z + rhs.z,
-                }
-            }
-        }
-
-        impl Sub<Self> for $quat_ty {
-            type Output = Self;
-
-            fn sub(self, rhs: Self) -> Self::Output {
-                Self {
-                    w: self.w - rhs.w,
-                    x: self.x - rhs.x,
-                    y: self.y - rhs.y,
-                    z: self.z - rhs.z,
-                }
-            }
-        }
-
-        impl Mul for $quat_ty {
-            type Output = Self;
-
-            fn mul(self, rhs: Self) -> Self::Output {
-                Self {
-                    w: self.w * rhs.w - self.x * rhs.x - self.y * rhs.y - self.z * rhs.z,
-                    x: self.w * rhs.x + self.x * rhs.w + self.y * rhs.z - self.z * rhs.y,
-                    y: self.w * rhs.y - self.x * rhs.z + self.y * rhs.w + self.z * rhs.x,
-                    z: self.w * rhs.z + self.x * rhs.y - self.y * rhs.x + self.z * rhs.w,
-                }
-            }
-        }
-
-        impl Mul<$vec3_ty> for $quat_ty {
-            type Output = Self;
-
-            /// Returns the multiplication of a Quaternion with a vector.  This is a
-            /// normal Quaternion multiplication where the vector is treated a
-            /// Quaternion with a W element value of zero.  The Quaternion is post-
-            /// multiplied by the vector.
-            fn mul(self, rhs: $vec3_ty) -> Self::Output {
-                Self {
-                    w: -self.x * rhs.x - self.y * rhs.y - self.z * rhs.z,
-                    x: self.w * rhs.x + self.y * rhs.z - self.z * rhs.y,
-                    y: self.w * rhs.y - self.x * rhs.z + self.z * rhs.x,
-                    z: self.w * rhs.z + self.x * rhs.y - self.y * rhs.x,
-                }
-            }
-        }
-
-        impl Mul<$fx> for $quat_ty {
-            type Output = Self;
-
-            fn mul(self, rhs: $fx) -> Self::Output {
-                Self {
-                    w: self.w * rhs,
-                    x: self.x * rhs,
-                    y: self.y * rhs,
-                    z: self.z * rhs,
-                }
-            }
         }
 
         impl Mul<$f> for $quat_ty {
@@ -557,14 +285,6 @@ macro_rules! create_simd {
                     y: self.y * s,
                     z: self.z * s,
                 }
-            }
-        }
-
-        impl Div<Self> for $quat_ty {
-            type Output = Self;
-
-            fn div(self, rhs: Self) -> Self::Output {
-                self * rhs.inverse()
             }
         }
 
@@ -655,15 +375,6 @@ macro_rules! create_simd {
                 }
             }
 
-            pub fn inverse(self) -> Self {
-                Self {
-                    w: self.w,
-                    x: -self.x,
-                    y: -self.y,
-                    z: -self.z,
-                }
-            }
-
             /// Converts the SIMD quaternion to a SIMD 3D vector, discarding `w`.
             pub fn to_vec(self) -> $vec3_ty {
                 $vec3_ty {
@@ -672,28 +383,11 @@ macro_rules! create_simd {
                     z: self.z,
                 }
             }
-            /// Returns the magnitude.
-            pub fn magnitude(&self) -> $fx {
-                (self.w.powi(2) + self.x.powi(2) + self.y.powi(2) + self.z.powi(2)).sqrt()
-            }
 
             /// Returns the normalised version of the quaternion
             pub fn to_normalized(self) -> Self {
                 let mag_recip = $fx::splat(1.) / self.magnitude();
                 self * mag_recip
-            }
-
-            /// Used by `slerp`.
-            pub fn dot(&self, rhs: Self) -> $fx {
-                self.w * rhs.w + self.x * rhs.x + self.y * rhs.y + self.z * rhs.z
-            }
-
-            /// Rotate a vector using this quaternion. Note that our multiplication Q * v
-            /// operation is effectively quaternion multiplication, with a quaternion
-            /// created by a vec with w=0.
-            /// Uses the right hand rule.
-            pub fn rotate_vec(self, vec: $vec3_ty) -> $vec3_ty {
-                (self * vec * self.inverse()).to_vec()
             }
         }
 

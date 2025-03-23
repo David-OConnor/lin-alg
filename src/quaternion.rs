@@ -1,27 +1,47 @@
 //! Handles Quaternion operations.
 
 #![macro_use]
-macro_rules! create_quaternion {
-    ($f:ident) => {
-        /// A quaternion using Hamilton (not JPL) transformation conventions. The most common operations
-        /// usedful for representing orientations and rotations are defined, including for operations
-        /// with `Vec3`.
-        #[derive(Clone, Copy, Debug)]
-        #[cfg_attr(feature = "encode", derive(Encode, Decode))]
-        pub struct Quaternion {
-            pub w: $f,
-            pub x: $f,
-            pub y: $f,
-            pub z: $f,
+
+// Agnostic to SIMD and non-simd
+// `$f` here could be a primitive like `f32`, or a SIMD primitive like `f32x8`.
+macro_rules! create_quaternion_shared {
+    ($f:ident, $vec3_ty:ident, $quat_ty:ident) => {
+        impl $quat_ty {
+            /// Returns the magnitude.
+            pub fn magnitude(&self) -> $f {
+                (self.w.powi(2) + self.x.powi(2) + self.y.powi(2) + self.z.powi(2)).sqrt()
+            }
+
+            /// Used by `slerp`.
+            pub fn dot(&self, rhs: Self) -> $f {
+                self.w * rhs.w + self.x * rhs.x + self.y * rhs.y + self.z * rhs.z
+            }
+
+            pub fn inverse(self) -> Self {
+                Self {
+                    w: self.w,
+                    x: -self.x,
+                    y: -self.y,
+                    z: -self.z,
+                }
+            }
+
+            /// Rotate a vector using this quaternion. Note that our multiplication Q * v
+            /// operation is effectively quaternion multiplication, with a quaternion
+            /// created by a vec with w=0.
+            /// Uses the right hand rule.
+            pub fn rotate_vec(self, vec: $vec3_ty) -> $vec3_ty {
+                (self * vec * self.inverse()).to_vec()
+            }
         }
 
-        impl Default for Quaternion {
+        impl Default for $quat_ty {
             fn default() -> Self {
                 Self::new_identity()
             }
         }
 
-        impl Add<Self> for Quaternion {
+        impl Add for $quat_ty {
             type Output = Self;
 
             fn add(self, rhs: Self) -> Self::Output {
@@ -34,7 +54,7 @@ macro_rules! create_quaternion {
             }
         }
 
-        impl Sub<Self> for Quaternion {
+        impl Sub for $quat_ty {
             type Output = Self;
 
             fn sub(self, rhs: Self) -> Self::Output {
@@ -47,7 +67,7 @@ macro_rules! create_quaternion {
             }
         }
 
-        impl Mul for Quaternion {
+        impl Mul for $quat_ty {
             type Output = Self;
 
             fn mul(self, rhs: Self) -> Self::Output {
@@ -60,14 +80,14 @@ macro_rules! create_quaternion {
             }
         }
 
-        impl Mul<Vec3> for Quaternion {
+        impl Mul<$vec3_ty> for $quat_ty {
             type Output = Self;
 
             /// Returns the multiplication of a Quaternion with a vector.  This is a
             /// normal Quaternion multiplication where the vector is treated a
             /// Quaternion with a W element value of zero.  The Quaternion is post-
             /// multiplied by the vector.
-            fn mul(self, rhs: Vec3) -> Self::Output {
+            fn mul(self, rhs: $vec3_ty) -> Self::Output {
                 Self {
                     w: -self.x * rhs.x - self.y * rhs.y - self.z * rhs.z,
                     x: self.w * rhs.x + self.y * rhs.z - self.z * rhs.y,
@@ -77,7 +97,7 @@ macro_rules! create_quaternion {
             }
         }
 
-        impl Mul<$f> for Quaternion {
+        impl Mul<$f> for $quat_ty {
             type Output = Self;
 
             fn mul(self, rhs: $f) -> Self::Output {
@@ -90,12 +110,28 @@ macro_rules! create_quaternion {
             }
         }
 
-        impl Div<Self> for Quaternion {
+        impl Div for $quat_ty {
             type Output = Self;
 
             fn div(self, rhs: Self) -> Self::Output {
                 self * rhs.inverse()
             }
+        }
+    };
+}
+
+macro_rules! create_quaternion {
+    ($f:ident) => {
+        /// A quaternion using Hamilton (not JPL) transformation conventions. The most common operations
+        /// usedful for representing orientations and rotations are defined, including for operations
+        /// with `Vec3`.
+        #[derive(Clone, Copy, Debug)]
+        #[cfg_attr(feature = "encode", derive(Encode, Decode))]
+        pub struct Quaternion {
+            pub w: $f,
+            pub x: $f,
+            pub y: $f,
+            pub z: $f,
         }
 
         impl Quaternion {
@@ -214,23 +250,6 @@ macro_rules! create_quaternion {
                 EulerAngle { pitch, roll, yaw }
             }
 
-            pub fn inverse(self) -> Self {
-                Self {
-                    w: self.w,
-                    x: -self.x,
-                    y: -self.y,
-                    z: -self.z,
-                }
-            }
-
-            /// Rotate a vector using this quaternion. Note that our multiplication Q * v
-            /// operation is effectively quaternion multiplication, with a quaternion
-            /// created by a vec with w=0.
-            /// Uses the right hand rule.
-            pub fn rotate_vec(self, vec: Vec3) -> Vec3 {
-                (self * vec * self.inverse()).to_vec()
-            }
-
             /// Extract the axis of rotation.
             pub fn axis(&self) -> Vec3 {
                 if self.w.abs() > 1. - $f::EPSILON {
@@ -295,20 +314,10 @@ macro_rules! create_quaternion {
                 }
             }
 
-            /// Returns the magnitude.
-            pub fn magnitude(&self) -> $f {
-                (self.w.powi(2) + self.x.powi(2) + self.y.powi(2) + self.z.powi(2)).sqrt()
-            }
-
             /// Returns the normalised version of the quaternion
             pub fn to_normalized(self) -> Self {
                 let mag_recip = 1. / self.magnitude();
                 self * mag_recip
-            }
-
-            /// Used by `slerp`.
-            pub fn dot(&self, rhs: Self) -> $f {
-                self.w * rhs.w + self.x * rhs.x + self.y * rhs.y + self.z * rhs.z
             }
 
             /// Used as part of `slerp`.

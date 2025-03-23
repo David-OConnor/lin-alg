@@ -40,3 +40,6 @@ cuda-12080 = ["cuda", "cudarc/cuda-12080"]
 # The `computer_graphics` feature enables projection matrices,
 # and other operations used in computer graphics.
 computer_graphics = []
+
+# For 512-bit SIMD.
+nightly = []

@@ -39,6 +39,7 @@ impl From<std::io::Error> for BufError {
 macro_rules! create {
     ($f:ident) => {
         use core::{
+            iter::Sum,
             ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign},
             $f::consts::TAU,
         };
@@ -83,8 +84,13 @@ macro_rules! create {
 
 pub mod f32 {
     create!(f32);
+
     create_vec!(f32);
+    create_vec_shared!(f32, Vec3, Vec4);
+
     create_quaternion!(f32);
+    create_quaternion_shared!(f32, Vec3, Quaternion);
+
     create_matrix!(f32);
 
     #[cfg(feature = "cuda")]
@@ -93,15 +99,29 @@ pub mod f32 {
     #[cfg(feature = "cuda")]
     use cudarc::driver::{CudaDevice, CudaSlice};
 
-    // todo: cfg_if lib to make this easier.
     use super::f64;
+
+    #[cfg(all(any(target_arch = "x86", target_arch = "x86_64"), feature = "std"))]
+    create_vec_shared!(f32x8, Vec3x8, Vec4x8);
+    #[cfg(all(any(target_arch = "x86", target_arch = "x86_64"), feature = "std"))]
+    create_quaternion_shared!(f32x8, Vec3x8, Quaternionx8);
+
+    // #[cfg(all(any(target_arch = "x86", target_arch = "x86_64"), feature = "std"))]
+    // create_vec_shared!(f32x16, Vec3x16, Vec4x16);
+    // #[cfg(all(any(target_arch = "x86", target_arch = "x86_64"), feature = "std"))]
+    // create_quaternion_shared!(f32x16, Vec3x16, Quaternionx16);
+
     #[cfg(all(any(target_arch = "x86", target_arch = "x86_64"), feature = "std"))]
     pub use crate::{
         simd::*,
         simd_primitives::{f32x8, f32x16},
     };
+    // #[cfg(all(any(target_arch = "x86", target_arch = "x86_64"), feature = "std"))]
+    // create_simd!(f32, f32x4, Vec3x4, Vec4x4, Quaternionx4, 4);
     #[cfg(all(any(target_arch = "x86", target_arch = "x86_64"), feature = "std"))]
     create_simd!(f32, f32x8, Vec3x8, Vec4x8, Quaternionx8, 8);
+    // #[cfg(all(any(target_arch = "x86", target_arch = "x86_64"), feature = "std"))]
+    // create_simd!(f32, f32x8, Vec3x16, Vec4x16, Quaternionx16, 16);
 
     impl From<f64::Vec2> for Vec2 {
         fn from(other: f64::Vec2) -> Self {
@@ -232,8 +252,13 @@ pub mod f32 {
 
 pub mod f64 {
     create!(f64);
+
     create_vec!(f64);
+    create_vec_shared!(f64, Vec3, Vec4);
+
     create_quaternion!(f64);
+    create_quaternion_shared!(f64, Vec3, Quaternion);
+
     create_matrix!(f64);
 
     #[cfg(feature = "cuda")]
@@ -243,13 +268,27 @@ pub mod f64 {
     use cudarc::driver::{CudaDevice, CudaSlice};
 
     use super::f32;
+
+    #[cfg(all(any(target_arch = "x86", target_arch = "x86_64"), feature = "std"))]
+    create_vec_shared!(f64x4, Vec3x4, Vec4x4);
+    #[cfg(all(any(target_arch = "x86", target_arch = "x86_64"), feature = "std"))]
+    create_quaternion_shared!(f64x4, Vec3x4, Quaternionx4);
+    // #[cfg(all(any(target_arch = "x86", target_arch = "x86_64"), feature = "std"))]
+    // create_vec_shared!(f32x8, Vec3x8, Vec4x8);
+    // #[cfg(all(any(target_arch = "x86", target_arch = "x86_64"), feature = "std"))]
+    // create_quaternion_shared!(f64x8, Vec3x8, Quaternionx8);
+
     #[cfg(all(any(target_arch = "x86", target_arch = "x86_64"), feature = "std"))]
     pub use crate::{
         simd::*,
         simd_primitives::{f64x4, f64x8},
     };
+    // #[cfg(all(any(target_arch = "x86", target_arch = "x86_64"), feature = "std"))]
+    // create_simd!(f64, f64x2, Vec3x2, Vec4x2, Quaternionx2, 2);
     #[cfg(all(any(target_arch = "x86", target_arch = "x86_64"), feature = "std"))]
     create_simd!(f64, f64x4, Vec3x4, Vec4x4, Quaternionx4, 4);
+    // #[cfg(all(any(target_arch = "x86", target_arch = "x86_64"), feature = "std"))]
+    // create_simd!(f64, f64x8, Vec3x8, Vec4x8, Quaternionx8, 8);
 
     impl From<f32::Vec2> for Vec2 {
         fn from(other: f32::Vec2) -> Self {

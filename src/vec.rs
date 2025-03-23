@@ -1,4 +1,359 @@
 #![macro_use]
+
+// Agnostic to SIMD and non-simd
+// `$f` here could be a primitive like `f32`, or a SIMD primitive like `f32x8`.
+macro_rules! create_vec_shared {
+    ($f:ident, $vec3_ty:ident, $vec4_ty:ident) => {
+        impl $vec3_ty {
+            /// Calculates the Hadamard product (element-wise multiplication).
+            pub fn hadamard_product(self, rhs: Self) -> Self {
+                Self {
+                    x: self.x * rhs.x,
+                    y: self.y * rhs.y,
+                    z: self.z * rhs.z,
+                }
+            }
+
+            /// Returns the vector magnitude squared
+            pub fn magnitude_squared(self) -> $f {
+                self.x.powi(2) + self.y.powi(2) + self.z.powi(2)
+            }
+
+            /// Returns the vector magnitude
+            pub fn magnitude(&self) -> $f {
+                (self.x.powi(2) + self.y.powi(2) + self.z.powi(2)).sqrt()
+            }
+
+            /// Returns the dot product with another vector.
+            pub fn dot(&self, rhs: Self) -> $f {
+                self.x * rhs.x + self.y * rhs.y + self.z * rhs.z
+            }
+
+            /// Calculate the cross product.
+            pub fn cross(&self, rhs: Self) -> Self {
+                Self {
+                    x: self.y * rhs.z - self.z * rhs.y,
+                    y: self.z * rhs.x - self.x * rhs.z,
+                    z: self.x * rhs.y - self.y * rhs.x,
+                }
+            }
+
+            /// Project a vector onto a plane defined by its normal vector. Assumes self and `plane_norm`
+            /// are unit vectors.
+            pub fn project_to_plane(self, plane_norm: Self) -> Self {
+                self - plane_norm * self.dot(plane_norm)
+            }
+
+            /// Projects this vector onto another vector.
+            pub fn project_to_vec(self, other: Self) -> Self {
+                other * (self.dot(other) / other.magnitude_squared())
+            }
+        }
+
+        impl Default for $vec3_ty {
+            fn default() -> Self {
+                Self::new_zero()
+            }
+        }
+
+        impl Add for $vec3_ty {
+            type Output = Self;
+
+            fn add(self, rhs: Self) -> Self::Output {
+                Self {
+                    x: self.x + rhs.x,
+                    y: self.y + rhs.y,
+                    z: self.z + rhs.z,
+                }
+            }
+        }
+
+        impl AddAssign for $vec3_ty {
+            fn add_assign(&mut self, rhs: Self) {
+                self.x += rhs.x;
+                self.y += rhs.y;
+                self.z += rhs.z;
+            }
+        }
+
+        impl Add<$f> for $vec3_ty {
+            type Output = Self;
+
+            fn add(self, rhs: $f) -> Self::Output {
+                Self {
+                    x: self.x + rhs,
+                    y: self.y + rhs,
+                    z: self.z + rhs,
+                }
+            }
+        }
+
+        impl AddAssign<$f> for $vec3_ty {
+            fn add_assign(&mut self, rhs: $f) {
+                self.x += rhs;
+                self.y += rhs;
+                self.z += rhs;
+            }
+        }
+
+        impl Sub for $vec3_ty {
+            type Output = Self;
+
+            fn sub(self, rhs: Self) -> Self::Output {
+                Self {
+                    x: self.x - rhs.x,
+                    y: self.y - rhs.y,
+                    z: self.z - rhs.z,
+                }
+            }
+        }
+
+        impl SubAssign for $vec3_ty {
+            fn sub_assign(&mut self, rhs: Self) {
+                self.x -= rhs.x;
+                self.y -= rhs.y;
+                self.z -= rhs.z;
+            }
+        }
+
+        impl Sub<$f> for $vec3_ty {
+            type Output = Self;
+
+            fn sub(self, rhs: $f) -> Self::Output {
+                Self {
+                    x: self.x - rhs,
+                    y: self.y - rhs,
+                    z: self.z - rhs,
+                }
+            }
+        }
+
+        impl SubAssign<$f> for $vec3_ty {
+            fn sub_assign(&mut self, rhs: $f) {
+                self.x -= rhs;
+                self.y -= rhs;
+                self.z -= rhs;
+            }
+        }
+
+        impl Mul<$f> for $vec3_ty {
+            type Output = Self;
+
+            fn mul(self, rhs: $f) -> Self::Output {
+                Self {
+                    x: self.x * rhs,
+                    y: self.y * rhs,
+                    z: self.z * rhs,
+                }
+            }
+        }
+
+        impl MulAssign<$f> for $vec3_ty {
+            fn mul_assign(&mut self, rhs: $f) {
+                self.x = self.x * rhs;
+                self.y = self.y * rhs;
+                self.z = self.z * rhs;
+            }
+        }
+
+        impl Div<$f> for $vec3_ty {
+            type Output = Self;
+
+            fn div(self, rhs: $f) -> Self::Output {
+                Self {
+                    x: self.x / rhs,
+                    y: self.y / rhs,
+                    z: self.z / rhs,
+                }
+            }
+        }
+
+        impl DivAssign<$f> for $vec3_ty {
+            fn div_assign(&mut self, rhs: $f) {
+                self.x = self.x / rhs;
+                self.y = self.y / rhs;
+                self.z = self.z / rhs;
+            }
+        }
+
+        impl $vec4_ty {
+            /// Calculates the Hadamard product (element-wise multiplication).
+            pub fn hadamard_product(self, rhs: Self) -> Self {
+                Self {
+                    x: self.x * rhs.x,
+                    y: self.y * rhs.y,
+                    z: self.z * rhs.z,
+                    w: self.w * rhs.w,
+                }
+            }
+
+            /// Returns the vector magnitude squared
+            pub fn magnitude_squared(self) -> $f {
+                self.x.powi(2) + self.y.powi(2) + self.z.powi(2) + self.w.powi(2)
+            }
+
+            /// Returns the vector magnitude
+            pub fn magnitude(&self) -> $f {
+                (self.x.powi(2) + self.y.powi(2) + self.z.powi(2) + self.w.powi(2)).sqrt()
+            }
+
+            /// Returns the dot product with another vector.
+            pub fn dot(&self, rhs: Self) -> $f {
+                self.x * rhs.x + self.y * rhs.y + self.z * rhs.z + self.w * rhs.w
+            }
+
+            /// Project a vector onto a plane defined by its normal vector. Assumes self and `plane_norm`
+            /// are unit vectors.
+            pub fn project_to_plane(self, plane_norm: Self) -> Self {
+                self - plane_norm * self.dot(plane_norm)
+            }
+
+            /// Projects this vector onto another vector.
+            pub fn project_to_vec(self, other: Self) -> Self {
+                other * (self.dot(other) / other.magnitude_squared())
+            }
+        }
+
+        impl Default for $vec4_ty {
+            fn default() -> Self {
+                Self::new_zero()
+            }
+        }
+
+        impl Add for $vec4_ty {
+            type Output = Self;
+
+            fn add(self, rhs: Self) -> Self::Output {
+                Self {
+                    x: self.x + rhs.x,
+                    y: self.y + rhs.y,
+                    z: self.z + rhs.z,
+                    w: self.w + rhs.w,
+                }
+            }
+        }
+
+        impl AddAssign for $vec4_ty {
+            fn add_assign(&mut self, rhs: Self) {
+                self.x += rhs.x;
+                self.y += rhs.y;
+                self.z += rhs.z;
+                self.w += rhs.w;
+            }
+        }
+
+        impl Add<$f> for $vec4_ty {
+            type Output = Self;
+
+            fn add(self, rhs: $f) -> Self::Output {
+                Self {
+                    x: self.x + rhs,
+                    y: self.y + rhs,
+                    z: self.z + rhs,
+                    w: self.w + rhs,
+                }
+            }
+        }
+
+        impl AddAssign<$f> for $vec4_ty {
+            fn add_assign(&mut self, rhs: $f) {
+                self.x += rhs;
+                self.y += rhs;
+                self.z += rhs;
+                self.w += rhs;
+            }
+        }
+
+        impl Sub for $vec4_ty {
+            type Output = Self;
+
+            fn sub(self, rhs: Self) -> Self::Output {
+                Self {
+                    x: self.x - rhs.x,
+                    y: self.y - rhs.y,
+                    z: self.z - rhs.z,
+                    w: self.w - rhs.w,
+                }
+            }
+        }
+
+        impl SubAssign for $vec4_ty {
+            fn sub_assign(&mut self, rhs: Self) {
+                self.x -= rhs.x;
+                self.y -= rhs.y;
+                self.z -= rhs.z;
+                self.w -= rhs.w;
+            }
+        }
+
+        impl Sub<$f> for $vec4_ty {
+            type Output = Self;
+
+            fn sub(self, rhs: $f) -> Self::Output {
+                Self {
+                    x: self.x - rhs,
+                    y: self.y - rhs,
+                    z: self.z - rhs,
+                    w: self.w - rhs,
+                }
+            }
+        }
+
+        impl SubAssign<$f> for $vec4_ty {
+            fn sub_assign(&mut self, rhs: $f) {
+                self.x -= rhs;
+                self.y -= rhs;
+                self.z -= rhs;
+                self.w -= rhs;
+            }
+        }
+
+        impl Mul<$f> for $vec4_ty {
+            type Output = Self;
+
+            fn mul(self, rhs: $f) -> Self::Output {
+                Self {
+                    x: self.x * rhs,
+                    y: self.y * rhs,
+                    z: self.z * rhs,
+                    w: self.w * rhs,
+                }
+            }
+        }
+
+        impl MulAssign<$f> for $vec4_ty {
+            fn mul_assign(&mut self, rhs: $f) {
+                self.x = self.x * rhs;
+                self.y = self.y * rhs;
+                self.z = self.z * rhs;
+                self.w = self.w * rhs;
+            }
+        }
+
+        impl Div<$f> for $vec4_ty {
+            type Output = Self;
+
+            fn div(self, rhs: $f) -> Self::Output {
+                Self {
+                    x: self.x / rhs,
+                    y: self.y / rhs,
+                    z: self.z / rhs,
+                    w: self.w / rhs,
+                }
+            }
+        }
+
+        impl DivAssign<$f> for $vec4_ty {
+            fn div_assign(&mut self, rhs: $f) {
+                self.x = self.x / rhs;
+                self.y = self.y / rhs;
+                self.z = self.z / rhs;
+                self.w = self.w / rhs;
+            }
+        }
+    };
+}
+
 macro_rules! create_vec {
     ($f:ident) => {
         /// A len-2 column vector.
@@ -32,7 +387,7 @@ macro_rules! create_vec {
             }
         }
 
-        #[derive(Clone, Copy, Default, Debug, PartialEq)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         #[cfg_attr(feature = "encode", derive(Encode, Decode))]
         /// A len-3 column vector.
         pub struct Vec3 {
@@ -51,86 +406,6 @@ macro_rules! create_vec {
             }
         }
 
-        impl Add<Self> for Vec3 {
-            type Output = Self;
-
-            fn add(self, rhs: Self) -> Self::Output {
-                Self {
-                    x: self.x + rhs.x,
-                    y: self.y + rhs.y,
-                    z: self.z + rhs.z,
-                }
-            }
-        }
-
-        impl AddAssign<Self> for Vec3 {
-            fn add_assign(&mut self, rhs: Self) {
-                self.x = self.x + rhs.x;
-                self.y = self.y + rhs.y;
-                self.z = self.z + rhs.z;
-            }
-        }
-
-        impl Sub<Self> for Vec3 {
-            type Output = Self;
-
-            fn sub(self, rhs: Self) -> Self::Output {
-                Self {
-                    x: self.x - rhs.x,
-                    y: self.y - rhs.y,
-                    z: self.z - rhs.z,
-                }
-            }
-        }
-
-        impl SubAssign<Self> for Vec3 {
-            fn sub_assign(&mut self, rhs: Self) {
-                self.x = self.x - rhs.x;
-                self.y = self.y - rhs.y;
-                self.z = self.z - rhs.z;
-            }
-        }
-
-        impl Mul<$f> for Vec3 {
-            type Output = Self;
-
-            fn mul(self, rhs: $f) -> Self::Output {
-                Self {
-                    x: self.x * rhs,
-                    y: self.y * rhs,
-                    z: self.z * rhs,
-                }
-            }
-        }
-
-        impl MulAssign<$f> for Vec3 {
-            fn mul_assign(&mut self, rhs: $f) {
-                self.x *= rhs;
-                self.y *= rhs;
-                self.z *= rhs;
-            }
-        }
-
-        impl Div<$f> for Vec3 {
-            type Output = Self;
-
-            fn div(self, rhs: $f) -> Self::Output {
-                Self {
-                    x: self.x / rhs,
-                    y: self.y / rhs,
-                    z: self.z / rhs,
-                }
-            }
-        }
-
-        impl DivAssign<$f> for Vec3 {
-            fn div_assign(&mut self, rhs: $f) {
-                self.x /= rhs;
-                self.y /= rhs;
-                self.z /= rhs;
-            }
-        }
-
         impl Neg for Vec3 {
             type Output = Self;
 
@@ -140,6 +415,12 @@ macro_rules! create_vec {
                     y: -self.y,
                     z: -self.z,
                 }
+            }
+        }
+
+        impl Sum<Vec3> for Vec3 {
+            fn sum<I: Iterator<Item = Vec3>>(iter: I) -> Vec3 {
+                iter.fold(Vec3::new_zero(), |a, b| a + b)
             }
         }
 
@@ -173,25 +454,6 @@ macro_rules! create_vec {
                 [self.x, self.y, self.z]
             }
 
-            /// Calculates the Hadamard product (element-wise multiplication).
-            pub fn hadamard_product(self, rhs: Self) -> Self {
-                Self {
-                    x: self.x * rhs.x,
-                    y: self.y * rhs.y,
-                    z: self.z * rhs.z,
-                }
-            }
-
-            /// Returns the vector magnitude squared
-            pub fn magnitude_squared(self) -> $f {
-                (self.hadamard_product(self)).sum()
-            }
-
-            /// Returns the vector magnitude
-            pub fn magnitude(&self) -> $f {
-                (self.x.powi(2) + self.y.powi(2) + self.z.powi(2)).sqrt()
-            }
-
             /// Normalize, modifying in place
             pub fn normalize(&mut self) {
                 let mag_recip = 1. / self.magnitude();
@@ -207,34 +469,9 @@ macro_rules! create_vec {
                 self * mag_recip
             }
 
-            /// Returns the dot product with another vector.
-            pub fn dot(&self, rhs: Self) -> $f {
-                self.x * rhs.x + self.y * rhs.y + self.z * rhs.z
-            }
-
-            /// Calculate the cross product.
-            pub fn cross(&self, rhs: Self) -> Self {
-                Self {
-                    x: self.y * rhs.z - self.z * rhs.y,
-                    y: self.z * rhs.x - self.x * rhs.z,
-                    z: self.x * rhs.y - self.y * rhs.x,
-                }
-            }
-
             /// Returns a sum of all elements
             pub fn sum(&self) -> $f {
                 self.x + self.y + self.z
-            }
-
-            /// Project a vector onto a plane defined by its normal vector. Assumes self and `plane_norm`
-            /// are unit vectors.
-            pub fn project_to_plane(self, plane_norm: Self) -> Self {
-                self - plane_norm * self.dot(plane_norm)
-            }
-
-            /// Projects this vector onto another vector.
-            pub fn project_to_vec(self, other: Self) -> Self {
-                other * (self.dot(other) / other.magnitude_squared())
             }
         }
 
@@ -267,94 +504,6 @@ macro_rules! create_vec {
             }
         }
 
-        impl Add<Self> for Vec4 {
-            type Output = Self;
-
-            fn add(self, rhs: Self) -> Self::Output {
-                Self {
-                    x: self.x + rhs.x,
-                    y: self.y + rhs.y,
-                    z: self.z + rhs.z,
-                    w: self.w + rhs.w,
-                }
-            }
-        }
-
-        impl AddAssign<Self> for Vec4 {
-            fn add_assign(&mut self, rhs: Self) {
-                self.x = self.x + rhs.x;
-                self.y = self.y + rhs.y;
-                self.z = self.z + rhs.z;
-                self.w = self.w + rhs.w;
-            }
-        }
-
-        impl Sub<Self> for Vec4 {
-            type Output = Self;
-
-            fn sub(self, rhs: Self) -> Self::Output {
-                Self {
-                    x: self.x - rhs.x,
-                    y: self.y - rhs.y,
-                    z: self.z - rhs.z,
-                    w: self.w - rhs.w,
-                }
-            }
-        }
-
-        impl SubAssign<Self> for Vec4 {
-            fn sub_assign(&mut self, rhs: Self) {
-                self.x = self.x - rhs.x;
-                self.y = self.y - rhs.y;
-                self.z = self.z - rhs.z;
-                self.w = self.w - rhs.w;
-            }
-        }
-
-        impl Mul<$f> for Vec4 {
-            type Output = Self;
-
-            fn mul(self, rhs: $f) -> Self::Output {
-                Self {
-                    x: self.x * rhs,
-                    y: self.y * rhs,
-                    z: self.z * rhs,
-                    w: self.w * rhs,
-                }
-            }
-        }
-
-        impl MulAssign<$f> for Vec4 {
-            fn mul_assign(&mut self, rhs: $f) {
-                self.x *= rhs;
-                self.y *= rhs;
-                self.z *= rhs;
-                self.w *= rhs;
-            }
-        }
-
-        impl Div<$f> for Vec4 {
-            type Output = Self;
-
-            fn div(self, rhs: $f) -> Self::Output {
-                Self {
-                    x: self.x / rhs,
-                    y: self.y / rhs,
-                    z: self.z / rhs,
-                    w: self.w / rhs,
-                }
-            }
-        }
-
-        impl DivAssign<$f> for Vec4 {
-            fn div_assign(&mut self, rhs: $f) {
-                self.x /= rhs;
-                self.y /= rhs;
-                self.z /= rhs;
-                self.w /= rhs;
-            }
-        }
-
         impl Neg for Vec4 {
             type Output = Self;
 
@@ -365,6 +514,12 @@ macro_rules! create_vec {
                     z: -self.z,
                     w: -self.w,
                 }
+            }
+        }
+
+        impl Sum<Vec4> for Vec4 {
+            fn sum<I: Iterator<Item = Vec4>>(iter: I) -> Vec4 {
+                iter.fold(Vec4::new_zero(), |a, b| a + b)
             }
         }
 
@@ -400,26 +555,6 @@ macro_rules! create_vec {
                 [self.x, self.y, self.z, self.w]
             }
 
-            /// Calculates the Hadamard product (element-wise multiplication).
-            pub fn hadamard_product(self, rhs: Self) -> Self {
-                Self {
-                    x: self.x * rhs.x,
-                    y: self.y * rhs.y,
-                    z: self.z * rhs.z,
-                    w: self.w * rhs.w,
-                }
-            }
-
-            /// Returns the vector magnitude squared
-            pub fn magnitude_squared(self) -> $f {
-                self.hadamard_product(self).sum()
-            }
-
-            /// Returns the vector magnitude
-            pub fn magnitude(&self) -> $f {
-                (self.x.powi(2) + self.y.powi(2) + self.z.powi(2) + self.w.powi(2)).sqrt()
-            }
-
             pub fn normalize(&mut self) {
                 let len =
                     (self.x.powi(2) + self.y.powi(2) + self.z.powi(2) + self.w.powi(2)).sqrt();
@@ -447,25 +582,9 @@ macro_rules! create_vec {
                 }
             }
 
-            /// Returns the dot product with another vector.
-            pub fn dot(&self, rhs: Self) -> $f {
-                self.x * rhs.x + self.y * rhs.y + self.z * rhs.z + self.w * rhs.w
-            }
-
             /// Returns a sum of all elements
             pub fn sum(&self) -> $f {
                 self.x + self.y + self.z + self.w
-            }
-
-            /// Project a vector onto a plane defined by its normal vector. Assumes self and `plane_norm`
-            /// are unit vectors.
-            pub fn project_to_plane(self, plane_norm: Self) -> Self {
-                self - plane_norm * self.dot(plane_norm)
-            }
-
-            /// Projects this vector onto another vector.
-            pub fn project_to_vec(self, other: Self) -> Self {
-                other * (self.dot(other) / other.magnitude_squared())
             }
 
             /// Remove the w element.
