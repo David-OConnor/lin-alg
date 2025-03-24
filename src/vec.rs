@@ -391,6 +391,18 @@ macro_rules! create_vec {
             pub fn track(&self) -> $f {
                 self.x.atan2(self.y)
             }
+
+            /// Returns the remaining scalar after removing the nth element (0-based).
+            /// For example:
+            /// truncate_n(0) => drops .x, returns y
+            /// truncate_n(1) => drops .y, returns x
+            pub fn truncate_n(&self, n: usize) -> $f {
+                match n {
+                    0 => self.y,
+                    1 => self.x,
+                    _ => panic!("{} is out of range for Vec2", n),
+                }
+            }
         }
 
         #[cfg(feature = "std")]
@@ -466,6 +478,20 @@ macro_rules! create_vec {
             /// Convert to a len-3 array: [x, y, z].
             pub fn to_arr(&self) -> [$f; 3] {
                 [self.x, self.y, self.z]
+            }
+
+            /// Returns this vector with the nth element removed (0-based).
+            /// For example:
+            /// truncate_n(0) => drops .x, returns Vec2(y, z)
+            /// truncate_n(1) => drops .y, returns Vec2(x, z)
+            /// truncate_n(2) => drops .z, returns Vec2(x, y)
+            pub fn truncate_n(&self, n: usize) -> Vec2 {
+                match n {
+                    0 => Vec2::new(self.y, self.z),
+                    1 => Vec2::new(self.x, self.z),
+                    2 => Vec2::new(self.x, self.y),
+                    _ => panic!("{} is out of range for Vec3", n),
+                }
             }
 
             /// Returns a sum of all elements

@@ -182,7 +182,7 @@ macro_rules! create_quaternion {
         }
 
         impl Quaternion {
-            pub fn new_identity() -> Self {
+            pub const fn new_identity() -> Self {
                 Self {
                     w: 1.,
                     x: 0.,

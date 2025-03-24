@@ -5,6 +5,35 @@ macro_rules! create_matrix {
     ($f:ident) => {
         #[derive(Clone, Debug)]
         #[cfg_attr(feature = "encode", derive(Encode, Decode))]
+        /// A 2x2 matrix. Data and operations are column-major.
+        pub struct Mat2 {
+            pub data: [$f; 4],
+        }
+
+        impl Mat2 {
+            pub fn new(data: [$f; 4]) -> Self {
+                Self { data }
+            }
+
+            pub const fn new_identity() -> Self {
+                Self {
+                    data: [1., 0., 0., 1.],
+                }
+            }
+
+            /// Create a matrix from column vectors
+            pub fn from_cols(x: Vec2, y: Vec2) -> Self {
+                Self::new([x.x, x.y, y.x, y.y])
+            }
+
+            pub fn determinant(&self) -> $f {
+                let d = self.data; // code shortener.
+                d[0] * d[3] - d[2] * d[1]
+            }
+        }
+
+        #[derive(Clone, Debug)]
+        #[cfg_attr(feature = "encode", derive(Encode, Decode))]
         /// A 3x3 matrix. Data and operations are column-major.
         pub struct Mat3 {
             pub data: [$f; 9],
@@ -35,6 +64,12 @@ macro_rules! create_matrix {
                 Self { data }
             }
 
+            pub const fn new_identity() -> Self {
+                Self {
+                    data: [1., 0., 0., 0., 1., 0., 0., 0., 1.],
+                }
+            }
+
             /// Create a matrix from column vectors
             pub fn from_cols(x: Vec3, y: Vec3, z: Vec3) -> Self {
                 Self::new([x.x, x.y, x.z, y.x, y.y, y.z, z.x, z.y, z.z])
@@ -50,10 +85,62 @@ macro_rules! create_matrix {
                     - d[6] * d[4] * d[2]
             }
 
-            pub fn new_identity() -> Self {
-                Self {
-                    data: [1., 0., 0., 0., 1., 0., 0., 0., 1.],
+            // todo: Impl more for Mat3, that you have for Mat4.
+            pub fn inverse(&self) -> Option<Self> {
+                let det = self.determinant();
+                if det == 0.0 {
+                    return None;
                 }
+
+                let inv_det = 1.0 / det;
+                let t = self.transpose(); // transpose of self
+                let (t_x, t_y, t_z) = t.to_cols(); // each is a Vec3
+
+                // Cofactor function: build 2×2 sub-matrix by skipping row `j` and
+                // skipping whichever column was "removed" by `i`.
+                let cf = |i, j| {
+                    // Build the 2×2 submatrix from the transposed columns
+                    let mat2 = match i {
+                        0 => Mat2::from_cols(t_y.truncate_n(j), t_z.truncate_n(j)),
+                        1 => Mat2::from_cols(t_x.truncate_n(j), t_z.truncate_n(j)),
+                        2 => Mat2::from_cols(t_x.truncate_n(j), t_y.truncate_n(j)),
+                        _ => panic!("out of range for cofactor"),
+                    };
+
+                    // (-1)^(i+j)
+                    let sign = if (i + j) & 1 == 1 { -1.0 } else { 1.0 };
+                    sign * mat2.determinant() * inv_det
+                };
+
+                Some(Self::new([
+                    cf(0, 0),
+                    cf(0, 1),
+                    cf(0, 2),
+                    cf(1, 0),
+                    cf(1, 1),
+                    cf(1, 2),
+                    cf(2, 0),
+                    cf(2, 1),
+                    cf(2, 2),
+                ]))
+            }
+
+            /// Transpose the matrix (column-major)
+            pub fn transpose(&self) -> Self {
+                let d = self.data; // code shortener
+                Self {
+                    data: [d[0], d[3], d[6], d[1], d[4], d[7], d[2], d[5], d[8]],
+                }
+            }
+
+            /// Returns columns: x, y, z
+            pub fn to_cols(&self) -> (Vec3, Vec3, Vec3) {
+                let d = self.data; // code shortener
+                (
+                    Vec3::new(d[0], d[1], d[2]),
+                    Vec3::new(d[3], d[4], d[5]),
+                    Vec3::new(d[6], d[7], d[8]),
+                )
             }
         }
 
@@ -288,7 +375,7 @@ macro_rules! create_matrix {
                 }
             }
 
-            pub fn new_identity() -> Self {
+            pub const fn new_identity() -> Self {
                 Self {
                     data: [
                         1., 0., 0., 0., 0., 1., 0., 0., 0., 0., 1., 0., 0., 0., 0., 1.,
@@ -332,6 +419,7 @@ macro_rules! create_matrix {
                 )
             }
 
+            // todo: Impl inverse for Mat3.
             /// See cgmath's impl.
             pub fn inverse(&self) -> Option<Self> {
                 let det = self.determinant();
