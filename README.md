@@ -3,13 +3,25 @@
 [![Crate](https://img.shields.io/crates/v/lin_alg.svg)](https://crates.io/crates/lin_alg)
 [![Docs](https://docs.rs/lin_alg/badge.svg)](https://docs.rs/lin_alg)
 
-Vector, matrix, and quaternion data structures and operations. Uses f32 or f64 based types.
+Vector, matrix, and quaternion data structures and operations. Uses `f32` or `f64` based types. SoA SIMD support.
 
-Example use cases:
+### Fundamental types:
+
+- Vec3
+- Vec4
+- Quaternion
+- Mat3
+- Mat4
+- Vec3x8,
+- Vec3x16,
+- Quaternionx8,
+- (etc)
+
+### Example use cases:
 
 - Computer graphics
 - Biomechanics
-- Robotics and unmanned aerial vehicles.
+- Robotics and unmanned aerial vehicles
 - Structural chemistry and biochemistry
 - Cosmology modeling
 - Various scientific and engineering applications
@@ -17,9 +29,9 @@ Example use cases:
 
 Vector and Quaternion types are *copy*.
 
-For Compatibility with no_std targets, e.g. embedded, disable default features, and enable the `no_std` feature. This  omits
+For Compatibility with no_std targets, e.g. embedded, disable default features, and enable the `no_std` feature. This omits SIMD,
 `std::fmt::Display` implementations, and enables [num_traits](https://docs.rs/num-traits/latest/num_traits/)'s `libm` capabilities
-for certain operations. `lin_alg = { version = "^1.1.0", default-features = false, features = ["no_std"] }`
+for certain operations. `lin_alg = { version = "^1.1.3", default-features = false, features = ["no_std"] }`
 
 For computer-graphics functionality (e.g. specialty matrix constructors, and [de]serialization to byte arrays for passing to and from GPUs), use the `computer_graphics` 
 feature. For [bincode](https://docs.rs/bincode/latest/bincode/) binary encoding and decoding, use the `encode` feature.
@@ -31,23 +43,26 @@ The `From` trait is implemented for most types, for converting between `f32` and
 
 ## SIMD
 
-Includes SIMD constructs (SoA layout) for Vec and Quaternion types. For example: `Vec3x8`, `Vec3x4`, `Vec4x8`, and `Quaternionx8` etc,
-for `f32` and `f64` types. They are configured with 256-bit wide (AVX) values, performing operations on 8 `f32`, `Vec3`,
-4 `f64` `Vec3`, etc. See the examples below for details.
+Includes SIMD constructs with structure of array (SoA) layout, for Vec and Quaternion types. For example: `Vec3x8`, `f64::Vec3x4`, `Vec4x8`, and `Quaternionx8`.
+These allow you to perform parallel operations on vectors and quaternions (e.g. 4, 8, or 16 at a time) for a similar computation cost as a single one. 
+They are currently configured with 256-bit wide (AVX) values, performing operations on 8 `f32` types, or 4 `f64` types. See the examples below for details.
 
-This library exposes an `f32x8` SIMD type that wraps `__m256` with appropriate constructors, operator overloads etc, and similar. This,
-and the `Vec3x8` etc APIs, mimic the nightly [core::simd](https://doc.rust-lang.org/beta/core/simd/index.html) library. They're used internally by our SIMD vector and quaternion types.
+This library exposes an `f32x8` SIMD type that wraps `__m256` with appropriate constructors, operator overloads etc, and similar. It's used
+internally by the SIMD Vec and Quaternion types. This,
+and the `Vec3x8`, `Quaternionx8` etc APIs, mimic the nightly [core::simd](https://doc.rust-lang.org/beta/core/simd/index.html) library. They're used internally by our SIMD vector and quaternion types.
 It also includes `f64x4`. We are waiting to add 512-bit wide types until their operations are in stable rust. Hopefully soon!
 
-We take this approach so this library will work on stable rust. We'll remove these when `core::simd` is stable.
+We use these custom SIMD types vice `core::simd` so this library will work on stable rust. We'll remove these when `core::simd` is stable.
 
 This lib also includes `pack` and `unpack` utility functions for converting slices of `f32`, `Vec3`, `Quaternion` etc between
-SIMD and normal values, taking care of padding the last chunk.
+SIMD and normal (scalar) values. This handles padding the last chunk, since input data may not align evenly in chunks of 4, 8, or 16.
+
+Note: This approach is the opposite of the array of structures (AoS) approach to SIMD used by the `glam` and `cgmath` libraries.
 
 
 ## CUDA (GPU)
 This library includes two helper functions for use with the `cudarc` library; these are to allocated `Vec3` and `Quaternion`
-types. (f32 and f64). They perform host-to-device copies.
+types. (f32 and f64). They perform host-to-device copies. This is intended to simply application code.
 ```rust
 pub fn alloc_vec3s(dev: &Arc<CudaDevice>, data: &[Vec3]) -> CudaSlice<f32> {}
 

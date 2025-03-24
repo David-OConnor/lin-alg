@@ -20,7 +20,9 @@ mod vec;
 #[cfg(all(any(target_arch = "x86", target_arch = "x86_64"), feature = "std"))]
 mod simd;
 
+#[cfg(all(any(target_arch = "x86", target_arch = "x86_64"), feature = "std"))]
 mod simd_primitives;
+
 #[cfg(test)]
 mod tests;
 
@@ -83,6 +85,19 @@ macro_rules! create {
 }
 
 pub mod f32 {
+    #[cfg(feature = "cuda")]
+    use std::sync::Arc;
+
+    #[cfg(feature = "cuda")]
+    use cudarc::driver::{CudaDevice, CudaSlice};
+
+    use super::f64;
+    #[cfg(all(any(target_arch = "x86", target_arch = "x86_64"), feature = "std"))]
+    pub use crate::{
+        simd::*,
+        simd_primitives::{f32x8, f32x16},
+    };
+
     create!(f32);
 
     create_vec!(f32);
@@ -92,14 +107,6 @@ pub mod f32 {
     create_quaternion_shared!(f32, Vec3, Quaternion);
 
     create_matrix!(f32);
-
-    #[cfg(feature = "cuda")]
-    use std::sync::Arc;
-
-    #[cfg(feature = "cuda")]
-    use cudarc::driver::{CudaDevice, CudaSlice};
-
-    use super::f64;
 
     #[cfg(all(any(target_arch = "x86", target_arch = "x86_64"), feature = "std"))]
     create_vec_shared!(f32x8, Vec3x8, Vec4x8);
@@ -111,11 +118,6 @@ pub mod f32 {
     // #[cfg(all(any(target_arch = "x86", target_arch = "x86_64"), feature = "std"))]
     // create_quaternion_shared!(f32x16, Vec3x16, Quaternionx16);
 
-    #[cfg(all(any(target_arch = "x86", target_arch = "x86_64"), feature = "std"))]
-    pub use crate::{
-        simd::*,
-        simd_primitives::{f32x8, f32x16},
-    };
     // #[cfg(all(any(target_arch = "x86", target_arch = "x86_64"), feature = "std"))]
     // create_simd!(f32, f32x4, Vec3x4, Vec4x4, Quaternionx4, 4);
     #[cfg(all(any(target_arch = "x86", target_arch = "x86_64"), feature = "std"))]
@@ -251,6 +253,19 @@ pub mod f32 {
 }
 
 pub mod f64 {
+    #[cfg(feature = "cuda")]
+    use std::sync::Arc;
+
+    #[cfg(feature = "cuda")]
+    use cudarc::driver::{CudaDevice, CudaSlice};
+
+    use super::f32;
+    #[cfg(all(any(target_arch = "x86", target_arch = "x86_64"), feature = "std"))]
+    pub use crate::{
+        simd::*,
+        simd_primitives::{f64x4, f64x8},
+    };
+
     create!(f64);
 
     create_vec!(f64);
@@ -261,14 +276,6 @@ pub mod f64 {
 
     create_matrix!(f64);
 
-    #[cfg(feature = "cuda")]
-    use std::sync::Arc;
-
-    #[cfg(feature = "cuda")]
-    use cudarc::driver::{CudaDevice, CudaSlice};
-
-    use super::f32;
-
     #[cfg(all(any(target_arch = "x86", target_arch = "x86_64"), feature = "std"))]
     create_vec_shared!(f64x4, Vec3x4, Vec4x4);
     #[cfg(all(any(target_arch = "x86", target_arch = "x86_64"), feature = "std"))]
@@ -278,11 +285,6 @@ pub mod f64 {
     // #[cfg(all(any(target_arch = "x86", target_arch = "x86_64"), feature = "std"))]
     // create_quaternion_shared!(f64x8, Vec3x8, Quaternionx8);
 
-    #[cfg(all(any(target_arch = "x86", target_arch = "x86_64"), feature = "std"))]
-    pub use crate::{
-        simd::*,
-        simd_primitives::{f64x4, f64x8},
-    };
     // #[cfg(all(any(target_arch = "x86", target_arch = "x86_64"), feature = "std"))]
     // create_simd!(f64, f64x2, Vec3x2, Vec4x2, Quaternionx2, 2);
     #[cfg(all(any(target_arch = "x86", target_arch = "x86_64"), feature = "std"))]
