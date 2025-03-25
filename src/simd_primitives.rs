@@ -1,3 +1,5 @@
+#![allow(non_camel_case_types)]
+
 //! Fundamental SIMD floating point types. Placeholder until `core::simd` is in standard.
 
 use std::{
@@ -9,25 +11,21 @@ use std::{
 // todo: Stabilization PR soon on 512 as of 2025-03-22.
 
 #[derive(Copy, Clone, Debug)]
-#[allow(non_camel_case_types)]
 #[repr(transparent)]
 /// Similar to `core::simd`.
 pub struct f32x8(__m256);
 
 #[derive(Copy, Clone, Debug)]
-#[allow(non_camel_case_types)]
 #[repr(transparent)]
 /// Similar to `core::simd`.
 pub struct f32x16(__m512);
 
 #[derive(Copy, Clone, Debug)]
-#[allow(non_camel_case_types)]
 #[repr(transparent)]
 /// Similar to `core::simd`.
 pub struct f64x4(__m256d);
 
 #[derive(Copy, Clone, Debug)]
-#[allow(non_camel_case_types)]
 #[repr(transparent)]
 /// Similar to `core::simd`.
 pub struct f64x8(__m512d);
@@ -98,6 +96,25 @@ impl f32x8 {
             n /= 2;
         }
         result
+    }
+
+    /// Lane‑wise “less than” comparison.
+    #[inline]
+    pub fn lt(self, other: Self) -> f32x8Mask {
+        // Use the new const-generic intrinsic.
+        unsafe { f32x8Mask(_mm256_cmp_ps::<{ _CMP_LT_OQ }>(self.0, other.0)) }
+    }
+
+    /// Lane‑wise “greater than” comparison.
+    #[inline]
+    pub fn gt(self, other: Self) -> f32x8Mask {
+        unsafe { f32x8Mask(_mm256_cmp_ps::<{ _CMP_GT_OQ }>(self.0, other.0)) }
+    }
+
+    /// Lane‑wise “equal to” comparison.
+    #[inline]
+    pub fn eq(self, other: Self) -> f32x8Mask {
+        unsafe { f32x8Mask(_mm256_cmp_ps::<{ _CMP_EQ_OQ }>(self.0, other.0)) }
     }
 }
 
@@ -235,6 +252,25 @@ impl f64x4 {
             n /= 2;
         }
         result
+    }
+
+    /// Lane‑wise “less than” comparison.
+    #[inline]
+    pub fn lt(self, other: Self) -> f64x4Mask {
+        // Use the new const-generic intrinsic.
+        unsafe { f64x4Mask(_mm256_cmp_pd::<{ _CMP_LT_OQ }>(self.0, other.0)) }
+    }
+
+    /// Lane‑wise “greater than” comparison.
+    #[inline]
+    pub fn gt(self, other: Self) -> f64x4Mask {
+        unsafe { f64x4Mask(_mm256_cmp_pd::<{ _CMP_GT_OQ }>(self.0, other.0)) }
+    }
+
+    /// Lane‑wise “equal to” comparison.
+    #[inline]
+    pub fn eq(self, other: Self) -> f64x4Mask {
+        unsafe { f64x4Mask(_mm256_cmp_pd::<{ _CMP_EQ_OQ }>(self.0, other.0)) }
     }
 }
 
@@ -598,5 +634,43 @@ impl DivAssign for f64x8 {
     #[inline]
     fn div_assign(&mut self, rhs: Self) {
         unsafe { *self = Self(_mm512_div_pd(self.0, rhs.0)) }
+    }
+}
+
+/// A mask type for 8 lanes of f32 values. For compare operations.
+#[derive(Copy, Clone, Debug)]
+#[repr(transparent)]
+pub struct f32x8Mask(__m256);
+
+impl f32x8Mask {
+    /// Returns true if any lane is true.
+    #[inline]
+    pub fn any(self) -> bool {
+        unsafe { _mm256_movemask_ps(self.0) != 0 }
+    }
+
+    /// Returns true if all lanes are true.
+    #[inline]
+    pub fn all(self) -> bool {
+        unsafe { _mm256_movemask_ps(self.0) == 0xFF }
+    }
+}
+
+/// A mask type for 4 lanes of f64 values. For compare operations.
+#[derive(Copy, Clone, Debug)]
+#[repr(transparent)]
+pub struct f64x4Mask(__m256d);
+
+impl f64x4Mask {
+    /// Returns true if any lane is true.
+    #[inline]
+    pub fn any(self) -> bool {
+        unsafe { _mm256_movemask_pd(self.0) != 0 }
+    }
+
+    /// Returns true if all lanes are true.
+    #[inline]
+    pub fn all(self) -> bool {
+        unsafe { _mm256_movemask_pd(self.0) == 0xFF }
     }
 }
