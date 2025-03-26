@@ -1,6 +1,8 @@
+#![macro_use]
+
 //! Handles Quaternion operations.
 
-#![macro_use]
+
 
 // Agnostic to SIMD and non-simd
 // `$f` here could be a primitive like `f32`, or a SIMD primitive like `f32x8`.
@@ -111,6 +113,14 @@ macro_rules! create_quaternion_shared {
             }
         }
 
+        impl Div for $quat_ty {
+            type Output = Self;
+
+            fn div(self, rhs: Self) -> Self::Output {
+                self * rhs.inverse()
+            }
+        }
+
         impl Mul<$f> for $quat_ty {
             type Output = Self;
 
@@ -124,11 +134,34 @@ macro_rules! create_quaternion_shared {
             }
         }
 
-        impl Div for $quat_ty {
+        impl MulAssign<$f> for $quat_ty {
+            fn mul_assign(&mut self, rhs: $f) {
+                self.w = self.w * rhs;
+                self.x = self.x * rhs;
+                self.y = self.y * rhs;
+                self.z = self.z * rhs;
+            }
+        }
+
+        impl Div<$f> for $quat_ty {
             type Output = Self;
 
-            fn div(self, rhs: Self) -> Self::Output {
-                self * rhs.inverse()
+            fn div(self, rhs: $f) -> Self::Output {
+                Self {
+                    w: self.w / rhs,
+                    x: self.x / rhs,
+                    y: self.y / rhs,
+                    z: self.z / rhs,
+                }
+            }
+        }
+
+        impl DivAssign<$f> for $quat_ty {
+            fn div_assign(&mut self, rhs: $f) {
+                self.w = self.w / rhs;
+                self.x = self.x / rhs;
+                self.y = self.y / rhs;
+                self.z = self.z / rhs;
             }
         }
 
@@ -152,18 +185,6 @@ macro_rules! create_quaternion_shared {
         //     }
         // }
 
-        impl Div<$f> for $quat_ty {
-            type Output = Self;
-
-            fn div(self, rhs: $f) -> Self::Output {
-                Self {
-                    w: self.w / rhs,
-                    x: self.x / rhs,
-                    y: self.y / rhs,
-                    z: self.z / rhs,
-                }
-            }
-        }
     };
 }
 
@@ -389,8 +410,8 @@ macro_rules! create_quaternion {
                 // product is negative, slerp between `self` and `-end`.
                 let mut dot = self.dot(end);
                 if dot < 0.0 {
-                    end = end * -1.;
-                    dot = dot * -1.;
+                    end *= -1.;
+                    dot *= -1.;
                 }
 
                 if dot > DOT_THRESHOLD {

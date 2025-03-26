@@ -1,5 +1,7 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
+#![allow(clippy::suspicious_arithmetic_impl)]  // E.g. quaternion division.
+
 //! Vector, matrix, and quaternion data structures and operations.
 //!
 //! Module for matrices, vectors, and quaternions, as used in 3D graphics, geometry,
@@ -27,6 +29,7 @@ mod simd_primitives;
 mod tests;
 
 pub use util::*;
+pub use simd::pack_slice;
 
 #[derive(Debug)]
 pub struct BufError {}

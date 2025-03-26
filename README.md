@@ -56,6 +56,7 @@ We use these custom SIMD types vice `core::simd` so this library will work on st
 
 This lib also includes `pack` and `unpack` utility functions for converting slices of `f32`, `Vec3`, `Quaternion` etc between
 SIMD and normal (scalar) values. This handles padding the last chunk, since input data may not align evenly in chunks of 4, 8, or 16.
+It also includes a generic `pack_slice` for packing `Copy` type items into arrays, generally for use with SIMD types.
 
 Note: This approach is the opposite of the array of structures (AoS) approach to SIMD used by the `glam` and `cgmath` libraries.
 
@@ -278,3 +279,38 @@ fn lj_potential(
     f32x8::splat(4.) * eps_ * (sr12 - sr6)
 }
 ```
+
+This example shows a few different SIMD operations. It mixes Vec3s, floating point types, and 
+arrays of non-numerical variables, synchronized.
+
+```rust
+fn bodies_from_atomsx8(atoms: &[Atom]) -> Vec<BodyVdwx8> {
+    let mut posits: Vec<Vec3> = Vec::with_capacity(atoms.len());
+    let mut els = Vec::with_capacity(atoms.len());
+    
+    for atom in atoms {
+        posits.push(atom.posit.into());
+        els.push(atom.element);
+    }
+
+    let (posits_x8, _valid_lanes) = pack_vec3(&posits);
+
+    let (els_x8, _) = pack_slice::<_, 8>(&els);
+    let mut result = Vec::with_capacity(posits_x8.len());
+
+    for (i, posit) in posits_x8.iter().enumerate() {
+        let masses: Vec<_> = els_x8[i].iter().map(|el| el.atomic_number() as f32).collect();
+        let mass = f32x8::from_slice(&masses);
+
+        result.push(BodyVdwx8 {
+            posit: *posit,
+            vel: Vec3x8::new_zero(),
+            accel: Vec3x8::new_zero(),
+            mass,
+            element: els_x8[i],
+        })
+    }
+
+    result
+}
+``````

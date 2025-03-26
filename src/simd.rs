@@ -21,7 +21,7 @@
 
 macro_rules! create_simd {
     ($f:ident, $fx:ident, $vec3_ty:ident, $vec4_ty:ident, $quat_ty:ident, $lanes:expr) => {
-        use std::{convert::TryInto, mem::transmute};
+        use std::convert::TryInto;
 
         /// SoA. Performs operations on x Vecs.
         #[derive(Clone, Copy, Debug)]
@@ -400,8 +400,7 @@ macro_rules! create_simd {
                 })
                 .collect();
 
-            let rem = vecs.len() % $lanes;
-            let valid_lanes_last_chunk = if rem == 0 { $lanes } else { rem };
+            let valid_lanes_last_chunk = if remainder == 0 { $lanes } else { remainder };
 
             (data, valid_lanes_last_chunk)
         }
@@ -455,8 +454,7 @@ macro_rules! create_simd {
                 })
                 .collect();
 
-            let rem = vals.len() % $lanes;
-            let valid_lanes_last_chunk = if rem == 0 { $lanes } else { rem };
+            let valid_lanes_last_chunk = if remainder == 0 { $lanes } else { remainder };
 
             (data, valid_lanes_last_chunk)
         }
@@ -507,8 +505,7 @@ macro_rules! create_simd {
                 .map(|chunk| $fx::load(chunk.as_ptr()))
                 .collect();
 
-            let rem = vals.len() % $lanes;
-            let valid_lanes_last_chunk = if rem == 0 { $lanes } else { rem };
+            let valid_lanes_last_chunk = if remainder == 0 { $lanes } else { remainder };
 
             (data, valid_lanes_last_chunk)
         }
@@ -533,4 +530,37 @@ macro_rules! create_simd {
             result
         }
     };
+}
+
+/// Convert a slice of any type to an array values, for use with SIMD. Padded as required. The result
+/// will have approximately 8x fewer elements than the input.
+///
+/// Important: When performing operations, make sure to discard data from *garbage* lanes
+/// in the remainder of your last packed value.
+///
+/// Returns (packed_values, lanes valid in last chunk)
+pub fn pack_slice<T, const LANES: usize>(vals: &[T]) -> (Vec<[T; LANES]>, usize)
+where
+    T: Copy + Clone + Default,
+{
+    let remainder = vals.len() % LANES;
+    let padding_needed = if remainder == 0 { 0 } else { LANES - remainder };
+
+    let mut padded = Vec::with_capacity(vals.len() + padding_needed);
+    padded.extend_from_slice(vals);
+    padded.extend((0..padding_needed).map(|_| T::default()));
+
+    let data = padded
+        .chunks_exact(LANES)
+        .map(|chunk| {
+            // Manually build a [T; LANES] array from the chunk
+            let mut arr = [T::default(); LANES];
+            arr.clone_from_slice(chunk);
+            arr
+        })
+        .collect();
+
+    let valid_lanes_last_chunk = if remainder == 0 { LANES } else { remainder };
+
+    (data, valid_lanes_last_chunk)
 }

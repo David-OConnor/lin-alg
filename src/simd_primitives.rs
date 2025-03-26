@@ -1,4 +1,5 @@
 #![allow(non_camel_case_types)]
+#![allow(clippy::not_unsafe_ptr_arg_deref)]
 
 //! Fundamental SIMD floating point types. Placeholder until `core::simd` is in standard.
 
@@ -90,7 +91,7 @@ impl f32x8 {
         // Exponentiation by squaring.
         while n > 0 {
             if n & 1 == 1 {
-                result = result * base;
+                result *= base;
             }
             base = base * base;
             n /= 2;
@@ -246,7 +247,7 @@ impl f64x4 {
         // Exponentiation by squaring.
         while n > 0 {
             if n & 1 == 1 {
-                result = result * base;
+                result *= base;
             }
             base = base * base;
             n /= 2;
