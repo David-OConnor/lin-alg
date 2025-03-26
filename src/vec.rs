@@ -211,6 +211,21 @@ macro_rules! create_vec_shared {
                 (self.x.powi(2) + self.y.powi(2) + self.z.powi(2) + self.w.powi(2)).sqrt()
             }
 
+            /// Normalize, modifying in place.
+            pub fn normalize(&mut self) {
+                let mag = self.magnitude();
+
+                self.x /= mag;
+                self.y /= mag;
+                self.z /= mag;
+                self.w /= mag;
+            }
+
+            /// Returns the normalized version of the vector.
+            pub fn to_normalized(self) -> Self {
+                self / self.magnitude()
+            }
+
             /// Returns the dot product with another vector.
             pub fn dot(&self, rhs: Self) -> $f {
                 self.x * rhs.x + self.y * rhs.y + self.z * rhs.z + self.w * rhs.w

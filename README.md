@@ -231,13 +231,13 @@ use lin_alg::f32::{Vec3, Vec3x8, f32x8, unpack_vec3};
 fn run_lj(atom_0_posits: &[Vec3], atom_1_posits: &[Vec3]) {
     // Convert all Vec3s to their SIMD variants, and loop through them. This converts then to 
     // `Vec<Vec3x8>`
-    let atom_0_posits_simd = pack_vec3(&atom_0_posits);
-    let atom_1_posits_simd = pack_vec3(&atom_1_posits);
+    let (atom_0_posits_x8, valid_lanes_last_0) = pack_vec3(&atom_0_posits);
+    let (atom_1_posits_x8, valid_lanes_last_0) = pack_vec3(&atom_1_posits);
     
     // todo: Or, parellilize with Rayon.
     for i in 0..atom_0_posits_simd {
-        let atom_1 = atom_0_posits_simd[i];       
-        let atom_0 = atom_1_posits_simd[i];       
+        let atom_1 = atom_0_posits_x8[i];       
+        let atom_0 = atom_1_posits_x8[i];       
         
         lj_potential(atom_0_posit, atom_1_posit, // ...);)
     }

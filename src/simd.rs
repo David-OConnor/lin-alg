@@ -376,7 +376,9 @@ macro_rules! create_simd {
         ///
         /// Important: When performing operations, make sure to discard data from *garbage* lanes
         /// in the remainder of your last packed value.
-        pub fn pack_vec3(vecs: &[Vec3]) -> Vec<$vec3_ty> {
+        ///
+        /// Returns (packed_values, lanes valid in last chunk)
+        pub fn pack_vec3(vecs: &[Vec3]) -> (Vec<$vec3_ty>, usize) {
             let remainder = vecs.len() % $lanes;
             let padding_needed = if remainder == 0 {
                 0
@@ -389,14 +391,19 @@ macro_rules! create_simd {
             padded.extend((0..padding_needed).map(|_| Vec3::new_zero()));
 
             // Now `padded.len()` is a multiple of x, so chunks_exact(x) will consume it fully.
-            padded
+            let data = padded
                 .chunks_exact($lanes)
                 .map(|chunk| {
                     // Convert the slice chunk into an array of x Vec3 elements.
                     let arr: [Vec3; $lanes] = chunk.try_into().unwrap();
                     $vec3_ty::from_array(arr)
                 })
-                .collect()
+                .collect();
+
+            let rem = vecs.len() % $lanes;
+            let valid_lanes_last_chunk = if rem == 0 { $lanes } else { rem };
+
+            (data, valid_lanes_last_chunk)
         }
 
         /// Convert a slice of SIMD Vec3x values, x-wide to Vec3. The result
@@ -424,27 +431,34 @@ macro_rules! create_simd {
         ///
         /// Important: When performing operations, make sure to discard data from *garbage* lanes
         /// in the remainder of your last packed value.
-        pub fn pack_quaternion(vecs: &[Quaternion]) -> Vec<$quat_ty> {
-            let remainder = vecs.len() % $lanes;
+        ///
+        /// Returns (packed_values, lanes valid in last chunk)
+        pub fn pack_quaternion(vals: &[Quaternion]) -> (Vec<$quat_ty>, usize) {
+            let remainder = vals.len() % $lanes;
             let padding_needed = if remainder == 0 {
                 0
             } else {
                 $lanes - remainder
             };
 
-            let mut padded = Vec::with_capacity(vecs.len() + padding_needed);
-            padded.extend_from_slice(vecs);
+            let mut padded = Vec::with_capacity(vals.len() + padding_needed);
+            padded.extend_from_slice(vals);
             padded.extend((0..padding_needed).map(|_| Quaternion::new_identity()));
 
             // Now `padded.len()` is a multiple of x, so chunks_exact(x) will consume it fully.
-            padded
+            let data = padded
                 .chunks_exact($lanes)
                 .map(|chunk| {
                     // Convert the slice chunk into an array of x Vec3 elements.
                     let arr: [Quaternion; $lanes] = chunk.try_into().unwrap();
                     $quat_ty::from_array(arr)
                 })
-                .collect()
+                .collect();
+
+            let rem = vals.len() % $lanes;
+            let valid_lanes_last_chunk = if rem == 0 { $lanes } else { rem };
+
+            (data, valid_lanes_last_chunk)
         }
 
         /// Convert a slice of SIMD Quaternionx values, x-wide to Quaternion. The result
@@ -473,7 +487,9 @@ macro_rules! create_simd {
         ///
         /// Important: When performing operations, make sure to discard data from *garbage* lanes
         /// in the remainder of your last packed value.
-        pub fn pack_f32(vals: &[$f]) -> Vec<$fx> {
+        ///
+        /// Returns (packed_values, lanes valid in last chunk)
+        pub fn pack_f32(vals: &[$f]) -> (Vec<$fx>, usize) {
             let remainder = vals.len() % $lanes;
             let padding_needed = if remainder == 0 {
                 0
@@ -486,11 +502,15 @@ macro_rules! create_simd {
             padded.extend((0..padding_needed).map(|_| 0.));
 
             // Now `padded.len()` is a multiple of x, so chunks_exact(x) will consume it fully.
-            padded
+            let data = padded
                 .chunks_exact($lanes)
-                // .map(|chunk| unsafe { _mm256_loadu_ps(chunk.as_ptr()) })
                 .map(|chunk| $fx::load(chunk.as_ptr()))
-                .collect()
+                .collect();
+
+            let rem = vals.len() % $lanes;
+            let valid_lanes_last_chunk = if rem == 0 { $lanes } else { rem };
+
+            (data, valid_lanes_last_chunk)
         }
 
         /// Convert a slice of SIMD floating point values to plain floating point ones. The result
