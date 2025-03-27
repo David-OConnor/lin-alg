@@ -3,7 +3,7 @@ use std::f32::consts::TAU;
 use std::mem::transmute;
 
 use super::*;
-use crate::f32::{FORWARD, RIGHT, UP};
+use crate::f32::{f32x8, FORWARD, RIGHT, UP};
 #[cfg(all(any(target_arch = "x86", target_arch = "x86_64"), feature = "std"))]
 // todo: More tests, including for matrices.
 #[test]
@@ -363,4 +363,36 @@ fn test_simd_rotate_vec() {
     assert!((result[5] - -UP).magnitude() < f32::EPSILON);
     assert!((result[6] - -FORWARD).magnitude() < f32::EPSILON);
     assert!((result[7] - angled).magnitude() < f32::EPSILON);
+}
+
+#[cfg(all(any(target_arch = "x86", target_arch = "x86_64"), feature = "std"))]
+#[test]
+fn test_simd_prim_exp() {
+    let base = f32x8::from_array([1., 1.5, 2., 2.5, 3., 3.5, -1., -2.]);
+
+    let exp_a = -2;
+    let exp_b = -1;
+    let exp_c = 0;
+    let exp_d = 1;
+    let exp_e = 2;
+    let exp_f = 3;
+
+
+    let result_a = base.powi(exp_a).to_array();
+    let result_b = base.powi(exp_b).to_array();
+    let result_c = base.powi(exp_c).to_array();
+    let result_d = base.powi(exp_d).to_array();
+    let result_e = base.powi(exp_e).to_array();
+    let result_f = base.powi(exp_f).to_array();
+
+    assert!(result_a[0] - 1. <  f32::EPSILON);
+    assert!(result_a[1] - 0.444444444 <  f32::EPSILON);
+    assert!(result_a[2] - 0.25 <  f32::EPSILON);
+
+    assert!(result_b[1] - 0.66666666666666 <  f32::EPSILON);
+    assert!(result_b[6] - 0.5 <  f32::EPSILON);
+
+    assert!(result_f[1] - 3.375 <  f32::EPSILON);
+    assert!(result_f[2] - 8. <  f32::EPSILON);
+    assert!(result_f[3] - 15.625 <  f32::EPSILON);
 }
