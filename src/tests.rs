@@ -3,7 +3,11 @@ use std::f32::consts::TAU;
 use std::mem::transmute;
 
 use super::*;
-use crate::f32::{f32x8, FORWARD, RIGHT, UP};
+use crate::{
+    f32::{FORWARD, RIGHT, UP, f32x8, pack_float, pack_vec3, unpack_float},
+    f64::unpack_vec3,
+};
+
 #[cfg(all(any(target_arch = "x86", target_arch = "x86_64"), feature = "std"))]
 // todo: More tests, including for matrices.
 #[test]
@@ -377,7 +381,6 @@ fn test_simd_prim_exp() {
     let exp_e = 2;
     let exp_f = 3;
 
-
     let result_a = base.powi(exp_a).to_array();
     let result_b = base.powi(exp_b).to_array();
     let result_c = base.powi(exp_c).to_array();
@@ -385,14 +388,135 @@ fn test_simd_prim_exp() {
     let result_e = base.powi(exp_e).to_array();
     let result_f = base.powi(exp_f).to_array();
 
-    assert!(result_a[0] - 1. <  f32::EPSILON);
-    assert!(result_a[1] - 0.444444444 <  f32::EPSILON);
-    assert!(result_a[2] - 0.25 <  f32::EPSILON);
+    assert!(result_a[0] - 1. < f32::EPSILON);
+    assert!(result_a[1] - 0.444444444 < f32::EPSILON);
+    assert!(result_a[2] - 0.25 < f32::EPSILON);
 
-    assert!(result_b[1] - 0.66666666666666 <  f32::EPSILON);
-    assert!(result_b[6] - 0.5 <  f32::EPSILON);
+    assert!(result_b[1] - 0.66666666666666 < f32::EPSILON);
+    assert!(result_b[6] - 0.5 < f32::EPSILON);
 
-    assert!(result_f[1] - 3.375 <  f32::EPSILON);
-    assert!(result_f[2] - 8. <  f32::EPSILON);
-    assert!(result_f[3] - 15.625 <  f32::EPSILON);
+    assert!(result_f[1] - 3.375 < f32::EPSILON);
+    assert!(result_f[2] - 8. < f32::EPSILON);
+    assert!(result_f[3] - 15.625 < f32::EPSILON);
+}
+
+#[cfg(all(any(target_arch = "x86", target_arch = "x86_64"), feature = "std"))]
+#[test]
+fn test_simd_neg() {
+    let a = f32x8::from_array([1., 1.5, 2., 2.5, 3., 3.5, -1., -2.]);
+    let b = (-a).to_array();
+
+    assert!(b[0] - -1. < f32::EPSILON);
+    assert!(b[1] - -1.5 < f32::EPSILON);
+    assert!(b[7] - 2. < f32::EPSILON);
+
+    let c = f32::Vec3x8::splat(f32::Vec3::new(1., -1., 2.));
+    let d = (-c).to_array();
+
+    assert!(d[0].x - -1. < f32::EPSILON);
+    assert!(d[1].y - 1. < f32::EPSILON);
+    assert!(d[2].z - -2. < f32::EPSILON);
+}
+
+#[cfg(all(any(target_arch = "x86", target_arch = "x86_64"), feature = "std"))]
+#[test]
+fn test_simd_pack_float() {
+    // Test both with and without garbage lanes.
+    let data = vec![
+        0., 1., 2., 3., 4., 5., 6., 7., 8., 9., 10., 11., 12., 13., 14., 15., 16., 17., 18.,
+    ];
+    let data_1 = vec![
+        0., 1., 2., 3., 4., 5., 6., 7., 8., 9., 10., 11., 12., 13., 14., 15.,
+    ];
+
+    let mut expected = Vec::with_capacity(data.len());
+    let mut expected_1 = Vec::with_capacity(data_1.len());
+    for v in &data {
+        expected.push(v * 10.);
+    }
+    for v in &data_1 {
+        expected_1.push(v * 10.);
+    }
+
+    let (mut packed, lanes_last) = pack_float(&data);
+    let (mut packed_1, lanes_last_1) = pack_float(&data_1);
+
+    assert_eq!(lanes_last, 3);
+    assert_eq!(lanes_last_1, 8);
+
+    for item in &mut packed {
+        *item *= f32x8::splat(10.);
+    }
+    for item in &mut packed_1 {
+        *item *= f32x8::splat(10.);
+    }
+
+    let unpacked = unpack_float(&packed, data.len());
+    let unpacked_1 = unpack_float(&packed_1, data_1.len());
+
+    assert_eq!(unpacked.len(), data.len());
+    assert_eq!(unpacked_1.len(), data_1.len());
+
+    for i in 0..packed.len() {
+        assert!((expected[i] - unpacked[i]).abs() < f32::EPSILON);
+    }
+
+    for i in 0..packed_1.len() {
+        assert!((expected_1[i] - unpacked_1[i]).abs() < f32::EPSILON);
+    }
+}
+
+#[cfg(all(any(target_arch = "x86", target_arch = "x86_64"), feature = "std"))]
+#[test]
+fn test_simd_pack_vec3() {
+    // Test both with and without garbage lanes.
+    let mut data = Vec::with_capacity(19);
+    let mut data_1 = Vec::with_capacity(16);
+    for i in 0..19 {
+        data.push(f32::Vec3::new(i as f32, i as f32, i as f32));
+    }
+
+    for i in 0..16 {
+        data_1.push(f32::Vec3::new(i as f32, i as f32, i as f32));
+    }
+
+    let mut expected = Vec::with_capacity(data.len());
+    let mut expected_1 = Vec::with_capacity(data_1.len());
+    for v in &data {
+        expected.push(*v * 10.);
+    }
+    for v in &data_1 {
+        expected_1.push(*v * 10.);
+    }
+
+    let (mut packed, lanes_last) = pack_vec3(&data);
+    let (mut packed_1, lanes_last_1) = pack_vec3(&data_1);
+
+    assert_eq!(lanes_last, 3);
+    assert_eq!(lanes_last_1, 8);
+
+    for item in &mut packed {
+        *item *= f32x8::splat(10.);
+    }
+    for item in &mut packed_1 {
+        *item *= f32x8::splat(10.);
+    }
+
+    let unpacked = f32::unpack_vec3(&packed, data.len());
+    let unpacked_1 = f32::unpack_vec3(&packed_1, data_1.len());
+
+    assert_eq!(unpacked.len(), data.len());
+    assert_eq!(unpacked_1.len(), data_1.len());
+
+    for i in 0..packed.len() {
+        assert!((expected[i] - unpacked[i]).x.abs() < f32::EPSILON);
+        assert!((expected[i] - unpacked[i]).y.abs() < f32::EPSILON);
+        assert!((expected[i] - unpacked[i]).z.abs() < f32::EPSILON);
+    }
+
+    for i in 0..packed_1.len() {
+        assert!((expected_1[i] - unpacked_1[i]).x.abs() < f32::EPSILON);
+        assert!((expected_1[i] - unpacked_1[i]).y.abs() < f32::EPSILON);
+        assert!((expected_1[i] - unpacked_1[i]).z.abs() < f32::EPSILON);
+    }
 }

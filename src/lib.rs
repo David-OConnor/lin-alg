@@ -1,6 +1,5 @@
 #![cfg_attr(not(feature = "std"), no_std)]
-
-#![allow(clippy::suspicious_arithmetic_impl)]  // E.g. quaternion division.
+#![allow(clippy::suspicious_arithmetic_impl)] // E.g. quaternion division.
 
 //! Vector, matrix, and quaternion data structures and operations.
 //!
@@ -28,8 +27,8 @@ mod simd_primitives;
 #[cfg(test)]
 mod tests;
 
-pub use util::*;
 pub use simd::pack_slice;
+pub use util::*;
 
 #[derive(Debug)]
 pub struct BufError {}

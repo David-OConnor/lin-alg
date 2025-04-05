@@ -487,7 +487,7 @@ macro_rules! create_simd {
         /// in the remainder of your last packed value.
         ///
         /// Returns (packed_values, lanes valid in last chunk)
-        pub fn pack_f32(vals: &[$f]) -> (Vec<$fx>, usize) {
+        pub fn pack_float(vals: &[$f]) -> (Vec<$fx>, usize) {
             let remainder = vals.len() % $lanes;
             let padding_needed = if remainder == 0 {
                 0
@@ -514,7 +514,7 @@ macro_rules! create_simd {
         /// will have approximately x as many elements as the input. Its parameters include
         /// the number of original values, so it knows to only use valid lanes on the last
         /// chunk.
-        pub fn unpack_f32(vals: &[$fx], len_orig: usize) -> Vec<$f> {
+        pub fn unpack_float(vals: &[$fx], len_orig: usize) -> Vec<$f> {
             let mut result = Vec::with_capacity(len_orig);
 
             for (i, val) in vals.iter().enumerate() {

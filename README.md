@@ -56,6 +56,7 @@ We use these custom SIMD types vice `core::simd` so this library will work on st
 
 This lib also includes `pack` and `unpack` utility functions for converting slices of `f32`, `Vec3`, `Quaternion` etc between
 SIMD and normal (scalar) values. This handles padding the last chunk, since input data may not align evenly in chunks of 4, 8, or 16.
+These include `pack_vec3`, `unpack_quaternion`, `pack_float` etc.
 It also includes a generic `pack_slice` for packing `Copy` type items into arrays, generally for use with SIMD types.
 
 Note: This approach is the opposite of the array of structures (AoS) approach to SIMD used by the `glam` and `cgmath` libraries.
@@ -232,6 +233,7 @@ use lin_alg::f32::{Vec3, Vec3x8, f32x8, unpack_vec3};
 fn run_lj(atom_0_posits: &[Vec3], atom_1_posits: &[Vec3]) {
     // Convert all Vec3s to their SIMD variants, and loop through them. This converts then to 
     // `Vec<Vec3x8>`
+    // See also: `pack_float`, `unpack_float`, `pack_quaternion` etc.
     let (atom_0_posits_x8, valid_lanes_last_0) = pack_vec3(&atom_0_posits);
     let (atom_1_posits_x8, valid_lanes_last_0) = pack_vec3(&atom_1_posits);
     
@@ -246,7 +248,7 @@ fn run_lj(atom_0_posits: &[Vec3], atom_1_posits: &[Vec3]) {
     
     // In practice here, you may wish to sum components, being careful to discard (or render harmless) values
     // from the pad lanes in the last chunk. If collecting the values directly instead. (prior to processing),
-    // you can use these `unpack` methods, available for `f32`, `f64`, `Vec3`, and `Quaternion`. They automatically
+    // you can use these `unpack` function, available for `f32`, `f64`, `Vec3`, and `Quaternion`. They automatically
     // remove the padding lanes.
     let atom_0_posits_processed = unpack_vec3(atom_0_posits_simd, atom_0_posits.len());
 }

@@ -2,8 +2,6 @@
 
 //! Handles Quaternion operations.
 
-
-
 // Agnostic to SIMD and non-simd
 // `$f` here could be a primitive like `f32`, or a SIMD primitive like `f32x8`.
 macro_rules! create_quaternion_shared {
@@ -184,7 +182,6 @@ macro_rules! create_quaternion_shared {
         //         self * as_vec.inverse()
         //     }
         // }
-
     };
 }
 
