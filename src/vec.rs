@@ -631,7 +631,7 @@ macro_rules! create_vec {
 
         #[cfg(feature = "cuda")]
         /// Convert a collection of `Vec3`s into Cuda arrays of their components.
-        pub fn alloc_vec3s(dev: &Arc<CudaDevice>, data: &[Vec3]) -> CudaSlice<$f> {
+        pub fn alloc_vec3s(stream: &Arc<CudaStream>, data: &[Vec3]) -> CudaSlice<$f> {
             let mut result = Vec::new();
             // todo: Ref etcs A/R; you are making a double copy here.
             for v in data {
@@ -639,7 +639,7 @@ macro_rules! create_vec {
                 result.push(v.y as $f);
                 result.push(v.z as $f);
             }
-            dev.htod_copy(result).unwrap()
+            stream.memcpy_stod(&result).unwrap()
         }
     };
 }

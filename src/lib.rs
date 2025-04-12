@@ -91,7 +91,7 @@ pub mod f32 {
     use std::sync::Arc;
 
     #[cfg(feature = "cuda")]
-    use cudarc::driver::{CudaDevice, CudaSlice};
+    use cudarc::driver::{CudaSlice, CudaStream};
 
     use super::f64;
     #[cfg(all(any(target_arch = "x86", target_arch = "x86_64"), feature = "std"))]
@@ -259,7 +259,7 @@ pub mod f64 {
     use std::sync::Arc;
 
     #[cfg(feature = "cuda")]
-    use cudarc::driver::{CudaDevice, CudaSlice};
+    use cudarc::driver::{CudaSlice, CudaStream};
 
     use super::f32;
     #[cfg(all(any(target_arch = "x86", target_arch = "x86_64"), feature = "std"))]
