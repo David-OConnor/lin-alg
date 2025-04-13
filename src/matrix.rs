@@ -85,7 +85,6 @@ macro_rules! create_matrix {
                     - d[6] * d[4] * d[2]
             }
 
-            // todo: Impl more for Mat3, that you have for Mat4.
             pub fn inverse(&self) -> Option<Self> {
                 let det = self.determinant();
                 if det == 0.0 {
@@ -419,8 +418,6 @@ macro_rules! create_matrix {
                 )
             }
 
-            // todo: Impl inverse for Mat3.
-            /// See cgmath's impl.
             pub fn inverse(&self) -> Option<Self> {
                 let det = self.determinant();
                 if det == 0. {
