@@ -514,7 +514,7 @@ macro_rules! create_quaternion {
 
         #[cfg(feature = "cuda")]
         /// Convert a collection of `Quaternion`s into Cuda arrays of their components.
-        pub fn alloc_quaternions(stream: &Arc<CudaStream>, data: &[Quaternion]) -> CudaSlice<$f> {
+        pub fn quaternions_to_dev(stream: &Arc<CudaStream>, data: &[Quaternion]) -> CudaSlice<$f> {
             let mut result = Vec::new();
             // todo: Ref etcs A/R; you are making a double copy here.
             for v in data {
@@ -524,6 +524,17 @@ macro_rules! create_quaternion {
                 result.push(v.z as $f);
             }
             stream.memcpy_stod(&result).unwrap()
+        }
+
+
+        #[cfg(feature = "cuda")]
+        pub fn quaternions_from_dev(stream: &Arc<CudaStream>, data_dev: &CudaSlice<$f>) -> Vec<Quaternion> {
+            let data_host = stream.memcpy_dtov(data_dev).unwrap();
+
+            data_host
+                .chunks_exact(4)
+                .map(|chunk| Quaternion::new(chunk[0], chunk[1], chunk[2], chunk[3]))
+                .collect()
         }
     };
 }

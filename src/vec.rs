@@ -630,16 +630,27 @@ macro_rules! create_vec {
         }
 
         #[cfg(feature = "cuda")]
-        /// Convert a collection of `Vec3`s into Cuda arrays of their components.
-        pub fn alloc_vec3s(stream: &Arc<CudaStream>, data: &[Vec3]) -> CudaSlice<$f> {
-            let mut result = Vec::new();
+        /// Convert a collection of `Vec3` into Cuda arrays of their components.
+        pub fn vec3s_to_dev(stream: &Arc<CudaStream>, data_host: &[Vec3]) -> CudaSlice<$f> {
+            let mut result = Vec::with_capacity(data_host.len() * 3);
             // todo: Ref etcs A/R; you are making a double copy here.
-            for v in data {
+            for v in data_host {
                 result.push(v.x as $f);
                 result.push(v.y as $f);
                 result.push(v.z as $f);
             }
             stream.memcpy_stod(&result).unwrap()
+        }
+
+        #[cfg(feature = "cuda")]
+        /// Convert a Cuda array of `Vec3` into host.
+        pub fn vec3s_from_dev(stream: &Arc<CudaStream>, data_dev: &CudaSlice<$f>) -> Vec<Vec3> {
+            let data_host = stream.memcpy_dtov(data_dev).unwrap();
+
+            data_host
+                .chunks_exact(3)
+                .map(|chunk| Vec3::new(chunk[0], chunk[1], chunk[2]))
+                .collect()
         }
     };
 }

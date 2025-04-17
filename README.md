@@ -66,9 +66,13 @@ Note: This approach is the opposite of the array of structures (AoS) approach to
 This library includes two helper functions for use with the `cudarc` library; these are to allocated `Vec3` and `Quaternion`
 types. (f32 and f64). They perform host-to-device copies. This is intended to simply application code.
 ```rust
-pub fn alloc_vec3s(dev: &Arc<CudaDevice>, data: &[Vec3]) -> CudaSlice<f32> {}
+pub fn vecs_to_dev(dev: &Arc<CudaDevice>, data: &[Vec3]) -> CudaSlice<f32> {}
 
-pub fn alloc_quaternions(dev: &Arc<CudaDevice>, data: &[Quaternion]) -> CudaSlice<f32> {}
+pub fn vec3s_from_dev(stream: &Arc<CudaStream>, data_dev: &CudaSlice<f32>) -> Vec<Vec3> {}
+
+pub fn quaternions_to_dev(dev: &Arc<CudaDevice>, data: &[Quaternion]) -> CudaSlice<f32> {}
+
+pub fn quaternions_from_dev(stream: &Arc<CudaStream>, data_dev: &CudaSlice<f32>) -> Vec<Quaternion> {}
 ```
 
 
