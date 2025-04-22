@@ -19,6 +19,8 @@
 //! It appears that 128-bit wide SIMD is the most common. ("SSE"). 256-bit is called AVX, and is only
 //! available on (relatively) newer CPUs. AVX-512 is less common.
 
+use std::array::from_fn;
+
 macro_rules! create_simd {
     ($f:ident, $fx:ident, $vec3_ty:ident, $vec4_ty:ident, $quat_ty:ident, $lanes:expr) => {
         use std::convert::TryInto;
@@ -553,7 +555,6 @@ where
     let data = padded
         .chunks_exact(LANES)
         .map(|chunk| {
-            // Manually build a [T; LANES] array from the chunk
             let mut arr = [T::default(); LANES];
             arr.clone_from_slice(chunk);
             arr
@@ -564,3 +565,46 @@ where
 
     (data, valid_lanes_last_chunk)
 }
+
+// todo: DRY
+pub fn pack_slice_noncopy<T, const LANES: usize>(vals: &[T]) -> (Vec<[T; LANES]>, usize)
+where
+    T: Clone + Default,
+{
+    let remainder = vals.len() % LANES;
+    let valid_lanes_last = if remainder == 0 { LANES } else { remainder };
+
+    let padding_needed = if remainder == 0 { 0 } else { LANES - remainder };
+
+    let mut padded: Vec<T> = vals.to_vec(); // clone all T
+    padded.reserve(padding_needed);
+    padded.extend((0..padding_needed).map(|_| T::default()));
+
+    let data: Vec<[T; LANES]> = padded
+        .chunks_exact(LANES)
+        .map(|chunk| {
+            // for each index 0..LANES, clone chunk[i] into the array
+            from_fn(|i| chunk[i].clone())
+        })
+        .collect();
+
+    (data, valid_lanes_last)
+}
+
+pub fn unpack_slice<T: Copy, const LANES: usize>(vals: &[[T; LANES]], len_orig: usize) -> Vec<T> {
+    let mut result = Vec::with_capacity(len_orig);
+
+    for (i, chunk) in vals.iter().enumerate() {
+        let lanes = if i == vals.len() - 1 {
+            let rem = len_orig % LANES;
+            if rem == 0 { LANES } else { rem }
+        } else {
+            LANES
+        };
+
+        result.extend(chunk[..lanes].iter().copied());
+    }
+    result
+}
+
+// todo: Unpack_slice_noncopy too

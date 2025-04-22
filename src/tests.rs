@@ -9,7 +9,6 @@ use crate::{
 };
 
 #[cfg(all(any(target_arch = "x86", target_arch = "x86_64"), feature = "std"))]
-// todo: More tests, including for matrices.
 #[test]
 fn test_vec3_addition() {
     let v1 = f32::Vec3::new(1.0, 2.0, 3.0);

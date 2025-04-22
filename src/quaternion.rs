@@ -526,9 +526,11 @@ macro_rules! create_quaternion {
             stream.memcpy_stod(&result).unwrap()
         }
 
-
         #[cfg(feature = "cuda")]
-        pub fn quaternions_from_dev(stream: &Arc<CudaStream>, data_dev: &CudaSlice<$f>) -> Vec<Quaternion> {
+        pub fn quaternions_from_dev(
+            stream: &Arc<CudaStream>,
+            data_dev: &CudaSlice<$f>,
+        ) -> Vec<Quaternion> {
             let data_host = stream.memcpy_dtov(data_dev).unwrap();
 
             data_host

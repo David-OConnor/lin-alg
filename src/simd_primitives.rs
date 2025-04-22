@@ -6,6 +6,7 @@
 use std::{
     arch::x86_64::*,
     intrinsics::transmute,
+    iter::Sum,
     ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign},
 };
 
@@ -184,6 +185,20 @@ impl DivAssign for f32x8 {
     #[inline]
     fn div_assign(&mut self, rhs: Self) {
         unsafe { *self = Self(_mm256_div_ps(self.0, rhs.0)) }
+    }
+}
+
+impl Sum for f32x8 {
+    /// Sum up a sequence of `f32x8` values by lane.
+    fn sum<I: Iterator<Item = f32x8>>(iter: I) -> Self {
+        iter.fold(Self::splat(0.0), |acc, x| acc + x)
+    }
+}
+
+impl<'a> Sum<&'a f32x8> for f32x8 {
+    /// Sum up a sequence of `&f32x8` by lane.
+    fn sum<I: Iterator<Item = &'a f32x8>>(iter: I) -> Self {
+        iter.fold(Self::splat(0.0), |acc, &x| acc + x)
     }
 }
 
