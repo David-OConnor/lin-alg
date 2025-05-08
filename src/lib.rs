@@ -24,10 +24,12 @@ mod simd;
 #[cfg(all(any(target_arch = "x86", target_arch = "x86_64"), feature = "std"))]
 mod simd_primitives;
 
+#[cfg(all(any(target_arch = "x86", target_arch = "x86_64"), feature = "std"))]
+pub use simd::pack_slice;
+
 #[cfg(test)]
 mod tests;
 
-pub use simd::pack_slice;
 pub use util::*;
 
 #[derive(Debug)]

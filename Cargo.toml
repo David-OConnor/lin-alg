@@ -1,6 +1,6 @@
 [package]
 name = "lin_alg"
-version = "1.1.7"
+version = "1.1.8"
 edition = "2024"
 authors = ["David O'Connor <the_alchemist@fastmail.com>"]
 description = "Vector, matrix, and quaternion operations for general purposes"
@@ -22,7 +22,7 @@ exclude = [".gitignore"]
 [dependencies]
 num-traits = { version = "^0.2.19", default-features = false }
 bincode = { version = "^2.0.1", optional = true }
-cudarc = { version = "^0.16.0", optional=true }
+cudarc = { version = "^0.16.4", optional=true }
 
 [features]
 default = ["std"]
@@ -36,6 +36,7 @@ cuda = []  # Used internally for feature gates
 cuda-12050 = ["cuda", "cudarc/cuda-12050"]
 cuda-12060 = ["cuda", "cudarc/cuda-12060"]
 cuda-12080 = ["cuda", "cudarc/cuda-12080"]
+cuda-12090 = ["cuda", "cudarc/cuda-12090"]
 
 # The `computer_graphics` feature enables projection matrices,
 # and other operations used in computer graphics.
