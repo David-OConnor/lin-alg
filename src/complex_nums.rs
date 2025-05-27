@@ -28,6 +28,13 @@ impl Cplx {
         Self { real: 0., im: 0. }
     }
 
+    pub fn from_mag_phase(mag: f64, phase: f64) -> Self {
+        Self {
+            real: mag * phase.cos(),
+            im: mag * phase.sin(),
+        }
+    }
+
     pub fn conj(&self) -> Self {
         Self {
             real: self.real,
