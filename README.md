@@ -64,7 +64,8 @@ Note: This approach is the opposite of the array of structures (AoS) approach to
 
 ## CUDA (GPU)
 This library includes two helper functions for use with the `cudarc` library; these are to allocated `Vec3` and `Quaternion`
-types. (f32 and f64). They perform host-to-device copies. This is intended to simply application code.
+types. (f32 and f64). They perform host-to-device copies. This is intended to simply application code. To enable this, select
+the `cuda` feature in `Cargo.toml`
 ```rust
 pub fn vecs_to_dev(dev: &Arc<CudaDevice>, data: &[Vec3]) -> CudaSlice<f32> {}
 
