@@ -495,6 +495,14 @@ macro_rules! create_vec {
                 [self.x, self.y, self.z]
             }
 
+            pub fn splat(val: $f) -> Self {
+                Self {
+                    x: val,
+                    y: val,
+                    z: val,
+                }
+            }
+
             /// Returns this vector with the nth element removed (0-based).
             /// For example:
             /// truncate_n(0) => drops .x, returns Vec2(y, z)
@@ -593,6 +601,15 @@ macro_rules! create_vec {
             /// Convert to a len-4 array: [x, y, z, w].
             pub fn to_arr(&self) -> [$f; 4] {
                 [self.x, self.y, self.z, self.w]
+            }
+
+            pub fn splat(val: $f) -> Self {
+                Self {
+                    x: val,
+                    y: val,
+                    z: val,
+                    w: val,
+                }
             }
 
             /// Remove the nth element. Used in our inverse calculations.
