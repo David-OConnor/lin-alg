@@ -20,7 +20,7 @@ exclude = [".gitignore"]
 
 
 [package.metadata.docs.rs]
-features = ["std", "cuda", "computer_graphics"]
+features = ["std", "computer_graphics"]
 
 
 [dependencies]
