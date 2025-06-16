@@ -521,6 +521,12 @@ macro_rules! create_vec {
             pub fn sum(&self) -> $f {
                 self.x + self.y + self.z
             }
+
+            /// Returns an arbitrary vector perpendicular to it.]
+            pub fn any_perpendicular(&self) -> Self {
+                let a = Self::new(1., 0., 0.); // This determines the resulting direction.
+                self.cross(a)
+            }
         }
 
         #[cfg(feature = "std")]
