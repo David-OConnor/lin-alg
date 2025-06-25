@@ -527,6 +527,22 @@ macro_rules! create_vec {
                 let a = Self::new(1., 0., 0.); // This determines the resulting direction.
                 self.cross(a)
             }
+
+            pub fn min(self, other: Self) -> Self {
+                Self {
+                    x: self.x.min(other.x),
+                    y: self.y.min(other.y),
+                    z: self.z.min(other.z),
+                }
+            }
+
+            pub fn max(self, other: Self) -> Self {
+                Self {
+                    x: self.x.max(other.x),
+                    y: self.y.max(other.y),
+                    z: self.z.max(other.z),
+                }
+            }
         }
 
         #[cfg(feature = "std")]

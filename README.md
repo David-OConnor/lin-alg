@@ -63,7 +63,7 @@ Note: This approach is the opposite of the array of structures (AoS) approach to
 
 
 ## CUDA (GPU)
-This library includes two helper functions for use with the `cudarc` library; these are to allocated `Vec3` and `Quaternion`
+This library includes two helper functions for use with the `cudarc` library; these are to allocate `Vec3` and `Quaternion`
 types. (f32 and f64). They perform host-to-device copies. This is intended to simply application code. To enable this, select
 the `cuda` feature in `Cargo.toml`
 ```rust

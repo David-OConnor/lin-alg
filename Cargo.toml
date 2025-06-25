@@ -1,6 +1,6 @@
 [package]
 name = "lin_alg"
-version = "1.1.12"
+version = "1.2.0"
 edition = "2024"
 authors = ["David O'Connor <the_alchemist@fastmail.com>"]
 description = "Vector, matrix, and quaternion operations for general purposes"
@@ -26,7 +26,13 @@ features = ["std", "computer_graphics"]
 [dependencies]
 num-traits = { version = "0.2.19", default-features = false }
 bincode = { version = "2.0.1", optional = true }
+
+# Notes: Setting an older cudarc version allows for better compatibility; newer ones than the one
+# specified here will work. Dynamic linking is not working.
 cudarc = { version = "0.16.4", features = ["cuda-version-from-build-system"], optional = true }
+#cudarc = { version = "0.16.4", features = [
+#    "std", "cublas", "cublaslt", "curand", "driver", "runtime", "nvrtc", "dynamic-linking", "cuda-12060"
+#], default-features = false, optional=true }
 
 [features]
 default = ["std"]
