@@ -656,6 +656,29 @@ macro_rules! create_vec {
             }
         }
 
+        /// Calculate the dihedral angle between 4 positions (3 bonds).
+        /// The `bonds` are one atom's position, substracted from the next. Order matters.
+        pub fn calc_dihedral_angle(
+            bond_middle: Vec3,
+            bond_adjacent1: Vec3,
+            bond_adjacent2: Vec3,
+        ) -> $f {
+            // Project the next and previous bonds onto the plane that has this bond as its normal.
+            // Re-normalize after projecting.
+            let bond1_on_plane = bond_adjacent1.project_to_plane(bond_middle).to_normalized();
+            let bond2_on_plane = bond_adjacent2.project_to_plane(bond_middle).to_normalized();
+
+            // Not sure why we need to offset by 𝜏/2 here, but it seems to be the case
+            let result = bond1_on_plane.dot(bond2_on_plane).acos() + TAU / 2.;
+
+            // The dot product approach to angles between vectors only covers half of possible
+            // rotations; use a determinant of the 3 vectors as matrix columns to determine if what we
+            // need to modify is on the second half.
+            let det = det_from_cols(bond1_on_plane, bond2_on_plane, bond_middle);
+
+            if det < 0. { result } else { TAU - result }
+        }
+
         #[cfg(feature = "std")]
         impl fmt::Display for Vec4 {
             fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
