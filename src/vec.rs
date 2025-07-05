@@ -656,17 +656,34 @@ macro_rules! create_vec {
             }
         }
 
-        /// Calculate the dihedral angle between 4 positions (3 bonds).
-        /// The `bonds` are one atom's position, substracted from the next. Order matters.
+        /// Calculate the dihedral angle between 4 positions. The positions must be in order by
+        /// connection/bond, although either direction is fine. Compared to `calc_dihedral_angle()`,
+        /// this function's API is more clear if you have the set of positions directly.
+        pub fn calc_dihedral_angle_v2(posits: &(Vec3, Vec3, Vec3, Vec3)) -> $f {
+            let mid = posits.1 - posits.2;
+            let adj_next = posits.2 - posits.3;
+            let adj_prev = posits.0 - posits.1;
+            calc_dihedral_angle(mid, adj_next, adj_prev)
+        }
+
+        /// Calculate the dihedral angle between 4 positions (3 bonds). Compared to `calc_dihedral_angle_v2()`,
+        /// this function's API is more clear if you have the bonds/connections, but not the positions.
+        ///
+        /// The `bonds` are one position, subtracted from the next.
+        ///
+        /// Order matters. For posits 0-1-2-3, with connections 0-1, 1-2, 2-3:
+        /// middle: posit 1 - posit 2.
+        /// adj next: posit 2 - posit 3
+        /// adj prev: posit 0 - posit 1
         pub fn calc_dihedral_angle(
             bond_middle: Vec3,
-            bond_adjacent1: Vec3,
-            bond_adjacent2: Vec3,
+            bond_adj_next: Vec3,
+            bond_adj_prev: Vec3,
         ) -> $f {
             // Project the next and previous bonds onto the plane that has this bond as its normal.
             // Re-normalize after projecting.
-            let bond1_on_plane = bond_adjacent1.project_to_plane(bond_middle).to_normalized();
-            let bond2_on_plane = bond_adjacent2.project_to_plane(bond_middle).to_normalized();
+            let bond1_on_plane = bond_adj_next.project_to_plane(bond_middle).to_normalized();
+            let bond2_on_plane = bond_adj_prev.project_to_plane(bond_middle).to_normalized();
 
             // Not sure why we need to offset by 𝜏/2 here, but it seems to be the case
             let result = bond1_on_plane.dot(bond2_on_plane).acos() + TAU / 2.;
