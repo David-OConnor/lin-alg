@@ -657,7 +657,7 @@ macro_rules! create_vec {
         }
 
         /// Calculate the dihedral angle between 4 positions. The positions must be in order by
-        /// connection/bond, although either direction is fine. Compared to `calc_dihedral_angle()`,
+        /// connection/bond, although both directions produce identical results. Compared to `calc_dihedral_angle()`,
         /// this function's API is more clear if you have the set of positions directly.
         pub fn calc_dihedral_angle_v2(posits: &(Vec3, Vec3, Vec3, Vec3)) -> $f {
             let mid = posits.1 - posits.2;
@@ -668,6 +668,7 @@ macro_rules! create_vec {
 
         /// Calculate the dihedral angle between 4 positions (3 bonds). Compared to `calc_dihedral_angle_v2()`,
         /// this function's API is more clear if you have the bonds/connections, but not the positions.
+        /// this might happen if you are doing certain vector operations, for example.
         ///
         /// The `bonds` are one position, subtracted from the next.
         ///
@@ -682,11 +683,11 @@ macro_rules! create_vec {
         ) -> $f {
             // Project the next and previous bonds onto the plane that has this bond as its normal.
             // Re-normalize after projecting.
-            let bond1_on_plane = bond_adj_next.project_to_plane(bond_middle).to_normalized();
-            let bond2_on_plane = bond_adj_prev.project_to_plane(bond_middle).to_normalized();
+            let bond1_on_plane = bond_adj_next.project_to_plane(bond_middle.to_normalized()).to_normalized();
+            let bond2_on_plane = -bond_adj_prev.project_to_plane(bond_middle.to_normalized()).to_normalized();
 
-            // Not sure why we need to offset by 𝜏/2 here, but it seems to be the case
-            let result = bond1_on_plane.dot(bond2_on_plane).acos() + TAU / 2.;
+            // We offset by 𝜏/2 here due to conventions.
+            let result = bond1_on_plane.dot(bond2_on_plane).acos();
 
             // The dot product approach to angles between vectors only covers half of possible
             // rotations; use a determinant of the 3 vectors as matrix columns to determine if what we
