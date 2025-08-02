@@ -683,8 +683,10 @@ macro_rules! create_vec {
         ) -> $f {
             // Project the next and previous bonds onto the plane that has this bond as its normal.
             // Re-normalize after projecting.
-            let bond1_on_plane = bond_adj_next.project_to_plane(bond_middle.to_normalized()).to_normalized();
-            let bond2_on_plane = -bond_adj_prev.project_to_plane(bond_middle.to_normalized()).to_normalized();
+            let mid_norm = bond_middle.to_normalized();
+
+            let bond1_on_plane = bond_adj_next.project_to_plane(mid_norm).to_normalized();
+            let bond2_on_plane = -bond_adj_prev.project_to_plane(mid_norm).to_normalized();
 
             // We offset by 𝜏/2 here due to conventions.
             let result = bond1_on_plane.dot(bond2_on_plane).acos();
@@ -692,7 +694,7 @@ macro_rules! create_vec {
             // The dot product approach to angles between vectors only covers half of possible
             // rotations; use a determinant of the 3 vectors as matrix columns to determine if what we
             // need to modify is on the second half.
-            let det = det_from_cols(bond1_on_plane, bond2_on_plane, bond_middle);
+            let det = det_from_cols(bond1_on_plane, bond2_on_plane, mid_norm);
 
             if det < 0. { result } else { TAU - result }
         }
