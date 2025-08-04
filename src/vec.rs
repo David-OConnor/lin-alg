@@ -688,8 +688,21 @@ macro_rules! create_vec {
             let bond1_on_plane = bond_adj_next.project_to_plane(mid_norm).to_normalized();
             let bond2_on_plane = -bond_adj_prev.project_to_plane(mid_norm).to_normalized();
 
-            // We offset by 𝜏/2 here due to conventions.
             let result = bond1_on_plane.dot(bond2_on_plane).acos();
+
+            // This can happen perhaps due to numerical precision problems on systems
+            // where all 4 points are coplanar.
+            // An alternative we could use instead of this check, starting at the line above:
+            // x = cos φ,  y = sin φ  (see Allen & Tildesley §4.5)
+            //let x = b1.dot(b2);
+            //let y = b1.cross(b2).dot(mid_norm);
+
+            //let mut φ = y.atan2(x);          // range (-π, π]
+            //if φ < 0.0 { φ += TAU; }         // put it into [0, τ) if you prefer
+
+            if result.is_nan() {
+                return 0.;
+            }
 
             // The dot product approach to angles between vectors only covers half of possible
             // rotations; use a determinant of the 3 vectors as matrix columns to determine if what we
