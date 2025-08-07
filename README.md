@@ -43,20 +43,23 @@ The `From` trait is implemented for most types, for converting between `f32` and
 
 ## SIMD
 
-Includes SIMD constructs with structure of array (SoA) layout, for Vec and Quaternion types. For example: `Vec3x8`, `f64::Vec3x4`, `Vec4x8`, and `Quaternionx8`.
-These allow you to perform parallel operations on vectors and quaternions (e.g. 4, 8, or 16 at a time) for a similar computation cost as a single one. 
-They are currently configured with 256-bit wide (AVX) values, performing operations on 8 `f32` types, or 4 `f64` types. See the examples below for details.
+Includes SIMD constructs with structure of array (SoA) layout, for Vec and Quaternion types. For example: `Vec3x8`, 
+`f64::Vec3x4`, `Vec4x8`, and `Quaternionx8`.
+These allow you to perform parallel operations on vectors and quaternions (e.g. 4, 8, or 16 at a time) for a similar 
+computation cost as a single one. 
+They are currently configured with 256-bit wide (AVX) values, performing operations on 8 `f32` types, or 4 `f64` types.
+See the examples below for details.
 
 This library exposes an `f32x8` SIMD type that wraps `__m256` with appropriate constructors, operator overloads etc, and similar. It's used
-internally by the SIMD Vec and Quaternion types. This,
-and the `Vec3x8`, `Quaternionx8` etc APIs, mimic the nightly [core::simd](https://doc.rust-lang.org/beta/core/simd/index.html) library. They're used internally by our SIMD vector and quaternion types.
-It also includes `f64x4`. We are waiting to add 512-bit wide types until their operations are in stable rust. Hopefully soon!
+internally by the SIMD Vec and Quaternion types. It contains `f32x8` types that wrap `__m512`. This,
+and the `Vec3x8`, `Quaternionx8` etc APIs, mimic the nightly [core::simd](https://doc.rust-lang.org/beta/core/simd/index.html) library. They're used internally by our 
+SIMD vector and quaternion types. It also includes `f64x4` and `f64x8` types.
 
 We use these custom SIMD types vice `core::simd` so this library will work on stable rust. We'll remove these when `core::simd` is stable.
 
 This lib also includes `pack` and `unpack` utility functions for converting slices of `f32`, `Vec3`, `Quaternion` etc between
 SIMD and normal (scalar) values. This handles padding the last chunk, since input data may not align evenly in chunks of 4, 8, or 16.
-These include `pack_vec3`, `unpack_quaternion`, `pack_float` etc.
+These include `pack_vec3x16`, `unpack_quaternionx16`, `pack_x16` etc.
 It also includes a generic `pack_slice` for packing `Copy` type items into arrays, generally for use with SIMD types.
 
 Note: This approach is the opposite of the array of structures (AoS) approach to SIMD used by the `glam` and `cgmath` libraries.
@@ -231,16 +234,17 @@ assert!((result[7] - angled).magnitude() < f32::EPSILON);
 An example function using SIMD for a practical use, integrating `Vec3x8s` with SIMD types directly.
 
 ```rust
-use lin_alg::f32::{Vec3, Vec3x8, f32x8, unpack_vec3};
+use lin_alg::f32::{Vec3, Vec3x8, f32x8, unpack_vec3x8, pack_vec3x8};
+use lin_alg::f32::consts::TAU;
 
 // ...
 
 fn run_lj(atom_0_posits: &[Vec3], atom_1_posits: &[Vec3]) {
     // Convert all Vec3s to their SIMD variants, and loop through them. This converts then to 
     // `Vec<Vec3x8>`
-    // See also: `pack_float`, `unpack_float`, `pack_quaternion` etc.
-    let (atom_0_posits_x8, valid_lanes_last_0) = pack_vec3(&atom_0_posits);
-    let (atom_1_posits_x8, valid_lanes_last_0) = pack_vec3(&atom_1_posits);
+    // See also: `pack_x8`, `unpack_x8`, `pack_quaternion` etc.
+    let (atom_0_posits_x8, valid_lanes_last_0) = pack_vec3x8(&atom_0_posits);
+    let (atom_1_posits_x8, valid_lanes_last_0) = pack_vec3x8(&atom_1_posits);
     
     // todo: Or, parellilize with Rayon.
     for i in 0..atom_0_posits_simd {
@@ -253,9 +257,9 @@ fn run_lj(atom_0_posits: &[Vec3], atom_1_posits: &[Vec3]) {
     
     // In practice here, you may wish to sum components, being careful to discard (or render harmless) values
     // from the pad lanes in the last chunk. If collecting the values directly instead. (prior to processing),
-    // you can use these `unpack` function, available for `f32`, `f64`, `Vec3`, and `Quaternion`. They automatically
+    // you can use these `unpack` functions, available for `f32`, `f64`, `Vec3`, and `Quaternion`. They automatically
     // remove the padding lanes.
-    let atom_0_posits_processed = unpack_vec3(atom_0_posits_simd, atom_0_posits.len());
+    let atom_0_posits_processed = unpack_vec3x8(atom_0_posits_simd, atom_0_posits.len());
 }
 
 
@@ -300,7 +304,7 @@ fn bodies_from_atomsx8(atoms: &[Atom]) -> Vec<BodyVdwx8> {
         els.push(atom.element);
     }
 
-    let (posits_x8, _valid_lanes) = pack_vec3(&posits);
+    let (posits_x8, _valid_lanes) = pack_vec3x8(&posits);
 
     let (els_x8, _) = pack_slice::<_, 8>(&els);
     let mut result = Vec::with_capacity(posits_x8.len());
@@ -346,8 +350,8 @@ fn test_simd_pack_vec3() {
     }
 
     // Converts to `Vec<Vec3x8>, then performs SIMD multiplication.
-    let (mut packed, lanes_last) = pack_vec3(&data);
-    let (mut packed_1, lanes_last_1) = pack_vec3(&data_1);
+    let (mut packed, lanes_last) = pack_vec3x8(&data);
+    let (mut packed_1, lanes_last_1) = pack_vec3x8(&data_1);
 
     assert_eq!(lanes_last, 3);
     assert_eq!(lanes_last_1, 8);
@@ -360,8 +364,8 @@ fn test_simd_pack_vec3() {
     }
 
     // Converts back to the original form: `Vec<Vec3>`.
-    let unpacked = f32::unpack_vec3(&packed, data.len());
-    let unpacked_1 = f32::unpack_vec3(&packed_1, data_1.len());
+    let unpacked = f32::unpack_vec3x8(&packed, data.len());
+    let unpacked_1 = f32::unpack_vec3x8(&packed_1, data_1.len());
 
     assert_eq!(unpacked.len(), data.len());
     assert_eq!(unpacked_1.len(), data_1.len());

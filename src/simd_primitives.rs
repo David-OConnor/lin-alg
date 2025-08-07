@@ -5,12 +5,10 @@
 
 use std::{
     arch::x86_64::*,
-    intrinsics::transmute,
     iter::Sum,
+    mem::transmute,
     ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign},
 };
-
-// todo: Stabilization PR soon on 512 as of 2025-03-22.
 
 #[derive(Copy, Clone, Debug)]
 #[repr(transparent)]
@@ -358,8 +356,6 @@ impl DivAssign for f64x4 {
     }
 }
 
-// todo: Ipml f32x16 and f64x8 once 512 bit is standard.
-#[cfg(feature = "nightly")]
 impl f32x16 {
     #[inline]
     pub fn from_slice(slice: &[f32]) -> Self {
@@ -429,7 +425,6 @@ impl f32x16 {
     }
 }
 
-#[cfg(feature = "nightly")]
 impl Neg for f32x16 {
     type Output = Self;
 
@@ -438,7 +433,6 @@ impl Neg for f32x16 {
     }
 }
 
-#[cfg(feature = "nightly")]
 impl Add for f32x16 {
     type Output = Self;
     #[inline]
@@ -447,7 +441,6 @@ impl Add for f32x16 {
     }
 }
 
-#[cfg(feature = "nightly")]
 impl Sub for f32x16 {
     type Output = Self;
     #[inline]
@@ -456,7 +449,6 @@ impl Sub for f32x16 {
     }
 }
 
-#[cfg(feature = "nightly")]
 impl Mul for f32x16 {
     type Output = Self;
     #[inline]
@@ -465,7 +457,6 @@ impl Mul for f32x16 {
     }
 }
 
-#[cfg(feature = "nightly")]
 impl Div for f32x16 {
     type Output = Self;
     #[inline]
@@ -474,7 +465,6 @@ impl Div for f32x16 {
     }
 }
 
-#[cfg(feature = "nightly")]
 impl AddAssign for f32x16 {
     #[inline]
     fn add_assign(&mut self, rhs: Self) {
@@ -482,7 +472,6 @@ impl AddAssign for f32x16 {
     }
 }
 
-#[cfg(feature = "nightly")]
 impl SubAssign for f32x16 {
     #[inline]
     fn sub_assign(&mut self, rhs: Self) {
@@ -490,7 +479,6 @@ impl SubAssign for f32x16 {
     }
 }
 
-#[cfg(feature = "nightly")]
 impl MulAssign for f32x16 {
     #[inline]
     fn mul_assign(&mut self, rhs: Self) {
@@ -498,7 +486,6 @@ impl MulAssign for f32x16 {
     }
 }
 
-#[cfg(feature = "nightly")]
 impl DivAssign for f32x16 {
     #[inline]
     fn div_assign(&mut self, rhs: Self) {
@@ -506,7 +493,6 @@ impl DivAssign for f32x16 {
     }
 }
 
-#[cfg(feature = "nightly")]
 impl f64x8 {
     #[inline]
     pub fn from_slice(slice: &[f64]) -> Self {
@@ -567,16 +553,17 @@ impl f64x8 {
         // Exponentiation by squaring.
         while n > 0 {
             if n & 1 == 1 {
-                result = result * base;
+                result *= base;
             }
             base = base * base;
             n /= 2;
         }
         result
     }
+
+    // todo: You need powf too.
 }
 
-#[cfg(feature = "nightly")]
 impl Neg for f64x8 {
     type Output = Self;
 
@@ -585,7 +572,6 @@ impl Neg for f64x8 {
     }
 }
 
-#[cfg(feature = "nightly")]
 impl Add for f64x8 {
     type Output = Self;
     #[inline]
@@ -594,7 +580,6 @@ impl Add for f64x8 {
     }
 }
 
-#[cfg(feature = "nightly")]
 impl Sub for f64x8 {
     type Output = Self;
     #[inline]
@@ -603,7 +588,6 @@ impl Sub for f64x8 {
     }
 }
 
-#[cfg(feature = "nightly")]
 impl Mul for f64x8 {
     type Output = Self;
     #[inline]
@@ -612,7 +596,6 @@ impl Mul for f64x8 {
     }
 }
 
-#[cfg(feature = "nightly")]
 impl Div for f64x8 {
     type Output = Self;
     #[inline]
@@ -621,7 +604,6 @@ impl Div for f64x8 {
     }
 }
 
-#[cfg(feature = "nightly")]
 impl AddAssign for f64x8 {
     #[inline]
     fn add_assign(&mut self, rhs: Self) {
@@ -629,7 +611,6 @@ impl AddAssign for f64x8 {
     }
 }
 
-#[cfg(feature = "nightly")]
 impl SubAssign for f64x8 {
     #[inline]
     fn sub_assign(&mut self, rhs: Self) {
@@ -637,7 +618,6 @@ impl SubAssign for f64x8 {
     }
 }
 
-#[cfg(feature = "nightly")]
 impl MulAssign for f64x8 {
     #[inline]
     fn mul_assign(&mut self, rhs: Self) {
@@ -645,7 +625,6 @@ impl MulAssign for f64x8 {
     }
 }
 
-#[cfg(feature = "nightly")]
 impl DivAssign for f64x8 {
     #[inline]
     fn div_assign(&mut self, rhs: Self) {

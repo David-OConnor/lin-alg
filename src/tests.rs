@@ -4,8 +4,8 @@ use std::mem::transmute;
 
 use super::*;
 use crate::{
-    f32::{FORWARD, RIGHT, UP, f32x8, pack_float, pack_vec3, unpack_float},
-    f64::unpack_vec3,
+    f32::{FORWARD, RIGHT, UP, f32x8, pack_vec3x8, pack_x8, unpack_x8},
+    f64::unpack_vec3x8,
 };
 
 #[cfg(all(any(target_arch = "x86", target_arch = "x86_64"), feature = "std"))]
@@ -437,8 +437,8 @@ fn test_simd_pack_float() {
         expected_1.push(v * 10.);
     }
 
-    let (mut packed, lanes_last) = pack_float(&data);
-    let (mut packed_1, lanes_last_1) = pack_float(&data_1);
+    let (mut packed, lanes_last) = pack_x8(&data);
+    let (mut packed_1, lanes_last_1) = pack_x8(&data_1);
 
     assert_eq!(lanes_last, 3);
     assert_eq!(lanes_last_1, 8);
@@ -450,8 +450,8 @@ fn test_simd_pack_float() {
         *item *= f32x8::splat(10.);
     }
 
-    let unpacked = unpack_float(&packed, data.len());
-    let unpacked_1 = unpack_float(&packed_1, data_1.len());
+    let unpacked = unpack_x8(&packed, data.len());
+    let unpacked_1 = unpack_x8(&packed_1, data_1.len());
 
     assert_eq!(unpacked.len(), data.len());
     assert_eq!(unpacked_1.len(), data_1.len());
@@ -488,8 +488,8 @@ fn test_simd_pack_vec3() {
         expected_1.push(*v * 10.);
     }
 
-    let (mut packed, lanes_last) = pack_vec3(&data);
-    let (mut packed_1, lanes_last_1) = pack_vec3(&data_1);
+    let (mut packed, lanes_last) = pack_vec3x8(&data);
+    let (mut packed_1, lanes_last_1) = pack_vec3x8(&data_1);
 
     assert_eq!(lanes_last, 3);
     assert_eq!(lanes_last_1, 8);
@@ -501,8 +501,8 @@ fn test_simd_pack_vec3() {
         *item *= f32x8::splat(10.);
     }
 
-    let unpacked = f32::unpack_vec3(&packed, data.len());
-    let unpacked_1 = f32::unpack_vec3(&packed_1, data_1.len());
+    let unpacked = f32::unpack_vec3x8(&packed, data.len());
+    let unpacked_1 = f32::unpack_vec3x8(&packed_1, data_1.len());
 
     assert_eq!(unpacked.len(), data.len());
     assert_eq!(unpacked_1.len(), data_1.len());

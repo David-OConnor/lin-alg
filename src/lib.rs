@@ -112,22 +112,41 @@ pub mod f32 {
 
     create_matrix!(f32);
 
+    // 256-bit Vec and Quaternion
     #[cfg(all(any(target_arch = "x86", target_arch = "x86_64"), feature = "std"))]
     create_vec_shared!(f32x8, Vec3x8, Vec4x8);
     #[cfg(all(any(target_arch = "x86", target_arch = "x86_64"), feature = "std"))]
     create_quaternion_shared!(f32x8, Vec3x8, Quaternionx8);
 
-    // #[cfg(all(any(target_arch = "x86", target_arch = "x86_64"), feature = "std"))]
-    // create_vec_shared!(f32x16, Vec3x16, Vec4x16);
-    // #[cfg(all(any(target_arch = "x86", target_arch = "x86_64"), feature = "std"))]
-    // create_quaternion_shared!(f32x16, Vec3x16, Quaternionx16);
-
-    // #[cfg(all(any(target_arch = "x86", target_arch = "x86_64"), feature = "std"))]
-    // create_simd!(f32, f32x4, Vec3x4, Vec4x4, Quaternionx4, 4);
+    // 512-bit Vec and Quaternion
     #[cfg(all(any(target_arch = "x86", target_arch = "x86_64"), feature = "std"))]
-    create_simd!(f32, f32x8, Vec3x8, Vec4x8, Quaternionx8, 8);
-    // #[cfg(all(any(target_arch = "x86", target_arch = "x86_64"), feature = "std"))]
-    // create_simd!(f32, f32x8, Vec3x16, Vec4x16, Quaternionx16, 16);
+    create_vec_shared!(f32x16, Vec3x16, Vec4x16);
+    #[cfg(all(any(target_arch = "x86", target_arch = "x86_64"), feature = "std"))]
+    create_quaternion_shared!(f32x16, Vec3x16, Quaternionx16);
+
+    // Primitives (256-bit and 512-bit)
+    #[cfg(all(any(target_arch = "x86", target_arch = "x86_64"), feature = "std"))]
+    create_simd!(
+        f32,
+        f32x8,
+        Vec3x8,
+        vec3x8,
+        Vec4x8,
+        Quaternionx8,
+        quaternionx8,
+        8
+    );
+    #[cfg(all(any(target_arch = "x86", target_arch = "x86_64"), feature = "std"))]
+    create_simd!(
+        f32,
+        f32x16,
+        Vec3x16,
+        vec3x16,
+        Vec4x16,
+        Quaternionx16,
+        quaternionx16,
+        16
+    );
 
     impl From<f64::Vec2> for Vec2 {
         fn from(other: f64::Vec2) -> Self {
@@ -280,21 +299,41 @@ pub mod f64 {
 
     create_matrix!(f64);
 
+    // 256-bit Vec and Quaternion
     #[cfg(all(any(target_arch = "x86", target_arch = "x86_64"), feature = "std"))]
     create_vec_shared!(f64x4, Vec3x4, Vec4x4);
     #[cfg(all(any(target_arch = "x86", target_arch = "x86_64"), feature = "std"))]
     create_quaternion_shared!(f64x4, Vec3x4, Quaternionx4);
-    // #[cfg(all(any(target_arch = "x86", target_arch = "x86_64"), feature = "std"))]
-    // create_vec_shared!(f32x8, Vec3x8, Vec4x8);
-    // #[cfg(all(any(target_arch = "x86", target_arch = "x86_64"), feature = "std"))]
-    // create_quaternion_shared!(f64x8, Vec3x8, Quaternionx8);
 
-    // #[cfg(all(any(target_arch = "x86", target_arch = "x86_64"), feature = "std"))]
-    // create_simd!(f64, f64x2, Vec3x2, Vec4x2, Quaternionx2, 2);
+    // 512-bit Vec and Quaternion
     #[cfg(all(any(target_arch = "x86", target_arch = "x86_64"), feature = "std"))]
-    create_simd!(f64, f64x4, Vec3x4, Vec4x4, Quaternionx4, 4);
-    // #[cfg(all(any(target_arch = "x86", target_arch = "x86_64"), feature = "std"))]
-    // create_simd!(f64, f64x8, Vec3x8, Vec4x8, Quaternionx8, 8);
+    create_vec_shared!(f64x8, Vec3x8, Vec4x8);
+    #[cfg(all(any(target_arch = "x86", target_arch = "x86_64"), feature = "std"))]
+    create_quaternion_shared!(f64x8, Vec3x8, Quaternionx8);
+
+    // Primitives (256-bit and 512-bit)
+    #[cfg(all(any(target_arch = "x86", target_arch = "x86_64"), feature = "std"))]
+    create_simd!(
+        f64,
+        f64x4,
+        Vec3x4,
+        vec3x4,
+        Vec4x4,
+        Quaternionx4,
+        quaternionx4,
+        4
+    );
+    #[cfg(all(any(target_arch = "x86", target_arch = "x86_64"), feature = "std"))]
+    create_simd!(
+        f64,
+        f64x8,
+        Vec3x8,
+        vec3x8,
+        Vec4x8,
+        Quaternionx8,
+        quaternionx8,
+        8
+    );
 
     impl From<f32::Vec2> for Vec2 {
         fn from(other: f32::Vec2) -> Self {

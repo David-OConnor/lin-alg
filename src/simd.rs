@@ -1,7 +1,5 @@
 #![macro_use]
-// todo:  You can combine these with your non-SIMD ones, for the most common operations.
-
-//! Notes.
+//! Notes:
 //! Array of structs (AoS): Each vector (x,y,z,w) is stored contiguously in memory.
 //! For a single 4D vector of $f, you can hold all 4 floats in one __m128.
 //!
@@ -12,19 +10,14 @@
 //! Note on Vec3: We just don't use the final 32 or 64 bits. The 4th lane is effectively unused,
 //! and set to 0. or 1., depending on application.
 //!
-//! I think, using the SoA approach is more efficient, from what I read. I.e. allow each vec to
-//! effectively act as 4 vecs... as opposed to placing all 4 values in the same vec field, as Glam
-//! does (?)
-//!
-//! It appears that 128-bit wide SIMD is the most common. ("SSE"). 256-bit is called AVX, and is only
-//! available on (relatively) newer CPUs. AVX-512 is less common.
+//! It appears that 128-bit wide SIMD is the most common. ("SSE"). 256-bit is called AVX, and is available
+//! widely. AVX-512 is less common, and is available on newer CPUs.
 
 use std::array::from_fn;
+// use std::convert::TryInto;
 
 macro_rules! create_simd {
-    ($f:ident, $fx:ident, $vec3_ty:ident, $vec4_ty:ident, $quat_ty:ident, $lanes:expr) => {
-        use std::convert::TryInto;
-
+    ($f:ident, $fx:ident, $vec3_ty:ident, $vec3_name:ident, $vec4_ty:ident, $quat_ty:ident, $quat_name:ident, $lanes:expr) => {
         /// SoA. Performs operations on x Vecs.
         #[derive(Clone, Copy, Debug)]
         pub struct $vec3_ty {
@@ -373,163 +366,167 @@ macro_rules! create_simd {
             }
         }
 
-        /// Used for creating a set of `Vec3x` from one of `Vec3`. Padded as required. The result
-        /// will have approximately x fewer elements than the input.
-        ///
-        /// Important: When performing operations, make sure to discard data from *garbage* lanes
-        /// in the remainder of your last packed value.
-        ///
-        /// Returns (packed_values, lanes valid in last chunk)
-        pub fn pack_vec3(vecs: &[Vec3]) -> (Vec<$vec3_ty>, usize) {
-            let remainder = vecs.len() % $lanes;
-            let padding_needed = if remainder == 0 {
-                0
-            } else {
-                $lanes - remainder
-            };
-
-            let mut padded = Vec::with_capacity(vecs.len() + padding_needed);
-            padded.extend_from_slice(vecs);
-            padded.extend((0..padding_needed).map(|_| Vec3::new_zero()));
-
-            // Now `padded.len()` is a multiple of x, so chunks_exact(x) will consume it fully.
-            let data = padded
-                .chunks_exact($lanes)
-                .map(|chunk| {
-                    // Convert the slice chunk into an array of x Vec3 elements.
-                    let arr: [Vec3; $lanes] = chunk.try_into().unwrap();
-                    $vec3_ty::from_array(arr)
-                })
-                .collect();
-
-            let valid_lanes_last_chunk = if remainder == 0 { $lanes } else { remainder };
-
-            (data, valid_lanes_last_chunk)
-        }
-
-        /// Convert a slice of SIMD Vec3x values, x-wide to Vec3. The result
-        /// will have approximately x as many elements as the input. Its parameters include
-        /// the number of original values, so it knows to only use valid lanes on the last
-        /// chunk.
-        pub fn unpack_vec3(vals: &[$vec3_ty], len_orig: usize) -> Vec<Vec3> {
-            let mut result = Vec::with_capacity(len_orig);
-
-            for (i, val) in vals.iter().enumerate() {
-                let lanes = if i == vals.len() - 1 {
-                    let rem = len_orig % $lanes;
-                    if rem == 0 { $lanes } else { rem }
+        // Paste allows us to assign specific function names; this is required to prevent name collisions,
+        // for these freestanding functions.
+        paste::paste! {
+            /// Used for creating a set of `Vec3x` from one of `Vec3`. Padded as required. The result
+            /// will have approximately x fewer elements than the input.
+            ///
+            /// Important: When performing operations, make sure to discard data from *garbage* lanes
+            /// in the remainder of your last packed value.
+            ///
+            /// Returns (packed_values, lanes valid in last chunk)
+            /// pack_vec3
+            pub fn [<pack_ $vec3_name>](vecs: &[Vec3]) -> (Vec<$vec3_ty>, usize) {
+                let remainder = vecs.len() % $lanes;
+                let padding_needed = if remainder == 0 {
+                    0
                 } else {
-                    $lanes
+                    $lanes - remainder
                 };
 
-                result.extend(&val.to_array()[..lanes]);
+                let mut padded = Vec::with_capacity(vecs.len() + padding_needed);
+                padded.extend_from_slice(vecs);
+                padded.extend((0..padding_needed).map(|_| Vec3::new_zero()));
+
+                // Now `padded.len()` is a multiple of x, so chunks_exact(x) will consume it fully.
+                let data = padded
+                    .chunks_exact($lanes)
+                    .map(|chunk| {
+                        // Convert the slice chunk into an array of x Vec3 elements.
+                        let arr: [Vec3; $lanes] = chunk.try_into().unwrap();
+                        $vec3_ty::from_array(arr)
+                    })
+                    .collect();
+
+                let valid_lanes_last_chunk = if remainder == 0 { $lanes } else { remainder };
+
+                (data, valid_lanes_last_chunk)
             }
-            result
-        }
 
-        /// Used for creating a set of `Quaternionx` from one of `Quatenrion`. Padded as required. The result
-        /// will have approximately x fewer elements than the input.
-        ///
-        /// Important: When performing operations, make sure to discard data from *garbage* lanes
-        /// in the remainder of your last packed value.
-        ///
-        /// Returns (packed_values, lanes valid in last chunk)
-        pub fn pack_quaternion(vals: &[Quaternion]) -> (Vec<$quat_ty>, usize) {
-            let remainder = vals.len() % $lanes;
-            let padding_needed = if remainder == 0 {
-                0
-            } else {
-                $lanes - remainder
-            };
+            /// Convert a slice of SIMD Vec3x values, x-wide to Vec3. The result
+            /// will have approximately x as many elements as the input. Its parameters include
+            /// the number of original values, so it knows to only use valid lanes on the last
+            /// chunk.
+            pub fn [<unpack_ $vec3_name>](vals: &[$vec3_ty], len_orig: usize) -> Vec<Vec3> {
+                let mut result = Vec::with_capacity(len_orig);
 
-            let mut padded = Vec::with_capacity(vals.len() + padding_needed);
-            padded.extend_from_slice(vals);
-            padded.extend((0..padding_needed).map(|_| Quaternion::new_identity()));
+                for (i, val) in vals.iter().enumerate() {
+                    let lanes = if i == vals.len() - 1 {
+                        let rem = len_orig % $lanes;
+                        if rem == 0 { $lanes } else { rem }
+                    } else {
+                        $lanes
+                    };
 
-            // Now `padded.len()` is a multiple of x, so chunks_exact(x) will consume it fully.
-            let data = padded
-                .chunks_exact($lanes)
-                .map(|chunk| {
-                    // Convert the slice chunk into an array of x Vec3 elements.
-                    let arr: [Quaternion; $lanes] = chunk.try_into().unwrap();
-                    $quat_ty::from_array(arr)
-                })
-                .collect();
+                    result.extend(&val.to_array()[..lanes]);
+                }
+                result
+            }
 
-            let valid_lanes_last_chunk = if remainder == 0 { $lanes } else { remainder };
-
-            (data, valid_lanes_last_chunk)
-        }
-
-        /// Convert a slice of SIMD Quaternionx values, x-wide to Quaternion. The result
-        /// will have approximately x as many elements as the input. Its parameters include
-        /// the number of original values, so it knows to only use valid lanes on the last
-        /// chunk.
-        pub fn unpack_quaternion(vals: &[$quat_ty], len_orig: usize) -> Vec<Quaternion> {
-            let mut result = Vec::with_capacity(len_orig);
-
-            for (i, val) in vals.iter().enumerate() {
-                let lanes = if i == vals.len() - 1 {
-                    let rem = len_orig % $lanes;
-                    if rem == 0 { $lanes } else { rem }
+            /// Used for creating a set of `Quaternionx` from one of `Quatenrion`. Padded as required. The result
+            /// will have approximately x fewer elements than the input.
+            ///
+            /// Important: When performing operations, make sure to discard data from *garbage* lanes
+            /// in the remainder of your last packed value.
+            ///
+            /// Returns (packed_values, lanes valid in last chunk)
+            pub fn [<pack_ $quat_name>](vals: &[Quaternion]) -> (Vec<$quat_ty>, usize) {
+                let remainder = vals.len() % $lanes;
+                let padding_needed = if remainder == 0 {
+                    0
                 } else {
-                    $lanes
+                    $lanes - remainder
                 };
 
-                result.extend(&val.to_array()[..lanes]);
+                let mut padded = Vec::with_capacity(vals.len() + padding_needed);
+                padded.extend_from_slice(vals);
+                padded.extend((0..padding_needed).map(|_| Quaternion::new_identity()));
+
+                // Now `padded.len()` is a multiple of x, so chunks_exact(x) will consume it fully.
+                let data = padded
+                    .chunks_exact($lanes)
+                    .map(|chunk| {
+                        // Convert the slice chunk into an array of x Vec3 elements.
+                        let arr: [Quaternion; $lanes] = chunk.try_into().unwrap();
+                        $quat_ty::from_array(arr)
+                    })
+                    .collect();
+
+                let valid_lanes_last_chunk = if remainder == 0 { $lanes } else { remainder };
+
+                (data, valid_lanes_last_chunk)
             }
-            result
-        }
 
-        // todo: Use the paste lib etc to put `$f` in the fn names here.
-        /// Convert a slice of `$f` to an array of SIMD `$f` values, x-wide. Padded as required. The result
-        /// will have approximately 8x fewer elements than the input.
-        ///
-        /// Important: When performing operations, make sure to discard data from *garbage* lanes
-        /// in the remainder of your last packed value.
-        ///
-        /// Returns (packed_values, lanes valid in last chunk)
-        pub fn pack_float(vals: &[$f]) -> (Vec<$fx>, usize) {
-            let remainder = vals.len() % $lanes;
-            let padding_needed = if remainder == 0 {
-                0
-            } else {
-                $lanes - remainder
-            };
+            /// Convert a slice of SIMD Quaternionx values, x-wide to Quaternion. The result
+            /// will have approximately x as many elements as the input. Its parameters include
+            /// the number of original values, so it knows to only use valid lanes on the last
+            /// chunk.
+            pub fn [<unpack_ $quat_name>](vals: &[$quat_ty], len_orig: usize) -> Vec<Quaternion> {
+                let mut result = Vec::with_capacity(len_orig);
 
-            let mut padded = Vec::with_capacity(vals.len() + padding_needed);
-            padded.extend_from_slice(vals);
-            padded.extend((0..padding_needed).map(|_| 0.));
+                for (i, val) in vals.iter().enumerate() {
+                    let lanes = if i == vals.len() - 1 {
+                        let rem = len_orig % $lanes;
+                        if rem == 0 { $lanes } else { rem }
+                    } else {
+                        $lanes
+                    };
 
-            // Now `padded.len()` is a multiple of x, so chunks_exact(x) will consume it fully.
-            let data = padded
-                .chunks_exact($lanes)
-                .map(|chunk| $fx::load(chunk.as_ptr()))
-                .collect();
+                    result.extend(&val.to_array()[..lanes]);
+                }
+                result
+            }
 
-            let valid_lanes_last_chunk = if remainder == 0 { $lanes } else { remainder };
-
-            (data, valid_lanes_last_chunk)
-        }
-
-        /// Convert a slice of SIMD floating point values to plain floating point ones. The result
-        /// will have approximately x as many elements as the input. Its parameters include
-        /// the number of original values, so it knows to only use valid lanes on the last
-        /// chunk.
-        pub fn unpack_float(vals: &[$fx], len_orig: usize) -> Vec<$f> {
-            let mut result = Vec::with_capacity(len_orig);
-
-            for (i, val) in vals.iter().enumerate() {
-                let lanes = if i == vals.len() - 1 {
-                    let rem = len_orig % $lanes;
-                    if rem == 0 { $lanes } else { rem }
+            /// Convert a slice of `$f` to an array of SIMD `$f` values, x-wide. Padded as required. The result
+            /// will have approximately 8x fewer elements than the input.
+            ///
+            /// Important: When performing operations, make sure to discard data from *garbage* lanes
+            /// in the remainder of your last packed value.
+            ///
+            /// Returns (packed_values, lanes valid in last chunk)
+            pub fn [<pack_x $lanes>](vals: &[$f]) -> (Vec<$fx>, usize) {
+                let remainder = vals.len() % $lanes;
+                let padding_needed = if remainder == 0 {
+                    0
                 } else {
-                    $lanes
+                    $lanes - remainder
                 };
 
-                result.extend(&val.to_array()[..lanes]);
+                let mut padded = Vec::with_capacity(vals.len() + padding_needed);
+                padded.extend_from_slice(vals);
+                padded.extend((0..padding_needed).map(|_| 0.));
+
+                // Now `padded.len()` is a multiple of x, so chunks_exact(x) will consume it fully.
+                let data = padded
+                    .chunks_exact($lanes)
+                    .map(|chunk| $fx::load(chunk.as_ptr()))
+                    .collect();
+
+                let valid_lanes_last_chunk = if remainder == 0 { $lanes } else { remainder };
+
+                (data, valid_lanes_last_chunk)
             }
-            result
+
+            /// Convert a slice of SIMD floating point values to plain floating point ones. The result
+            /// will have approximately x as many elements as the input. Its parameters include
+            /// the number of original values, so it knows to only use valid lanes on the last
+            /// chunk.
+            pub fn [<unpack_x $lanes>](vals: &[$fx], len_orig: usize) -> Vec<$f> {
+                let mut result = Vec::with_capacity(len_orig);
+
+                for (i, val) in vals.iter().enumerate() {
+                    let lanes = if i == vals.len() - 1 {
+                        let rem = len_orig % $lanes;
+                        if rem == 0 { $lanes } else { rem }
+                    } else {
+                        $lanes
+                    };
+
+                    result.extend(&val.to_array()[..lanes]);
+                }
+                result
+            }
         }
     };
 }
