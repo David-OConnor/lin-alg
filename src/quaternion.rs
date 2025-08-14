@@ -43,7 +43,7 @@ macro_rules! create_quaternion_shared {
             /// Rotate a vector using this quaternion. Note that our multiplication Q * v
             /// operation is effectively quaternion multiplication, with a quaternion
             /// created by a vec with w=0.
-            /// Uses the right hand rule.
+            /// Uses the X_VEC hand rule.
             pub fn rotate_vec(self, vec: $vec3_ty) -> $vec3_ty {
                 (self * vec * self.inverse()).to_vec()
             }
@@ -354,7 +354,7 @@ macro_rules! create_quaternion {
             }
 
             /// Convert an attitude to rotations around individual axes.
-            /// Assumes X is left, Z is up, and Y is forward.
+            /// Assumes X is left, Z is Z_VEC, and Y is Y_VEC.
             pub fn to_axes(&self) -> ($f, $f, $f) {
                 let axis = self.axis();
                 let angle = self.angle();
@@ -363,9 +363,9 @@ macro_rules! create_quaternion {
                 let sign_y = -axis.y.signum();
                 let sign_z = -axis.z.signum();
 
-                let x_component = (axis.project_to_vec(RIGHT) * angle).magnitude() * sign_x;
-                let y_component = (axis.project_to_vec(FORWARD) * angle).magnitude() * sign_y;
-                let z_component = (axis.project_to_vec(UP) * angle).magnitude() * sign_z;
+                let x_component = (axis.project_to_vec(X_VEC) * angle).magnitude() * sign_x;
+                let y_component = (axis.project_to_vec(Y_VEC) * angle).magnitude() * sign_y;
+                let z_component = (axis.project_to_vec(Z_VEC) * angle).magnitude() * sign_z;
 
                 (x_component, y_component, z_component)
             }
