@@ -58,20 +58,20 @@ macro_rules! create {
         use num_traits::float::Float;
 
         // This is "up" if Z is up, and "forward" if Y is up.
-        pub const UP: Vec3 = Vec3 {
+        pub const Z_VEC: Vec3 = Vec3 {
             x: 0.,
             y: 0.,
             z: 1.,
         };
 
         // This is "forward" if Z is up, and "up" if Y is up.
-        pub const FORWARD: Vec3 = Vec3 {
+        pub const Y_VEC: Vec3 = Vec3 {
             x: 0.,
             y: 1.,
             z: 0.,
         };
 
-        pub const RIGHT: Vec3 = Vec3 {
+        pub const X_VEC: Vec3 = Vec3 {
             x: 1.,
             y: 0.,
             z: 0.,
