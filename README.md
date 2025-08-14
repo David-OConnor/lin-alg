@@ -140,7 +140,7 @@ If using for computer graphics, this functionality may be helpful:
     let view_mat = self.orientation.inverse().to_matrix() * Mat4::new_translation(-self.position);
 
     // Example of rolling a camera around the forward axis:
-    let fwd = orientation.rotate_vec(FWD_VEC);
+    let fwd = orientation.rotate_vec(Y_VEC);
     let rotation = Quaternion::from_axis_angle(fwd, -rotate_key_amt);
     orientation = rotation * orientation;
 ```
@@ -201,33 +201,33 @@ use core::f32::consts::TAU;
 use lin_alg::f32::{Quaternion, Vec3, Quaternionx8, Vec3x8};
 
 let rot_init = [
-    Quaternion::from_unit_vecs(UP, FORWARD),
-    Quaternion::from_unit_vecs(UP, -FORWARD),
-    Quaternion::from_unit_vecs(UP, RIGHT),
-    Quaternion::from_unit_vecs(UP, -RIGHT),
-    Quaternion::from_unit_vecs(UP, UP),
-    Quaternion::from_unit_vecs(UP, -UP),
-    Quaternion::from_axis_angle(RIGHT, TAU/4.),
-    Quaternion::from_axis_angle(RIGHT, TAU/8.),
+    Quaternion::from_unit_vecs(Y_VEC, Z_VEC),
+    Quaternion::from_unit_vecs(Y_VEC, -Z_VEC),
+    Quaternion::from_unit_vecs(Y_VEC, X_VEC),
+    Quaternion::from_unit_vecs(Y_VEC, -X_VEC),
+    Quaternion::from_unit_vecs(Y_VEC, Y_VEC),
+    Quaternion::from_unit_vecs(Y_VEC, -Y_VEC),
+    Quaternion::from_axis_angle(X_VEC, TAU/4.),
+    Quaternion::from_axis_angle(X_VEC, TAU/8.),
 ];
 
 let rotation = Quaternionx8::from_array(rot_init);
 
 // This could be 8 separate values.
-let vec = Vec3x8::from_array([UP; 8]);
+let vec = Vec3x8::from_array([Y_VEC; 8]);
 
 let result = rotation.rotate_vec(vec).to_array();
 
 let sqrt_2_div_2 = 2_f32.sqrt()/2.;
 let angled = Vec3::new(0., -sqrt_2_div_2, sqrt_2_div_2);
 
-assert!((result[0] - FORWARD).magnitude() < f32::EPSILON);
-assert!((result[1] - -FORWARD).magnitude() < f32::EPSILON);
-assert!((result[2] - RIGHT).magnitude() < f32::EPSILON);
-assert!((result[3] - -RIGHT).magnitude() < f32::EPSILON);
-assert!((result[4] - UP).magnitude() < f32::EPSILON);
-assert!((result[5] - -UP).magnitude() < f32::EPSILON);
-assert!((result[6] - -FORWARD).magnitude() < f32::EPSILON);
+assert!((result[0] - Y_VEC).magnitude() < f32::EPSILON);
+assert!((result[1] - -Y_VEC).magnitude() < f32::EPSILON);
+assert!((result[2] - X_VEC).magnitude() < f32::EPSILON);
+assert!((result[3] - -X_VEC).magnitude() < f32::EPSILON);
+assert!((result[4] - Z_VEC).magnitude() < f32::EPSILON);
+assert!((result[5] - -Z_VEC).magnitude() < f32::EPSILON);
+assert!((result[6] - -Y_VEC).magnitude() < f32::EPSILON);
 assert!((result[7] - angled).magnitude() < f32::EPSILON);
 ```
 
