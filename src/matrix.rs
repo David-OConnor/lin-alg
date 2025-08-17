@@ -141,6 +141,182 @@ macro_rules! create_matrix {
                     Vec3::new(d[6], d[7], d[8]),
                 )
             }
+
+            // todo: Untested
+            /// Symmetric 3x3 eigen-decomposition (Jacobi). Returns (V, λ) where columns of V are eigenvectors
+            /// and λ=(λx,λy,λz). Input must be symmetric (e.g., inertia tensor).
+            pub fn eigen_vecs_vals(&self) -> (Mat3, Vec3) {
+                let mut a = self.to_arr(); // will converge to diagonal
+                let mut v = Self::new_identity().to_arr(); // eigenvectors accumulator
+
+                // Typed literals for f32/f64
+                let zero: $f = 0.0 as $f;
+                let one: $f = 1.0 as $f;
+                let two: $f = 2.0 as $f;
+                let tiny: $f = 1e-12 as $f; // tolerance
+
+                const SWEEPS: usize = 10;
+
+                let mut offdiag =
+                    |m: &[[$f; 3]; 3]| -> $f { m[0][1].abs() + m[0][2].abs() + m[1][2].abs() };
+
+                let rotate = |a: &mut [[$f; 3]; 3], v: &mut [[$f; 3]; 3], p: usize, q: usize| {
+                    let apq = a[p][q];
+                    if apq.abs() <= tiny {
+                        return;
+                    }
+
+                    let app = a[p][p];
+                    let aqq = a[q][q];
+                    let tau = (aqq - app) / (two * apq);
+                    let t = if tau >= zero {
+                        one / (tau + (one + tau * tau).sqrt())
+                    } else {
+                        -one / (-tau + (one + tau * tau).sqrt())
+                    };
+                    let c = one / (one + t * t).sqrt();
+                    let s = t * c;
+
+                    let app_new = c * c * app - two * s * c * apq + s * s * aqq;
+                    let aqq_new = s * s * app + two * s * c * apq + c * c * aqq;
+                    a[p][p] = app_new;
+                    a[q][q] = aqq_new;
+                    a[p][q] = zero;
+                    a[q][p] = zero;
+
+                    for r in 0..3 {
+                        if r != p && r != q {
+                            let arp = a[r][p];
+                            let arq = a[r][q];
+                            let new_rp = c * arp - s * arq;
+                            let new_rq = s * arp + c * arq;
+                            a[r][p] = new_rp;
+                            a[p][r] = new_rp;
+                            a[r][q] = new_rq;
+                            a[q][r] = new_rq;
+                        }
+                    }
+
+                    for r in 0..3 {
+                        let vrp = v[r][p];
+                        let vrq = v[r][q];
+                        v[r][p] = c * vrp - s * vrq;
+                        v[r][q] = s * vrp + c * vrq;
+                    }
+                };
+
+                for _ in 0..SWEEPS {
+                    if offdiag(&a) <= tiny {
+                        break;
+                    }
+                    rotate(&mut a, &mut v, 0, 1);
+                    rotate(&mut a, &mut v, 0, 2);
+                    rotate(&mut a, &mut v, 1, 2);
+                }
+
+                // Sort by descending eigenvalue (handy for inertia tensors)
+                let mut lambdas = [(a[0][0], 0usize), (a[1][1], 1usize), (a[2][2], 2usize)];
+                lambdas.sort_by(|(l1, _), (l2, _)| l2.partial_cmp(l1).unwrap());
+
+                let mut V_sorted = [[zero; 3]; 3];
+                for col in 0..3 {
+                    let src = lambdas[col].1;
+                    for r in 0..3 {
+                        V_sorted[r][col] = v[r][src];
+                    }
+
+                    // normalize column
+                    let n = (V_sorted[0][col] * V_sorted[0][col]
+                        + V_sorted[1][col] * V_sorted[1][col]
+                        + V_sorted[2][col] * V_sorted[2][col])
+                        .sqrt();
+                    if n > zero {
+                        for r in 0..3 {
+                            V_sorted[r][col] /= n;
+                        }
+                    }
+                }
+
+                let eigvals = Vec3::new(lambdas[0].0, lambdas[1].0, lambdas[2].0);
+                (Self::from_arr(V_sorted), eigvals)
+            }
+
+            // todo: Untested
+            /// Solve A x = b (3x3) via LU with partial pivoting. Good for SPD matrices (e.g., inertia).
+            pub fn solve_system(&self, b_in: Vec3) -> Vec3 {
+                let mut a = self.to_arr();
+                let mut b = [b_in.x, b_in.y, b_in.z];
+
+                let zero: $f = 0.0 as $f;
+                let tiny: $f = 1e-12 as $f;
+
+                // Pivot col 0
+                let mut p0 = 0usize;
+                if a[1][0].abs() > a[p0][0].abs() {
+                    p0 = 1;
+                }
+                if a[2][0].abs() > a[p0][0].abs() {
+                    p0 = 2;
+                }
+                if p0 != 0 {
+                    a.swap(0, p0);
+                    b.swap(0, p0);
+                }
+
+                if a[0][0].abs() <= tiny {
+                    return Vec3::new(zero, zero, zero);
+                }
+
+                for i in 1..3 {
+                    let f = a[i][0] / a[0][0];
+                    a[i][0] = zero;
+                    a[i][1] -= f * a[0][1];
+                    a[i][2] -= f * a[0][2];
+                    b[i] -= f * b[0];
+                }
+
+                // Pivot col 1
+                if a[2][1].abs() > a[1][1].abs() {
+                    a.swap(1, 2);
+                    b.swap(1, 2);
+                }
+
+                if a[1][1].abs() <= tiny {
+                    return Vec3::new(zero, zero, zero);
+                }
+
+                let f = a[2][1] / a[1][1];
+                a[2][1] = zero;
+                a[2][2] -= f * a[1][2];
+                b[2] -= f * b[1];
+
+                if a[2][2].abs() <= tiny {
+                    return Vec3::new(zero, zero, zero);
+                }
+
+                // Back-sub
+                let x2 = b[2] / a[2][2];
+                let x1 = (b[1] - a[1][2] * x2) / a[1][1];
+                let x0 = (b[0] - a[0][1] * x1 - a[0][2] * x2) / a[0][0];
+
+                Vec3::new(x0, x1, x2)
+            }
+
+            // todo: Untested
+            pub fn to_arr(&self) -> [[$f; 3]; 3] {
+                let (c0, c1, c2) = self.to_cols(); // <-- change to your getter (e.g., m.columns() / m.to_cols())
+
+                [[c0.x, c1.x, c2.x], [c0.y, c1.y, c2.y], [c0.z, c1.z, c2.z]]
+            }
+
+            // todo: Untested
+            pub fn from_arr(a: [[$f; 3]; 3]) -> Mat3 {
+                let c0 = Vec3::new(a[0][0], a[1][0], a[2][0]);
+                let c1 = Vec3::new(a[0][1], a[1][1], a[2][1]);
+                let c2 = Vec3::new(a[0][2], a[1][2], a[2][2]);
+
+                Mat3::from_cols(c0, c1, c2)
+            }
         }
 
         impl Mul for Mat3 {
