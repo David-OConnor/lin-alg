@@ -79,6 +79,9 @@ pub fn quaternions_to_dev(dev: &Arc<CudaDevice>, data: &[Quaternion]) -> CudaSli
 pub fn quaternions_from_dev(stream: &Arc<CudaStream>, data_dev: &CudaSlice<f32>) -> Vec<Quaternion> {}
 ```
 
+`Vec3` and `Quaternion` types implement `cudarc::DeviceRepr`, so you can pass them directly as launch args to the kernel.
+e.g.: `launch_args.arg(&my_vec);`, where in the kernel param is is: `float3 my_vec`.
+
 
 ## A note on performance
 For performance-sensitive operations, depending on the details of your computation and hardware, you may wish to 

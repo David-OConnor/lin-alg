@@ -538,5 +538,8 @@ macro_rules! create_quaternion {
                 .map(|chunk| Quaternion::new(chunk[0], chunk[1], chunk[2], chunk[3]))
                 .collect()
         }
+
+        #[cfg(feature = "cuda")]
+        unsafe impl cudarc::driver::DeviceRepr for Quaternion {}
     };
 }

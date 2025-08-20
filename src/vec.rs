@@ -725,9 +725,11 @@ macro_rules! create_vec {
         }
 
         #[cfg(feature = "cuda")]
-        /// Convert a collection of `Vec3` into Cuda arrays of their components.
+        /// Convert a collection of `Vec3` into Cuda arrays of float3.
+        /// Note: Ignore resources that say you need to pad to 16-bytes to map to float3; they're wrong.
         pub fn vec3s_to_dev(stream: &Arc<CudaStream>, data_host: &[Vec3]) -> CudaSlice<$f> {
             let mut result = Vec::with_capacity(data_host.len() * 3);
+
             // todo: Ref etcs A/R; you are making a double copy here.
             for v in data_host {
                 result.push(v.x as $f);
@@ -738,7 +740,8 @@ macro_rules! create_vec {
         }
 
         #[cfg(feature = "cuda")]
-        /// Convert a Cuda array of `Vec3` into host.
+        /// Convert a Cuda array of `float3` into Vec3.
+        /// Note: Ignore resources that say you need to pad to 16-bytes to map to float3; they're wrong.
         pub fn vec3s_from_dev(stream: &Arc<CudaStream>, data_dev: &CudaSlice<$f>) -> Vec<Vec3> {
             let data_host = stream.memcpy_dtov(data_dev).unwrap();
 
@@ -747,5 +750,8 @@ macro_rules! create_vec {
                 .map(|chunk| Vec3::new(chunk[0], chunk[1], chunk[2]))
                 .collect()
         }
+
+        #[cfg(feature = "cuda")]
+        unsafe impl cudarc::driver::DeviceRepr for Vec3 {}
     };
 }
