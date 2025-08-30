@@ -29,7 +29,7 @@ bincode = { version = "2.0.1", optional = true }
 paste = "1.0.15"  # Token pasting, to make macros easier
 
 # Disable default features to prevent conflicts which the feature set the caller sets. And, we don't want to bring them in.
-cudarc = { version = "0.17.2", default-features = false, optional=true }
+cudarc = { version = "0.17.2", default-features = false, optional = true }
 
 [features]
 default = ["std"]
