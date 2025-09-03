@@ -145,6 +145,7 @@ macro_rules! create_matrix {
             // todo: Untested
             /// Symmetric 3x3 eigen-decomposition (Jacobi). Returns (V, λ) where columns of V are eigenvectors
             /// and λ=(λx,λy,λz). Input must be symmetric (e.g., inertia tensor).
+            #[cfg(feature = "std")]
             pub fn eigen_vecs_vals(&self) -> (Mat3, Vec3) {
                 let mut a = self.to_arr(); // will converge to diagonal
                 let mut v = Self::new_identity().to_arr(); // eigenvectors accumulator
