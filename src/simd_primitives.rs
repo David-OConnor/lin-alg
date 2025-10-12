@@ -10,6 +10,8 @@ use std::{
     ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign},
 };
 
+use num_traits::{MulAdd, real::Real};
+
 #[derive(Copy, Clone, Debug)]
 #[repr(transparent)]
 /// Similar to `core::simd`.
@@ -95,6 +97,40 @@ impl f32x8 {
 
             Self(_mm256_mul_ps(p, two_n))
         }
+    }
+
+    // todo: f64 variants of erfc
+    pub fn erfc(self) -> Self {
+        // x >= 0 in our use (α r), but clamp anyway
+        let x = self.max(Self::splat(0.0));
+
+        // t = 1/(1 + p x)
+        let p = Self::splat(0.3275911);
+        let t = Self::splat(1.0) / (Self::splat(1.0) + p * x);
+
+        // Horner for ((((a5 t + a4) t + a3) t + a2) t + a1) t
+        let a1 = Self::splat(0.254829592);
+        let a2 = Self::splat(-0.284496736);
+        let a3 = Self::splat(1.421413741);
+        let a4 = Self::splat(-1.453152027);
+        let a5 = Self::splat(1.061405429);
+
+        let mut poly = a5.mul_add(t, a4);
+        poly = poly.mul_add(t, a3);
+        poly = poly.mul_add(t, a2);
+        poly = poly.mul_add(t, a1);
+        poly = poly * t;
+
+        // erfc(x) ≈ poly * exp(-x^2)
+        poly * (-(x * x)).exp()
+    }
+
+    pub fn max(self, rhs: Self) -> Self {
+        unsafe { Self(_mm256_max_ps(self.0, rhs.0)) }
+    }
+
+    pub fn min(self, rhs: Self) -> Self {
+        unsafe { Self(_mm256_min_ps(self.0, rhs.0)) }
     }
 
     /// todo: This doesn't match the core::simd API. What's the equivalent there?
@@ -186,6 +222,14 @@ impl Mul for f32x8 {
     }
 }
 
+impl MulAdd for f32x8 {
+    type Output = Self;
+
+    fn mul_add(self, b: Self, c: Self) -> Self {
+        unsafe { Self(_mm256_fmadd_ps(self.0, b.0, c.0)) }
+    }
+}
+
 impl Div for f32x8 {
     type Output = Self;
 
@@ -255,6 +299,14 @@ impl f64x4 {
 
     pub fn sqrt(&self) -> Self {
         unsafe { Self(_mm256_sqrt_pd(self.0)) }
+    }
+
+    pub fn max(self, rhs: Self) -> Self {
+        unsafe { Self(_mm256_max_pd(self.0, rhs.0)) }
+    }
+
+    pub fn min(self, rhs: Self) -> Self {
+        unsafe { Self(_mm256_min_pd(self.0, rhs.0)) }
     }
 
     /// todo: This doesn't match the core::simd API. What's the equivalent there?
@@ -343,6 +395,14 @@ impl Mul for f64x4 {
 
     fn mul(self, rhs: Self) -> Self::Output {
         unsafe { Self(_mm256_mul_pd(self.0, rhs.0)) }
+    }
+}
+
+impl MulAdd for f64x4 {
+    type Output = Self;
+
+    fn mul_add(self, b: Self, c: Self) -> Self {
+        unsafe { Self(_mm256_fmadd_pd(self.0, b.0, c.0)) }
     }
 }
 
@@ -445,6 +505,40 @@ impl f32x16 {
         }
     }
 
+    // todo: f64 variants of erfc
+    pub fn erfc(self) -> Self {
+        // x >= 0 in our use (α r), but clamp anyway
+        let x = self.max(Self::splat(0.0));
+
+        // t = 1/(1 + p x)
+        let p = Self::splat(0.3275911);
+        let t = Self::splat(1.0) / (Self::splat(1.0) + p * x);
+
+        // Horner for ((((a5 t + a4) t + a3) t + a2) t + a1) t
+        let a1 = Self::splat(0.254829592);
+        let a2 = Self::splat(-0.284496736);
+        let a3 = Self::splat(1.421413741);
+        let a4 = Self::splat(-1.453152027);
+        let a5 = Self::splat(1.061405429);
+
+        let mut poly = a5.mul_add(t, a4);
+        poly = poly.mul_add(t, a3);
+        poly = poly.mul_add(t, a2);
+        poly = poly.mul_add(t, a1);
+        poly = poly * t;
+
+        // erfc(x) ≈ poly * exp(-x^2)
+        poly * (-(x * x)).exp()
+    }
+
+    pub fn max(self, rhs: Self) -> Self {
+        unsafe { Self(_mm512_max_ps(self.0, rhs.0)) }
+    }
+
+    pub fn min(self, rhs: Self) -> Self {
+        unsafe { Self(_mm512_min_ps(self.0, rhs.0)) }
+    }
+
     /// todo: This doesn't match the core::simd API. What's the equivalent there?
     /// todo: This is potentially a slow approach compared to using intrinsics
     pub fn replace(self, index: usize, value: f32) -> Self {
@@ -515,6 +609,14 @@ impl Mul for f32x16 {
     }
 }
 
+impl MulAdd for f32x16 {
+    type Output = Self;
+
+    fn mul_add(self, b: Self, c: Self) -> Self {
+        unsafe { Self(_mm512_fmadd_ps(self.0, b.0, c.0)) }
+    }
+}
+
 impl Div for f32x16 {
     type Output = Self;
 
@@ -570,6 +672,14 @@ impl f64x8 {
 
     pub fn sqrt(&self) -> Self {
         unsafe { Self(_mm512_sqrt_pd(self.0)) }
+    }
+
+    pub fn max(self, rhs: Self) -> Self {
+        unsafe { Self(_mm512_max_pd(self.0, rhs.0)) }
+    }
+
+    pub fn min(self, rhs: Self) -> Self {
+        unsafe { Self(_mm512_min_pd(self.0, rhs.0)) }
     }
 
     /// todo: This doesn't match the core::simd API. What's the equivalent there?
@@ -641,6 +751,14 @@ impl Mul for f64x8 {
 
     fn mul(self, rhs: Self) -> Self::Output {
         unsafe { Self(_mm512_mul_pd(self.0, rhs.0)) }
+    }
+}
+
+impl MulAdd for f64x8 {
+    type Output = Self;
+
+    fn mul_add(self, b: Self, c: Self) -> Self {
+        unsafe { Self(_mm512_fmadd_pd(self.0, b.0, c.0)) }
     }
 }
 
