@@ -15,22 +15,22 @@ use num_traits::{MulAdd, real::Real};
 #[derive(Copy, Clone, Debug)]
 #[repr(transparent)]
 /// Similar to `core::simd`.
-pub struct f32x8(__m256);
+pub struct f32x8(pub __m256);
 
 #[derive(Copy, Clone, Debug)]
 #[repr(transparent)]
 /// Similar to `core::simd`.
-pub struct f32x16(__m512);
+pub struct f32x16(pub __m512);
 
 #[derive(Copy, Clone, Debug)]
 #[repr(transparent)]
 /// Similar to `core::simd`.
-pub struct f64x4(__m256d);
+pub struct f64x4(pub __m256d);
 
 #[derive(Copy, Clone, Debug)]
 #[repr(transparent)]
 /// Similar to `core::simd`.
-pub struct f64x8(__m512d);
+pub struct f64x8(pub __m512d);
 
 impl f32x8 {
     pub fn from_slice(slice: &[f32]) -> Self {
@@ -538,6 +538,10 @@ impl f32x16 {
     pub fn min(self, rhs: Self) -> Self {
         unsafe { Self(_mm512_min_ps(self.0, rhs.0)) }
     }
+    //
+    // pub fn mask_zero(self, mask: Mask8) -> Self {
+    //     unsafe { Self(_mm256_andnot_ps(mask.0, self.0)) } // keep where mask==0
+    // }
 
     /// todo: This doesn't match the core::simd API. What's the equivalent there?
     /// todo: This is potentially a slow approach compared to using intrinsics
