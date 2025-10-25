@@ -386,7 +386,7 @@ macro_rules! create_vec_shared {
 macro_rules! create_vec {
     ($f:ident) => {
         /// A len-2 column vector.
-        #[derive(Default, Clone, Copy)]
+        #[derive(Default, Clone, Copy, PartialEq)]
         #[cfg_attr(feature = "encode", derive(Encode, Decode))]
         pub struct Vec2 {
             pub x: $f,
@@ -553,7 +553,7 @@ macro_rules! create_vec {
             }
         }
 
-        #[derive(Clone, Copy, Debug)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         #[cfg_attr(feature = "encode", derive(Encode, Decode))]
         /// A len-4 column vector
         pub struct Vec4 {

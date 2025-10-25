@@ -190,7 +190,7 @@ macro_rules! create_quaternion {
         /// A quaternion using Hamilton (not JPL) transformation conventions. The most common operations
         /// usedful for representing orientations and rotations are defined, including for operations
         /// with `Vec3`.
-        #[derive(Clone, Copy, Debug)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         #[cfg_attr(feature = "encode", derive(Encode, Decode))]
         pub struct Quaternion {
             pub w: $f,
