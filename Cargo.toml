@@ -1,6 +1,6 @@
 [package]
 name = "lin_alg"
-version = "1.3.10"
+version = "1.3.11"
 edition = "2024"
 authors = ["David O'Connor <the_alchemist@fastmail.com>"]
 description = "Vector, matrix, and quaternion operations for general purposes"
@@ -29,7 +29,7 @@ bincode = { version = "2.0.1", optional = true }
 paste = "1.0.15"  # Token pasting, to make macros easier
 
 # Disable default features to prevent conflicts which the feature set the caller sets. And, we don't want to bring them in.
-cudarc = { version = "0.17.2", default-features = false, optional = true }
+cudarc = { version = "0.18.1", default-features = false, optional = true }
 
 [features]
 default = ["std"]
