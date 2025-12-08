@@ -1,5 +1,7 @@
 #![macro_use]
 
+use crate::f32::X_VEC;
+
 // Agnostic to SIMD and non-simd
 // `$f` here could be a primitive like `f32`, or a SIMD primitive like `f32x8`.
 macro_rules! create_vec_shared {
@@ -522,10 +524,10 @@ macro_rules! create_vec {
                 self.x + self.y + self.z
             }
 
-            /// Returns an arbitrary vector perpendicular to it.]
+            /// Returns an arbitrary unit vector perpendicular to it.
             pub fn any_perpendicular(&self) -> Self {
-                let a = Self::new(1., 0., 0.); // This determines the resulting direction.
-                self.cross(a)
+                // The vec we cross with it determines the resulting direction.
+                self.to_normalized().cross(X_VEC)
             }
 
             pub fn min(self, other: Self) -> Self {
