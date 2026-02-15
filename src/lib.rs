@@ -231,6 +231,24 @@ pub mod f32 {
 
             result
         }
+
+        pub fn to_le_bytes(&self) -> [u8; 3 * 4] {
+            let mut result = [0; 3 * 4];
+
+            result[0..4].clone_from_slice(&self.x.to_le_bytes());
+            result[4..8].clone_from_slice(&self.y.to_le_bytes());
+            result[8..12].clone_from_slice(&self.z.to_le_bytes());
+
+            result
+        }
+
+        pub fn from_le_bytes(v: &[u8]) -> Self {
+            Self {
+                x: f32::from_le_bytes(v[0..4].try_into().unwrap()),
+                y: f32::from_le_bytes(v[4..8].try_into().unwrap()),
+                z: f32::from_le_bytes(v[8..12].try_into().unwrap()),
+            }
+        }
     }
 
     impl Vec4 {
@@ -385,6 +403,28 @@ pub mod f64 {
         fn from(other: f32::Mat4) -> Self {
             Self {
                 data: other.data.map(|x| x as f64),
+            }
+        }
+    }
+
+    impl Vec3 {
+        /// Convert to a LE byte array, e.g. for sending to a GPU.
+        pub fn to_le_bytes(&self) -> [u8; 3 * 8] {
+            let mut result = [0; 3 * 8];
+
+            result[0..8].clone_from_slice(&self.x.to_ne_bytes());
+            result[8..16].clone_from_slice(&self.y.to_ne_bytes());
+            result[16..24].clone_from_slice(&self.z.to_ne_bytes());
+
+            result
+        }
+
+        /// Convert to a LE byte array, e.g. for sending to a GPU.
+        pub fn from_le_bytes(v: &[u8]) -> Self {
+            Self {
+                x: f64::from_le_bytes(v[0..8].try_into().unwrap()),
+                y: f64::from_le_bytes(v[8..16].try_into().unwrap()),
+                z: f64::from_le_bytes(v[16..24].try_into().unwrap()),
             }
         }
     }
