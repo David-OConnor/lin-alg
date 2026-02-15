@@ -206,7 +206,6 @@ pub mod f32 {
     }
 
     impl Vec3 {
-        #[cfg(feature = "computer_graphics")]
         /// Convert to a byte array, e.g. for sending to a GPU. Note that this function pads with an
         /// extra 4 bytes, IOC with the  hardware
         /// 16-byte alignment requirement. This assumes we're using this in a uniform; Vertexes
@@ -249,7 +248,6 @@ pub mod f32 {
     }
 
     impl Mat3 {
-        #[cfg(feature = "computer_graphics")]
         pub fn to_bytes(&self) -> [u8; 9 * 4] {
             let mut result = [0; 9 * 4];
 
@@ -262,7 +260,6 @@ pub mod f32 {
     }
 
     impl Mat4 {
-        #[cfg(feature = "computer_graphics")]
         pub fn to_bytes(&self) -> [u8; 16 * 4] {
             let mut result = [0; 16 * 4];
 

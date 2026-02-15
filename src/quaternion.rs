@@ -132,6 +132,19 @@ macro_rules! create_quaternion_shared {
             }
         }
 
+        // todo: Mul and div assign are not compiling for simd?
+        // impl MulAssign<$quat_ty> for $quat_ty {
+        //     fn mul_assign(&mut self, rhs: $quat_ty) {
+        //         self = self * rhs;
+        //     }
+        // }
+        //
+        // impl DivAssign<$quat_ty> for $quat_ty {
+        //     fn div_assign(&mut self, rhs: $quat_ty) {
+        //         self = self  rhs;
+        //     }
+        // }
+
         impl MulAssign<$f> for $quat_ty {
             fn mul_assign(&mut self, rhs: $f) {
                 self.w = self.w * rhs;
