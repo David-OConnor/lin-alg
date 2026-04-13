@@ -480,6 +480,30 @@ macro_rules! create_vec {
                 }
             }
 
+            pub const fn x() -> Self {
+                Self {
+                    x: 1.,
+                    y: 0.,
+                    z: 0.,
+                }
+            }
+
+            pub const fn y() -> Self {
+                Self {
+                    x: 0.,
+                    y: 1.,
+                    z: 0.,
+                }
+            }
+
+            pub const fn z() -> Self {
+                Self {
+                    x: 0.,
+                    y: 0.,
+                    z: 1.,
+                }
+            }
+
             /// Construct from the first 3 values in a slice: &[x, y, z].
             pub fn from_slice(slice: &[$f]) -> Result<Self, crate::BufError> {
                 if slice.len() < 3 {
