@@ -511,6 +511,30 @@ macro_rules! create_quaternion {
                     ],
                 }
             }
+
+            #[cfg(feature = "random")]
+            pub fn random(
+                rng: &mut impl rand::Rng,
+                distro: Option<rand::distr::Uniform<$f>>,
+            ) -> Self {
+                use rand::distr::Distribution as _;
+                // This allows for cacheing distro.
+                let distro =
+                    distro.unwrap_or_else(|| rand::distr::Uniform::<$f>::new(0.0, 1.0).unwrap());
+
+                let (u1, u2, u3) = (distro.sample(rng), distro.sample(rng), distro.sample(rng));
+                let sqrt1_minus_u1 = (1.0 - u1).sqrt();
+                let sqrt_u1 = u1.sqrt();
+                let (theta1, theta2) = (TAU * u2, TAU * u3);
+
+                Quaternion::new(
+                    sqrt1_minus_u1 * theta1.sin(),
+                    sqrt1_minus_u1 * theta1.cos(),
+                    sqrt_u1 * theta2.sin(),
+                    sqrt_u1 * theta2.cos(),
+                )
+                .to_normalized()
+            }
         }
 
         #[cfg(feature = "std")]
