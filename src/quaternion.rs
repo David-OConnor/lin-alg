@@ -307,23 +307,23 @@ macro_rules! create_quaternion {
             /// Most sources online provide us with results that do not behave how we expect.
             pub fn to_euler(&self) -> EulerAngle {
                 let w = self.w;
-                let x = self.y;
-                let y = self.x;
+                let x = self.x;
+                let y = self.y;
                 let z = self.z;
 
                 // half z-component of x' (negated)
                 let xz = w * y - x * z;
 
                 let yaw = (x * y + w * z).atan2(0.5 - (y * y + z * z));
-                let pitch = -(xz / (0.25 - xz * xz).sqrt()).atan();
+                let pitch = (xz / (0.25 - xz * xz).sqrt()).atan();
 
                 const YPR_GIMBAL_LOCK: $f = 100.; // todo: Currently always uses logic A.
 
                 let roll = if (xz.abs()) < YPR_GIMBAL_LOCK {
-                    y * z + w * x.atan2(0.5 - (x * x + y * y))
+                    (y * z + w * x).atan2(0.5 - (x * x + y * y))
                 } else {
                     2.0 * x.atan2(w) + xz.signum() * yaw
-                } * -1.;
+                };
 
                 EulerAngle { pitch, roll, yaw }
             }
