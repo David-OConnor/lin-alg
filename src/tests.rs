@@ -3,10 +3,7 @@ use std::f32::consts::TAU;
 use std::mem::transmute;
 
 use super::*;
-use crate::{
-    f32::{FORWARD, RIGHT, UP, f32x8, pack_vec3x8, pack_x8, unpack_x8},
-    f64::unpack_vec3x8,
-};
+use crate::f32::{self, X_VEC, Y_VEC, Z_VEC, f32x8, pack_vec3x8, pack_x8, unpack_x8};
 
 #[cfg(all(any(target_arch = "x86", target_arch = "x86_64"), feature = "std"))]
 #[test]
@@ -338,33 +335,33 @@ fn test_simd_add() {
 #[test]
 fn test_simd_rotate_vec() {
     let rot_init = [
-        f32::Quaternion::from_unit_vecs(UP, FORWARD),
-        f32::Quaternion::from_unit_vecs(UP, -FORWARD),
-        f32::Quaternion::from_unit_vecs(UP, RIGHT),
-        f32::Quaternion::from_unit_vecs(UP, -RIGHT),
-        f32::Quaternion::from_unit_vecs(UP, UP),
-        f32::Quaternion::from_unit_vecs(UP, -UP),
-        f32::Quaternion::from_axis_angle(RIGHT, TAU / 4.),
-        f32::Quaternion::from_axis_angle(RIGHT, TAU / 8.),
+        f32::Quaternion::from_unit_vecs(Z_VEC, X_VEC),
+        f32::Quaternion::from_unit_vecs(Z_VEC, -X_VEC),
+        f32::Quaternion::from_unit_vecs(Z_VEC, Y_VEC),
+        f32::Quaternion::from_unit_vecs(Z_VEC, -Y_VEC),
+        f32::Quaternion::from_unit_vecs(Z_VEC, Z_VEC),
+        f32::Quaternion::from_unit_vecs(Z_VEC, -Z_VEC),
+        f32::Quaternion::from_axis_angle(Y_VEC, TAU / 4.),
+        f32::Quaternion::from_axis_angle(Y_VEC, TAU / 8.),
     ];
 
     let rotation = f32::Quaternionx8::from_array(rot_init);
 
     // This could be 8 separate values.
-    let vec = f32::Vec3x8::from_array([UP; 8]);
+    let vec = f32::Vec3x8::from_array([Z_VEC; 8]);
 
     let result = rotation.rotate_vec(vec).to_array();
 
     let sqrt_2_div_2 = 2_f32.sqrt() / 2.;
-    let angled = f32::Vec3::new(0., -sqrt_2_div_2, sqrt_2_div_2);
+    let angled = f32::Vec3::new(sqrt_2_div_2, 0.0, sqrt_2_div_2);
 
-    assert!((result[0] - FORWARD).magnitude() < f32::EPSILON);
-    assert!((result[1] - -FORWARD).magnitude() < f32::EPSILON);
-    assert!((result[2] - RIGHT).magnitude() < f32::EPSILON);
-    assert!((result[3] - -RIGHT).magnitude() < f32::EPSILON);
-    assert!((result[4] - UP).magnitude() < f32::EPSILON);
-    assert!((result[5] - -UP).magnitude() < f32::EPSILON);
-    assert!((result[6] - -FORWARD).magnitude() < f32::EPSILON);
+    assert!((result[0] - X_VEC).magnitude() < f32::EPSILON);
+    assert!((result[1] - -X_VEC).magnitude() < f32::EPSILON);
+    assert!((result[2] - Y_VEC).magnitude() < f32::EPSILON);
+    assert!((result[3] - -Y_VEC).magnitude() < f32::EPSILON);
+    assert!((result[4] - Z_VEC).magnitude() < f32::EPSILON);
+    assert!((result[5] - -Z_VEC).magnitude() < f32::EPSILON);
+    assert!((result[6] - X_VEC).magnitude() < f32::EPSILON);
     assert!((result[7] - angled).magnitude() < f32::EPSILON);
 }
 
