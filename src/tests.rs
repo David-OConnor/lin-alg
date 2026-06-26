@@ -1,6 +1,4 @@
 use std::f32::consts::TAU;
-#[cfg(all(any(target_arch = "x86", target_arch = "x86_64"), feature = "std"))]
-use std::mem::transmute;
 
 use super::*;
 use crate::f32::{self, X_VEC, Y_VEC, Z_VEC, f32x8, pack_vec3x8, pack_x8, unpack_x8};
