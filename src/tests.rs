@@ -353,7 +353,7 @@ fn test_simd_rotate_vec() {
     let result = rotation.rotate_vec(vec).to_array();
 
     let sqrt_2_div_2 = 2_f32.sqrt() / 2.;
-    let angled = f32::Vec3::new(0., -sqrt_2_div_2, sqrt_2_div_2);
+    let angled = f32::Vec3::new(sqrt_2_div_2, 0.0, sqrt_2_div_2);
 
     assert!((result[0] - X_VEC).magnitude() < f32::EPSILON);
     assert!((result[1] - -X_VEC).magnitude() < f32::EPSILON);
