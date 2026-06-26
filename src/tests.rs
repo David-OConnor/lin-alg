@@ -1,7 +1,23 @@
-use std::f32::consts::TAU;
+use std::f32::consts::{FRAC_PI_2, TAU};
 
 use super::*;
 use crate::f32::{self, X_VEC, Y_VEC, Z_VEC, f32x8, pack_vec3x8, pack_x8, unpack_x8};
+
+/// Assert that two f32 expressions are equal up to machine precision
+///
+/// The assertion is done by comparing the absolute difference to be less or equal than f32::EPSILON
+///
+/// On panic, this macro will print the values of the expressions with their debug representations.
+macro_rules! assert_eq_f32 {
+    ($left:expr, $right:expr) => {
+        let (left, right): (f32, f32) = ($left, $right);
+
+        assert!(
+            (left - right).abs() <= f32::EPSILON,
+            "assertion `left == right` failed (up to f32::EPSILON)\n  left: {left}\n right: {right}"
+        );
+    };
+}
 
 #[cfg(all(any(target_arch = "x86", target_arch = "x86_64"), feature = "std"))]
 #[test]
@@ -251,9 +267,36 @@ fn test_quaternion_from_and_to_euler() {
     // you might verify that euler2.pitch ~ 0, euler2.roll ~ pi/2, euler2.yaw ~ pi/2
     // within some tolerance
 
-    // assert!((euler2.roll - std::f32::consts::FRAC_PI_2).abs() < 0.2);
-    assert!((euler2.pitch - 0.0).abs() < 0.2);
-    assert!((euler2.yaw - std::f32::consts::FRAC_PI_2).abs() < 0.2);
+    assert_eq_f32!(euler2.roll, std::f32::consts::FRAC_PI_2);
+    assert_eq_f32!(euler2.pitch, 0.0);
+    assert_eq_f32!(euler2.yaw, std::f32::consts::FRAC_PI_2);
+}
+
+#[test]
+fn test_quaternion_to_euler() {
+    let q = f32::Quaternion::from_axis_angle(X_VEC, 0.5);
+    let euler = q.to_euler();
+    assert_eq_f32!(euler.roll, 0.5);
+    assert_eq_f32!(euler.pitch, 0.0);
+    assert_eq_f32!(euler.yaw, 0.0);
+
+    let q = f32::Quaternion::from_axis_angle(Y_VEC, 0.5);
+    let euler = q.to_euler();
+    assert_eq_f32!(euler.roll, 0.0);
+    assert_eq_f32!(euler.pitch, 0.5);
+    assert_eq_f32!(euler.yaw, 0.0);
+
+    let q = f32::Quaternion::from_axis_angle(Z_VEC, 0.5);
+    let euler = q.to_euler();
+    assert_eq_f32!(euler.roll, 0.0);
+    assert_eq_f32!(euler.pitch, 0.0);
+    assert_eq_f32!(euler.yaw, 0.5);
+
+    let q = f32::Quaternion::new(0.5, 0.5, 0.5, 0.5);
+    let euler = q.to_euler();
+    assert_eq_f32!(euler.roll, FRAC_PI_2);
+    assert_eq_f32!(euler.pitch, 0.0);
+    assert_eq_f32!(euler.yaw, FRAC_PI_2);
 }
 
 #[cfg(all(any(target_arch = "x86", target_arch = "x86_64"), feature = "std"))]
